@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ASPPorcelette.API", "ASPPorcelette.API.csproj", "{165C1725-E135-E202-6291-20921B680408}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{165C1725-E135-E202-6291-20921B680408}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{165C1725-E135-E202-6291-20921B680408}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{165C1725-E135-E202-6291-20921B680408}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{165C1725-E135-E202-6291-20921B680408}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {612190D1-A473-4430-AED4-93CCE9A63DCA}
+	EndGlobalSection
+EndGlobal
