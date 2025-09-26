@@ -5,10 +5,13 @@ namespace ASPPorcelette.API.Models
     // C'est votre classe d'utilisateur principale pour l'authentification
     public class User : IdentityUser
     {
+        // Propriétés personnelles ajoutées
+        public string Nom { get; set; } 
+        public string Prenom { get; set; }
         // -----------------------------------------------------------------
         // Clé Étrangère (Foreign Key)
         // -----------------------------------------------------------------
-        
+
         // Lien vers le profil détaillé du Sensei (nullable car l'utilisateur n'est pas forcément un Sensei)
         public int? SenseiId { get; set; } 
 

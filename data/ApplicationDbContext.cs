@@ -35,7 +35,7 @@ namespace ASPPorcelette.API.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-                        // IMPORTANT : Toujours appeler la méthode de base pour gérer Identity
+            // IMPORTANT : Toujours appeler la méthode de base pour gérer Identity
             base.OnModelCreating(modelBuilder);
 
             // Exemple de configuration : Relation plusieurs-à-plusieurs entre Adherent et Cours via une table de jonction
@@ -44,7 +44,13 @@ namespace ASPPorcelette.API.Data
                 .WithMany(c => c.AdherentsApprenant)
                 .UsingEntity(j => j.ToTable("Apprendre")); // Nom de la table de jonction
 
-            // Ajoutez ici d'autres configurations complexes si nécessaire
+            modelBuilder.Entity<Cours>()
+            .HasOne(c => c.Sensei) // Le Cours a un Sensei
+            .WithMany(s => s.CoursEnseignes) // Le Sensei a plusieurs Cours
+            .HasForeignKey(c => c.SenseiId)
+            // C'est la ligne magique qui brise la boucle :
+            .OnDelete(DeleteBehavior.Restrict); // OU .OnDelete(DeleteBehavior.SetNull) si SenseiId était nullable
+                                         // On utilise .Restrict car SenseiId est NOT NULL
         }
 
 
