@@ -166,3 +166,10 @@ C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\obj\Debug\net9
 C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\obj\Debug\net9.0\ASPPorcelette.API.pdb
 C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\obj\Debug\net9.0\ASPPorcelette.API.genruntimeconfig.cache
 C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\obj\Debug\net9.0\ref\ASPPorcelette.API.dll
+C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\bin\Debug\net9.0\Swashbuckle.AspNetCore.Swagger.dll
+C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\bin\Debug\net9.0\Microsoft.AspNetCore.JsonPatch.dll
+C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\bin\Debug\net9.0\Microsoft.AspNetCore.Mvc.NewtonsoftJson.dll
+C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\bin\Debug\net9.0\Newtonsoft.Json.dll
+C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\bin\Debug\net9.0\Newtonsoft.Json.Bson.dll
