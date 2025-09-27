@@ -1,5 +1,8 @@
+
+using ASPPorcelette.API.DTOs.Sensei;
 using ASPPorcelette.API.Models;
 using ASPPorcelette.API.Services;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ASPPorcelette.API.Controllers
@@ -10,19 +13,35 @@ namespace ASPPorcelette.API.Controllers
     public class SenseiController : ControllerBase
     {
         private readonly ISenseiService _senseiService;
+        private readonly IMapper _mapper;
 
-        public SenseiController(ISenseiService senseiService)
+        public SenseiController(ISenseiService senseiService, IMapper mapper)
         {
             _senseiService = senseiService;
+            _mapper = mapper;
         }
 
         // GET: api/Sensei
+       // GET: api/Sensei
+        // Le type de retour utilise maintenant le DTO
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Sensei>>> GetAllSenseis()
+        public async Task<ActionResult<IEnumerable<SenseiDto>>> GetSenseis()
         {
-            var senseis = await _senseiService.GetAllSenseisAsync();
-            return Ok(senseis);
+            // 1. Récupère la liste des modèles complets (incluant la DisciplinePrincipale)
+            var senseiModels = await _senseiService.GetAllSenseisAsync();
+
+            if (senseiModels == null)
+            {
+                return NotFound();
+            }
+
+            // 2. Mappe la liste des modèles Sensei vers une liste de SenseiDto
+            var senseiDtos = _mapper.Map<IEnumerable<SenseiDto>>(senseiModels);
+
+            // 3. Retourne la liste des DTOs
+            return Ok(senseiDtos);
         }
+
 
         // GET: api/Sensei/5
         [HttpGet("{id}")]
@@ -38,7 +57,7 @@ namespace ASPPorcelette.API.Controllers
 
         // POST: api/Sensei
         [HttpPost]
-        public async Task<ActionResult<Sensei>> CreateSensei(Sensei sensei)
+        public async Task<ActionResult<SenseiCreateDto>> CreateSensei(Sensei sensei)
         {
             var createdSensei = await _senseiService.CreateSenseiAsync(sensei);
             return CreatedAtAction(nameof(GetSenseiById), new { id = createdSensei.SenseiId }, createdSensei);

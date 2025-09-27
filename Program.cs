@@ -6,6 +6,7 @@ using ASPPorcelette.API.Services;
 using Microsoft.OpenApi.Models;
 using ASPPorcelette.API.Repository.Interfaces;
 using ASPPorcelette.API.Repository.Implementation;
+using ASPPorcelette.API.MappingProfiles;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,11 +29,15 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
     .AddEntityFrameworkStores<ApplicationDbContext>() 
     .AddDefaultTokenProviders();
 
+
 // --- 3. CONFIGURATION DES SERVICES (Vos couches Repository et Service) ---
 
 // *********** INJECTIONS DE DÉPENDANCES ***********
+builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
 builder.Services.AddScoped<ISenseiRepository, SenseiRepository>();
 builder.Services.AddScoped<ISenseiService, SenseiService>();
+
+
 // Si vous utilisez un modèle avec le dossier 'Repository.Interfaces' etc., ajustez les 'using' ci-dessus.
 
 // Program.cs

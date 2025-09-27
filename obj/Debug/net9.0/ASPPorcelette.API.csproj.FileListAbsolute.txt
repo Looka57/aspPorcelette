@@ -173,3 +173,5 @@ C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\bin\Debug\net9
 C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\bin\Debug\net9.0\Microsoft.AspNetCore.Mvc.NewtonsoftJson.dll
 C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\bin\Debug\net9.0\Newtonsoft.Json.dll
 C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\bin\Debug\net9.0\Newtonsoft.Json.Bson.dll
+C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\bin\Debug\net9.0\AutoMapper.dll
+C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\bin\Debug\net9.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll
