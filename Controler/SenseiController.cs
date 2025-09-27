@@ -1,4 +1,5 @@
 
+using ASPPorcelette.API.DTOs;
 using ASPPorcelette.API.DTOs.Sensei;
 using ASPPorcelette.API.Models;
 using ASPPorcelette.API.Services;
@@ -73,6 +74,27 @@ namespace ASPPorcelette.API.Controllers
             }
 
             var updatedSensei = await _senseiService.UpdateSenseiAsync(sensei);
+            return Ok(updatedSensei);
+        }
+
+        // PATCH: api/Sensei/5
+        [HttpPatch("{id}")]
+        public async Task<IActionResult> PartialUpdateSensei(
+            int id, 
+            [FromBody] Microsoft.AspNetCore.JsonPatch.JsonPatchDocument<SenseiUpdateDto> patchDoc
+        )
+        {
+            if (patchDoc == null)
+            {
+                return BadRequest();
+            }
+
+            var (updatedSensei, success) = await _senseiService.PartialUpdateSenseiAsync(id, patchDoc);
+            if (!success)
+            {
+                return NotFound();
+            }
+
             return Ok(updatedSensei);
         }
 

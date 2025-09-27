@@ -49,6 +49,7 @@ builder.Services.AddControllers()
     {
         options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
     });
+    
 
 // ...
 
