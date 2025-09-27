@@ -2,6 +2,7 @@ using AutoMapper;
 using ASPPorcelette.API.Models;
 using ASPPorcelette.API.DTOs;
 using ASPPorcelette.API.DTOs.Sensei;
+using ASPPorcelette.API.DTOs.Discipline;
 
 namespace ASPPorcelette.API.MappingProfiles
 {

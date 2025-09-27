@@ -1,3 +1,5 @@
+using ASPPorcelette.API.DTOs.Discipline;
+
 namespace ASPPorcelette.API.DTOs.Sensei
 {
     public class SenseiDto

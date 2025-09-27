@@ -7,6 +7,8 @@ using Microsoft.OpenApi.Models;
 using ASPPorcelette.API.Repository.Interfaces;
 using ASPPorcelette.API.Repository.Implementation;
 using ASPPorcelette.API.MappingProfiles;
+using ASPPorcelette.API.Services.Interfaces;
+using ASPPorcelette.API.Services.Implementation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,6 +38,8 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
 builder.Services.AddScoped<ISenseiRepository, SenseiRepository>();
 builder.Services.AddScoped<ISenseiService, SenseiService>();
+builder.Services.AddScoped<IDisciplineRepository, DisciplineRepository>();
+builder.Services.AddScoped<IDisciplineService, DisciplineService>();
 
 
 // Si vous utilisez un modèle avec le dossier 'Repository.Interfaces' etc., ajustez les 'using' ci-dessus.
