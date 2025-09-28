@@ -46,6 +46,10 @@ builder.Services.AddScoped<IDisciplineService, DisciplineService>();
 builder.Services.AddScoped<IAdherentRepository, AdherentRepository>();
 builder.Services.AddScoped<IAdherentService, AdherentService>();
 
+builder.Services.AddScoped<ICoursRepository, CoursRepository>();
+builder.Services.AddScoped<ICoursService, CoursService>();
+
+
 
 // Si vous utilisez un modèle avec le dossier 'Repository.Interfaces' etc., ajustez les 'using' ci-dessus.
 

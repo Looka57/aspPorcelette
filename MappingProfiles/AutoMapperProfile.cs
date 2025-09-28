@@ -31,17 +31,23 @@ namespace ASPPorcelette.API.MappingProfiles
             // ----------------------------------------------------
             // Mappings pour la ressource Adherent (CRUD complet)
             // ----------------------------------------------------
-            // 1. Entité vers DTO de sortie (CORRIGÉ : MANQUANT PRÉCÉDEMMENT)
-            CreateMap<Adherent, AdherentDto>();
+            CreateMap<Adherent, AdherentDto>(); // 1. Entité vers DTO de sortie 
+            CreateMap<Adherent, AdherentUpdateDto>();  // 2. Entité vers DTO de mise à jour (pour l'initialisation du PATCH)
+            CreateMap<AdherentCreateDto, Adherent>();  // 3. DTO de création vers Entité (POST)
+            CreateMap<AdherentUpdateDto, Adherent>();// 4. DTO de mise à jour vers Entité (PUT/PATCH)
 
-            // 2. Entité vers DTO de mise à jour (pour l'initialisation du PATCH)
-            CreateMap<Adherent, AdherentUpdateDto>();
+            // ----------------------------------------------------
+            // Mappings pour la ressource Cours
+            // ----------------------------------------------------
+            CreateMap<Models.Cours, DTOs.Cours.CoursDto>();   // 1. Entité vers DTO de sortie (GET)
+            CreateMap<DTOs.Cours.CoursCreateDto, Models.Cours>();   // 2. DTO de création vers Entité (POST)
+            CreateMap<Models.Cours, DTOs.Cours.CoursUpdateDto>();   // 3. Entité vers DTO de mise à jour (pour l'initialisation du PATCH)
+            CreateMap<DTOs.Cours.CoursUpdateDto, Models.Cours>();  // 4. DTO de mise à jour vers Entité (PUT/PATCH)
 
-            // 3. DTO de création vers Entité (POST)
-            CreateMap<AdherentCreateDto, Adherent>();
-
-            // 4. DTO de mise à jour vers Entité (PUT/PATCH)
-            CreateMap<AdherentUpdateDto, Adherent>();
+            // / ----------------------------------------------------
+            // Mappings pour la ressource Horaire
+            // ----------------------------------------------------
+            CreateMap<Models.Horaire, DTOs.Horaire.HoraireDto>();
         }
     }
 }
