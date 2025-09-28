@@ -36,10 +36,15 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 
 // *********** INJECTIONS DE DÉPENDANCES ***********
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
+
 builder.Services.AddScoped<ISenseiRepository, SenseiRepository>();
 builder.Services.AddScoped<ISenseiService, SenseiService>();
+
 builder.Services.AddScoped<IDisciplineRepository, DisciplineRepository>();
 builder.Services.AddScoped<IDisciplineService, DisciplineService>();
+
+builder.Services.AddScoped<IAdherentRepository, AdherentRepository>();
+builder.Services.AddScoped<IAdherentService, AdherentService>();
 
 
 // Si vous utilisez un modèle avec le dossier 'Repository.Interfaces' etc., ajustez les 'using' ci-dessus.

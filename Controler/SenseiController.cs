@@ -22,7 +22,6 @@ namespace ASPPorcelette.API.Controllers
             _mapper = mapper;
         }
 
-        // GET: api/Sensei
        // GET: api/Sensei
         // Le type de retour utilise maintenant le DTO
         [HttpGet]

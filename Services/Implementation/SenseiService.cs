@@ -1,5 +1,5 @@
 using ASPPorcelette.API.DTOs;
-using ASPPorcelette.API.DTOs.Sensei; // Assurez-vous d'avoir ce using
+using ASPPorcelette.API.DTOs.Sensei; 
 using ASPPorcelette.API.Models;
 using ASPPorcelette.API.Repository.Interfaces;
 using AutoMapper;
