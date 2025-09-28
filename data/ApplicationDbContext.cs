@@ -16,6 +16,7 @@ namespace ASPPorcelette.API.Data
         // --- Déclaration des DbSet (Vos Tables) ---
 
         public DbSet<Actualite> Actualites { get; set; }
+        // public DbSet<Apprendre> Apprendre { get; set; }
         public DbSet<Adherent> Adherents { get; set; }
         public DbSet<CategorieTransaction> CategorieTransactions { get; set; }
         public DbSet<Compte> Comptes { get; set; }
@@ -38,11 +39,30 @@ namespace ASPPorcelette.API.Data
             // IMPORTANT : Toujours appeler la méthode de base pour gérer Identity
             base.OnModelCreating(modelBuilder);
 
+            // Configuration des relations complexes ici
+            
+
             // Exemple de configuration : Relation plusieurs-à-plusieurs entre Adherent et Cours via une table de jonction
-            modelBuilder.Entity<Adherent>()
-                .HasMany(a => a.DisciplinesPratiquees)
-                .WithMany(c => c.AdherentsApprenant)
-                .UsingEntity(j => j.ToTable("Apprendre")); // Nom de la table de jonction
+         modelBuilder.Entity<Adherent>()
+    .HasMany(a => a.DisciplinesPratiquees)
+    .WithMany(d => d.AdherentsApprenant)
+    .UsingEntity<Apprendre>( // <-- on utilise ta classe Apprendre
+        j => j
+            .HasOne(p => p.DisciplinePratiquee)
+            .WithMany()
+            .HasForeignKey(p => p.DisciplineId)
+            .HasConstraintName("FK_Apprendre_Discipline"),
+        j => j
+            .HasOne(p => p.AdherentApprenant)
+            .WithMany()
+            .HasForeignKey(p => p.AdherentId)
+            .HasConstraintName("FK_Apprendre_Adherent"),
+        j =>
+        {
+            j.HasKey(p => new { p.AdherentId, p.DisciplineId });
+            j.ToTable("Apprendre"); // Force le nom exact de la table
+        });
+
 
             modelBuilder.Entity<Cours>()
             .HasOne(c => c.Sensei) // Le Cours a un Sensei

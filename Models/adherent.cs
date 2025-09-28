@@ -29,8 +29,14 @@ namespace ASPPorcelette.API.Models
         // -----------------------------------------------------------------
         // Propriétés de Navigation (Relation N,N Adherent-Discipline 'apprendre')
         // -----------------------------------------------------------------
-        
+
         // Le nom reflète l'association 'apprendre' ou 'pratiquer'
         public ICollection<Discipline> DisciplinesPratiquees { get; set; } = new List<Discipline>();
+        
+        // Adherent.cs
+public ICollection<Apprendre> Apprentissages { get; set; }
+
+// Discipline.cs
+
     }
 }

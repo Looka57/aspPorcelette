@@ -48,6 +48,14 @@ namespace ASPPorcelette.API.MappingProfiles
             // Mappings pour la ressource Horaire
             // ----------------------------------------------------
             CreateMap<Models.Horaire, DTOs.Horaire.HoraireDto>();
+
+            // / ----------------------------------------------------
+            // Mappings pour la ressource Apprendre
+            // ----------------------------------------------------
+            CreateMap<Models.Apprendre, DTOs.Apprendre.ApprendreDto>();
+            CreateMap<DTOs.Apprendre.ApprendreCreateDto, Models.Apprendre>();
+            
+
         }
     }
 }

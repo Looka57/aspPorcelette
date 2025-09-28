@@ -49,6 +49,15 @@ builder.Services.AddScoped<IAdherentService, AdherentService>();
 builder.Services.AddScoped<ICoursRepository, CoursRepository>();
 builder.Services.AddScoped<ICoursService, CoursService>();
 
+// builder.Services.AddScoped<IHoraireRepository, HoraireRepository>();
+// builder.Services.AddScoped<IHoraireService, HoraireService>();
+
+// 1. Enregistrement de l'interface du Repository et son implémentation
+builder.Services.AddScoped<IApprendreRepository, ApprendreRepository>();
+// 2. Enregistrement de l'interface du Service et son implémentation
+builder.Services.AddScoped<IApprendreService, ApprendreService>();
+
+
 
 
 // Si vous utilisez un modèle avec le dossier 'Repository.Interfaces' etc., ajustez les 'using' ci-dessus.
