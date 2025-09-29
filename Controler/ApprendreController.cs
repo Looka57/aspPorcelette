@@ -56,14 +56,14 @@ namespace ASPPorcelette.API.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<ApprendreDto>> CreateInscription([FromBody] ApprendreCreateDto inscriptionDto)
+        public async Task<ActionResult<ApprendreDto>> CreateInscription([FromBody] ApprendreCreateDto dto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var createdInscription = await _apprendreService.CreateInscriptionAsync(inscriptionDto);
+            var createdInscription = await _apprendreService.CreateInscriptionAsync(dto);
 
             // Mapping du Modèle retourné vers le DTO de réponse
             var createdInscriptionDto = _mapper.Map<ApprendreDto>(createdInscription);
