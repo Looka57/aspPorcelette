@@ -9,5 +9,8 @@ namespace ASPPorcelette.API.DTOs.Horaire
         public TimeSpan HeureDebut { get; set; }
         public TimeSpan HeureFin { get; set; }
         // Pas besoin de CoursId ici pour éviter les boucles, sauf si nécessaire pour le client.
+
+          public int CoursId { get; set; }
+        public string Libelle { get; set; }
     }
 }

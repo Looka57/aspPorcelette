@@ -1,11 +1,15 @@
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace ASPPorcelette.API.Models
 {
     public class TypeEvenement
     {
-        // Propriétés de la table (Colonnes)
+        [Key]
         public int TypeEvenementId { get; set; }
+
+        [Required]
+        [MaxLength(50)]   
         public string Libelle { get; set; }
 
         // -----------------------------------------------------------------

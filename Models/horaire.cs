@@ -7,7 +7,8 @@ namespace ASPPorcelette.API.Models
     public class Horaire
     {
         // Propriétés de la table (Colonnes)
-        [Key] public int HoraireId { get; set; }
+        [Key]
+        public int HoraireId { get; set; }
 
         [Required]
         [MaxLength(20)]

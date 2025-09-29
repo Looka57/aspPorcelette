@@ -54,7 +54,14 @@ namespace ASPPorcelette.API.MappingProfiles
             // ----------------------------------------------------
             CreateMap<Models.Apprendre, DTOs.Apprendre.ApprendreDto>();
             CreateMap<DTOs.Apprendre.ApprendreCreateDto, Models.Apprendre>();
-            
+
+            // / ----------------------------------------------------
+            // Mappings pour la ressource TypeEvenement
+            // ----------------------------------------------------
+            CreateMap<TypeEvenement, DTOs.TypeEvenement.TypeEvenementDto>();
+            CreateMap<DTOs.TypeEvenement.TypeEvenementCreateDto, TypeEvenement>();
+            CreateMap<DTOs.TypeEvenement.TypeEvenementUpdateDto, TypeEvenement>();
+            CreateMap<TypeEvenement, DTOs.TypeEvenement.TypeEvenementUpdateDto>();
 
         }
     }

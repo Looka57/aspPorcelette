@@ -49,13 +49,14 @@ builder.Services.AddScoped<IAdherentService, AdherentService>();
 builder.Services.AddScoped<ICoursRepository, CoursRepository>();
 builder.Services.AddScoped<ICoursService, CoursService>();
 
-// builder.Services.AddScoped<IHoraireRepository, HoraireRepository>();
-// builder.Services.AddScoped<IHoraireService, HoraireService>();
+builder.Services.AddScoped<IHoraireRepository, HoraireRepository>();
+builder.Services.AddScoped<IHoraireService, HoraireService>();
 
-// 1. Enregistrement de l'interface du Repository et son implémentation
 builder.Services.AddScoped<IApprendreRepository, ApprendreRepository>();
-// 2. Enregistrement de l'interface du Service et son implémentation
 builder.Services.AddScoped<IApprendreService, ApprendreService>();
+
+builder.Services.AddScoped<ITypeEvenementRepository, TypeEvenementRepository>();
+builder.Services.AddScoped<ITypeEvenementService, TypeEvenementService>();
 
 
 
