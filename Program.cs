@@ -61,6 +61,9 @@ builder.Services.AddScoped<ITypeEvenementService, TypeEvenementService>();
 builder.Services.AddScoped<IEvenementRepository, EvenementRepository>();
 builder.Services.AddScoped<IEvenementService, EvenementService>();
 
+builder.Services.AddScoped<IActualiteRepository, ActualiteRepository>();
+builder.Services.AddScoped<IActualiteService, ActualiteService>();
+
 
 
 

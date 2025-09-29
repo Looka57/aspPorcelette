@@ -5,6 +5,7 @@ using ASPPorcelette.API.DTOs.Sensei;
 using ASPPorcelette.API.DTOs.Discipline;
 using ASPPorcelette.API.DTOs.Adherent;
 using ASPPorcelette.API.DTOs.Evenement;
+using ASPPorcelette.API.DTOs.Actualite;
 
 namespace ASPPorcelette.API.MappingProfiles
 {
@@ -70,7 +71,14 @@ namespace ASPPorcelette.API.MappingProfiles
             CreateMap<Evenement, EvenementUpdateDto>();  // 2. Entité vers DTO de mise à jour (pour l'initialisation du PATCH)
             CreateMap<EvenementCreateDto, Evenement>();  // 3. DTO de création vers Entité (POST)
             CreateMap<EvenementUpdateDto, Evenement>();// 4. DTO de mise à jour vers Entité (PUT/PATCH)
-            
+
+            // / ----------------------------------------------------
+            // Mappings pour la ressource Evenements
+            // ----------------------------------------------------
+            CreateMap<Actualite, ActualiteDto>();  // AutoMapper mappera automatiquement Sensei à SenseiDto et Discipline à DisciplineDto
+            CreateMap<Actualite, ActualiteUpdateDto>();  // 2. Entité
+            CreateMap<ActualiteCreateDto, Actualite>();  // 3. DTO de création vers Entité (POST)
+            CreateMap<ActualiteUpdateDto, Actualite>();// 4. DTO de mise
 
         }
     }
