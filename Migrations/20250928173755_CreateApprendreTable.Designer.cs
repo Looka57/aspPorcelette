@@ -4,6 +4,7 @@ using ASPPorcelette.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ASPPorcelette.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250928173755_CreateApprendreTable")]
+    partial class CreateApprendreTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -118,7 +121,7 @@ namespace ASPPorcelette.API.Migrations
 
                     b.HasIndex("DisciplineId");
 
-                    b.ToTable("Apprendre", (string)null);
+                    b.ToTable("Apprendre");
                 });
 
             modelBuilder.Entity("ASPPorcelette.API.Models.CategorieTransaction", b =>

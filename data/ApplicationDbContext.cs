@@ -5,18 +5,14 @@ using ASPPorcelette.API.Models;
 namespace ASPPorcelette.API.Data
 {
     public class ApplicationDbContext : IdentityDbContext<User>
-
     {
-        // Le constructeur est obligatoire pour passer les options à DbContext
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
         }
 
-        // --- Déclaration des DbSet (Vos Tables) ---
-
         public DbSet<Actualite> Actualites { get; set; }
-        // public DbSet<Apprendre> Apprendre { get; set; }
+        public DbSet<Apprendre> Apprendre { get; set; }
         public DbSet<Adherent> Adherents { get; set; }
         public DbSet<CategorieTransaction> CategorieTransactions { get; set; }
         public DbSet<Compte> Comptes { get; set; }
@@ -30,51 +26,30 @@ namespace ASPPorcelette.API.Data
         public DbSet<TypeEvenement> TypeEvenements { get; set; }
         public DbSet<User> User { get; set; }
 
-        // ---------------------------------------------------------------------
-        // CONFIGURATION DES RELATIONS COMPLEXES (OnModelCreating)
-        // ---------------------------------------------------------------------
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // IMPORTANT : Toujours appeler la méthode de base pour gérer Identity
             base.OnModelCreating(modelBuilder);
 
-            // Configuration des relations complexes ici
-            
+            // Relation N-N Adherent ↔ Discipline via Apprendre
+            modelBuilder.Entity<Apprendre>()
+            .ToTable("Apprendre") 
+                .HasKey(a => new { a.AdherentId, a.DisciplineId }); // clé composite
 
-            // Exemple de configuration : Relation plusieurs-à-plusieurs entre Adherent et Cours via une table de jonction
-         modelBuilder.Entity<Adherent>()
-    .HasMany(a => a.DisciplinesPratiquees)
-    .WithMany(d => d.AdherentsApprenant)
-    .UsingEntity<Apprendre>( // <-- on utilise ta classe Apprendre
-        j => j
-            .HasOne(p => p.DisciplinePratiquee)
-            .WithMany()
-            .HasForeignKey(p => p.DisciplineId)
-            .HasConstraintName("FK_Apprendre_Discipline"),
-        j => j
-            .HasOne(p => p.AdherentApprenant)
-            .WithMany()
-            .HasForeignKey(p => p.AdherentId)
-            .HasConstraintName("FK_Apprendre_Adherent"),
-        j =>
-        {
-            j.HasKey(p => new { p.AdherentId, p.DisciplineId });
-            j.ToTable("Apprendre"); // Force le nom exact de la table
-        });
+            modelBuilder.Entity<Apprendre>()
+                .HasOne(a => a.AdherentApprenant)
+                .WithMany(ad => ad.Apprentissages)
+                .HasForeignKey(a => a.AdherentId);
 
+            modelBuilder.Entity<Apprendre>()
+                .HasOne(a => a.DisciplinePratiquee)
+                .WithMany(d => d.Apprentissages)
+                .HasForeignKey(a => a.DisciplineId);
 
             modelBuilder.Entity<Cours>()
-            .HasOne(c => c.Sensei) // Le Cours a un Sensei
-            .WithMany(s => s.CoursEnseignes) // Le Sensei a plusieurs Cours
-            .HasForeignKey(c => c.SenseiId)
-            // C'est la ligne magique qui brise la boucle :
-            .OnDelete(DeleteBehavior.Restrict); // OU .OnDelete(DeleteBehavior.SetNull) si SenseiId était nullable
-                                         // On utilise .Restrict car SenseiId est NOT NULL
+                .HasOne(c => c.Sensei)
+                .WithMany(s => s.CoursEnseignes)
+                .HasForeignKey(c => c.SenseiId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
-
-
-        // public DbSet<YourModel> YourModels { get; set; }
     }
 }
-
