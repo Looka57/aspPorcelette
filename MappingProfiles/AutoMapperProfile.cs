@@ -4,6 +4,7 @@ using ASPPorcelette.API.DTOs;
 using ASPPorcelette.API.DTOs.Sensei;
 using ASPPorcelette.API.DTOs.Discipline;
 using ASPPorcelette.API.DTOs.Adherent;
+using ASPPorcelette.API.DTOs.Evenement;
 
 namespace ASPPorcelette.API.MappingProfiles
 {
@@ -26,7 +27,6 @@ namespace ASPPorcelette.API.MappingProfiles
             CreateMap<SenseiCreateDto, Sensei>();//(POST : du DTO de création au Modèle)
             CreateMap<SenseiUpdateDto, Sensei>();//(PUT/PATCH : du DTO de mise à jour au Modèle existant)
             CreateMap<Sensei, SenseiUpdateDto>();//(PATCH : du Modèle existant au DTO, pour initialiser le patch)
-
 
             // ----------------------------------------------------
             // Mappings pour la ressource Adherent (CRUD complet)
@@ -62,6 +62,15 @@ namespace ASPPorcelette.API.MappingProfiles
             CreateMap<DTOs.TypeEvenement.TypeEvenementCreateDto, TypeEvenement>();
             CreateMap<DTOs.TypeEvenement.TypeEvenementUpdateDto, TypeEvenement>();
             CreateMap<TypeEvenement, DTOs.TypeEvenement.TypeEvenementUpdateDto>();
+
+            // / ----------------------------------------------------
+            // Mappings pour la ressource Evenements
+            // ----------------------------------------------------
+            CreateMap<Evenement, EvenementDto>();  // AutoMapper mappera automatiquement TypeEvenement à TypeEvenementDto
+            CreateMap<Evenement, EvenementUpdateDto>();  // 2. Entité vers DTO de mise à jour (pour l'initialisation du PATCH)
+            CreateMap<EvenementCreateDto, Evenement>();  // 3. DTO de création vers Entité (POST)
+            CreateMap<EvenementUpdateDto, Evenement>();// 4. DTO de mise à jour vers Entité (PUT/PATCH)
+            
 
         }
     }
