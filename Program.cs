@@ -23,14 +23,18 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // --- 2. CONFIGURATION D'ASP.NET IDENTITY ---
 
 // !! CORRECTION IMPORTANTE !! Utiliser ApplicationUser au lieu de User
-builder.Services.AddIdentity<User, IdentityRole>(options => 
+builder.Services.AddIdentity<User, IdentityRole>(options =>
     {
-        // Options de sécurité (à affiner plus tard)
-        options.SignIn.RequireConfirmedAccount = false; 
+        // Configuration de la robustesse du mot de passe (à adapter selon vos besoins)
+        options.Password.RequireDigit = true;
+        options.Password.RequireLowercase = true;
+        options.Password.RequireUppercase = true;
+        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequiredLength = 8;
+        options.User.RequireUniqueEmail = true;
     })
-    .AddEntityFrameworkStores<ApplicationDbContext>() 
-    .AddDefaultTokenProviders();
-
+    .AddEntityFrameworkStores<ApplicationDbContext>() // Utilise EF Core pour stocker les données Identity
+    .AddDefaultTokenProviders(); 
 
 // --- 3. CONFIGURATION DES SERVICES (Vos couches Repository et Service) ---
 
