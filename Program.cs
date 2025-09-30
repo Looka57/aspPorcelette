@@ -64,6 +64,9 @@ builder.Services.AddScoped<IEvenementService, EvenementService>();
 builder.Services.AddScoped<IActualiteRepository, ActualiteRepository>();
 builder.Services.AddScoped<IActualiteService, ActualiteService>();
 
+builder.Services.AddScoped<ICategorieTransactionRepository, CategorieTransactionRepository>();
+builder.Services.AddScoped<ICategorieTransactionService, CategorieTransactionService>();
+
 
 
 

@@ -6,6 +6,7 @@ using ASPPorcelette.API.DTOs.Discipline;
 using ASPPorcelette.API.DTOs.Adherent;
 using ASPPorcelette.API.DTOs.Evenement;
 using ASPPorcelette.API.DTOs.Actualite;
+using ASPPorcelette.API.DTOs.CategorieTransaction;
 
 namespace ASPPorcelette.API.MappingProfiles
 {
@@ -79,6 +80,15 @@ namespace ASPPorcelette.API.MappingProfiles
             CreateMap<Actualite, ActualiteUpdateDto>();  // 2. Entité
             CreateMap<ActualiteCreateDto, Actualite>();  // 3. DTO de création vers Entité (POST)
             CreateMap<ActualiteUpdateDto, Actualite>();// 4. DTO de mise
+
+            // / ----------------------------------------------------
+            // Mappings pour la ressource CategorieTransaction
+            // ----------------------------------------------------
+            CreateMap<CategorieTransaction, CategorieTransactionDto>();
+            CreateMap<CategorieTransactionCreateDto, CategorieTransaction>();
+            CreateMap<CategorieTransactionUpdateDto, CategorieTransaction>();
+            CreateMap<CategorieTransaction, CategorieTransactionUpdateDto>();
+            
 
         }
     }
