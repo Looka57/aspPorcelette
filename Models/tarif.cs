@@ -1,26 +1,42 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace ASPPorcelette.API.Models
 {
     public class Tarif
     {
-        // Propriétés de la table (Colonnes)
+        [Key]
         public int TarifId { get; set; }
-        public string Libelle { get; set; }
-        public decimal Prix { get; set; } // Utilisation de decimal pour le montant
-        public string Description { get; set; }
+
+        [Required]
+        [MaxLength(100)]
+        // Ex: "Tarif Annuel Adulte", "Tarif Trimestriel Enfant"
+        public string Nom { get; set; } 
+
+        [Required]
+        [Column(TypeName = "decimal(18, 2)")] // Précision pour les montants monétaires
+        public decimal Montant { get; set; }
+
+        [Required]
+        [MaxLength(50)]
+        // Ex: "Annuel", "Trimestriel", "Mensuel", "Séance"
+        public string Periodicite { get; set; }
+
+        public bool EstActif { get; set; } = true;
 
         // -----------------------------------------------------------------
-        // Clé Étrangère (Foreign Key)
+        // Clé Étrangère
         // -----------------------------------------------------------------
-        
-        // Clé vers la Discipline (Relation 1,1 : Un tarif est lié à une seule discipline)
+
+        [Required]
+        // Le tarif est lié à une Discipline spécifique
         public int DisciplineId { get; set; }
 
-        
         // -----------------------------------------------------------------
-        // Propriété de Navigation (Lien vers la classe parente)
+        // Propriétés de Navigation
         // -----------------------------------------------------------------
-        
-        // Permet d'accéder aux détails de la Discipline concernée
-        public Discipline DisciplineConcernee { get; set; }
+
+        [ForeignKey(nameof(DisciplineId))]
+        public Discipline Discipline { get; set; } = null!;
     }
 }

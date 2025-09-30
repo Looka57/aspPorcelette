@@ -24,5 +24,15 @@ namespace ASPPorcelette.API.Services.Implementation
         {
             return await _repository.GetByIdAsync(id);
         }
+
+        public async Task<Discipline> GetByIdAsync(int id)
+        {
+            var discipline = await _repository.GetByIdAsync(id);
+            if (discipline == null)
+            {
+                throw new KeyNotFoundException($"Discipline with ID {id} not found.");
+            }
+            return discipline;
+        }
     }
 }

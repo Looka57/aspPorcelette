@@ -73,6 +73,9 @@ builder.Services.AddScoped<ICompteService, CompteService>();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 
+builder.Services.AddScoped<ITarifRepository, TarifRepository>();
+builder.Services.AddScoped<ITarifService, TarifService>();
+
 
 
 

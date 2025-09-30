@@ -6,5 +6,6 @@ namespace ASPPorcelette.API.Services.Interfaces
     {
         Task<IEnumerable<Discipline>> GetAllDisciplinesAsync();
         Task<Discipline?> GetDisciplineByIdAsync(int id);
+        Task<Discipline> GetByIdAsync( int id);
     }
 }

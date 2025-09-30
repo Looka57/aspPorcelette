@@ -9,6 +9,7 @@ using ASPPorcelette.API.DTOs.Actualite;
 using ASPPorcelette.API.DTOs.CategorieTransaction;
 using ASPPorcelette.API.DTOs.Compte;
 using ASPPorcelette.API.DTOs.Transaction;
+using ASPPorcelette.API.DTOs.Tarif;
 
 namespace ASPPorcelette.API.MappingProfiles
 {
@@ -100,12 +101,20 @@ namespace ASPPorcelette.API.MappingProfiles
             CreateMap<Compte, CompteUpdateDto>();// 4. Entité vers DTO
 
             // / ----------------------------------------------------
-            // Mappings pour la ressource Compte
+            // Mappings pour la ressource Transaction
             // ----------------------------------------------------
             CreateMap<Transaction, TransactionDto>();  // AutoMapper mappera automatiquement Compte à CompteDto, CategorieTransaction à CategorieTransactionDto et Discipline à DisciplineDto
             CreateMap<TransactionCreateDto, Transaction>();  // 2. DTO de création vers Ent
             CreateMap<TransactionUpdateDto, Transaction>();// 3. DTO de mise à jour vers Entité (PUT/PATCH)
             CreateMap<Transaction, TransactionUpdateDto>();// 4. Entité vers DTO de mise
+
+            // / ----------------------------------------------------
+            // Mappings pour la ressource Tarif
+            // ----------------------------------------------------
+            CreateMap<Tarif, TarifDto>();  // AutoMapper mappera automatiquement Discipline à DisciplineDto
+            CreateMap<TarifCreateDto, Tarif>();  // 2. DTO de création
+            CreateMap<TarifUpdateDto, Tarif>();// 3. DTO de mise à jour vers Entité (PUT/PATCH)
+            CreateMap<Tarif, TarifUpdateDto>();// 4. Entité vers DTO
         }
     }
 }
