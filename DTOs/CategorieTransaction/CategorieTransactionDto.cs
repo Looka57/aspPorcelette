@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using ASPPorcelette.API.Models;
+using ASPPorcelette.API.Models.Enums;
 
 namespace ASPPorcelette.API.DTOs.CategorieTransaction
 {

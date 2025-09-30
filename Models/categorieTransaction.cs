@@ -1,14 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
+using ASPPorcelette.API.Models.Enums;
 
 namespace ASPPorcelette.API.Models
 {
-    // Énumération pour définir le type de transaction
-    public enum TypeFlux
-    {
-        Recette, // Entrée d'argent (Revenus)
-        Depense  // Sortie d'argent (Dépenses)
-    }
+
 
     public class CategorieTransaction
     {

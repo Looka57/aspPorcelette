@@ -67,6 +67,12 @@ builder.Services.AddScoped<IActualiteService, ActualiteService>();
 builder.Services.AddScoped<ICategorieTransactionRepository, CategorieTransactionRepository>();
 builder.Services.AddScoped<ICategorieTransactionService, CategorieTransactionService>();
 
+builder.Services.AddScoped<ICompteRepository, CompteRepository>();
+builder.Services.AddScoped<ICompteService, CompteService>();
+
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
+
 
 
 

@@ -1,40 +1,57 @@
 using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ASPPorcelette.API.Models
 {
     public class Transaction
     {
-        // Propriétés de la table (Colonnes)
+        [Key]
         public int TransactionId { get; set; }
-        public decimal Montant { get; set; } // Type recommandé pour la comptabilité
-        public DateTime DateTransaction { get; set; }
-        public string Description { get; set; }
+
+        [Required]
+        public DateTime DateTransaction { get; set; } = DateTime.UtcNow; 
+
+        // Le montant peut être positif (revenu) ou négatif (dépense)
+        [Required]
+        [Column(TypeName = "decimal(18, 2)")] // Précision monétaire
+        public decimal Montant { get; set; }
+
+        [MaxLength(500)]
+        public string? Description { get; set; }
 
         // -----------------------------------------------------------------
         // Clés Étrangères (Foreign Keys)
         // -----------------------------------------------------------------
         
-        // 1. Clé vers le Compte (Relation 1,1 côté Compte)
+        // 1. Clé étrangère vers le Compte (Transaction N-1 Compte)
+        [Required]
         public int CompteId { get; set; }
-        
-        // 2. Clé vers la Catégorie (Relation 1,1 côté CatégorieTransaction)
+
+        // 2. Clé étrangère vers la Catégorie (Transaction N-1 CatégorieTransaction)
+        [Required]
         public int CategorieTransactionId { get; set; }
+        
+        // 3. NOUVEAU: Clé étrangère vers la Discipline (Transaction N-1 Discipline)
+        // Peut être requis si toutes les transactions sont liées à une discipline (cotisations, etc.)
+        [Required] 
+        public int DisciplineId { get; set; }
 
-        // 3. Clé vers la Discipline (Relation 0,n côté Discipline : Rendue nullable)
-        public int? DisciplineId { get; set; } 
-        
-        
+
         // -----------------------------------------------------------------
-        // Propriétés de Navigation (Liens vers les Objets)
+        // Propriétés de Navigation
         // -----------------------------------------------------------------
+
+        // Le Compte concerné (Relation N-1)
+        [ForeignKey(nameof(CompteId))]
+        public Compte Compte { get; set; } = null!;
         
-        // Permet d'accéder aux détails du Compte associé
-        public Compte Compte { get; set; }
+        // La Catégorie de la transaction (Relation N-1)
+        [ForeignKey(nameof(CategorieTransactionId))]
+        public CategorieTransaction Categorie { get; set; } = null!;
 
-        // Permet d'accéder aux détails de la Catégorie associée
-        public CategorieTransaction Categorie { get; set; }
-
-        // Permet d'accéder aux détails de la Discipline associée (peut être null)
-        public Discipline? DisciplineAssociee { get; set; }
+        // NOUVEAU: La Discipline concernée (Relation N-1)
+        [ForeignKey(nameof(DisciplineId))]
+        public Discipline Discipline { get; set; } = null!;
     }
 }

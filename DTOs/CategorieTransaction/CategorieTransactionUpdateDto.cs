@@ -2,8 +2,9 @@
 // DTO de Mise à Jour (PUT/PATCH)
 using System.ComponentModel.DataAnnotations;
 using ASPPorcelette.API.Models;
+using ASPPorcelette.API.Models.Enums;
 
- public class CategorieTransactionUpdateDto
+public class CategorieTransactionUpdateDto
     {
         [MaxLength(150)]
         public string? Nom { get; set; }

@@ -1,6 +1,7 @@
 // DTO de Création (POST)
 using System.ComponentModel.DataAnnotations;
 using ASPPorcelette.API.Models;
+using ASPPorcelette.API.Models.Enums;
 
 // DTO de Création (POST)
 public class CategorieTransactionCreateDto
