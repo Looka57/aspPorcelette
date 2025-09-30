@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using ASPPorcelette.API.Models.Identity;
 
 namespace ASPPorcelette.API.Models
 {
@@ -45,7 +46,7 @@ namespace ASPPorcelette.API.Models
         public int DisciplineId { get; set; }
 
         // 2. Clé vers le compte Utilisateur (pour la connexion et l'authentification)
-        public string? UtilisateurId { get; set; }
+        public string? UserId { get; set; }
 
 
         // -----------------------------------------------------------------
@@ -56,7 +57,7 @@ namespace ASPPorcelette.API.Models
         public Discipline? DisciplinePrincipale { get; set; }
 
         // Permet d'accéder au compte Utilisateur lié (peut être null)
-        public User? Utilisateur { get; set; }
+        public User? User { get; set; }
 
         // Relation 1-à-N : Liste des cours que ce Sensei enseigne
         public ICollection<Cours> CoursEnseignes { get; set; } = new List<Cours>();

@@ -1,29 +1,28 @@
 using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 
-namespace ASPPorcelette.API.Models
+namespace ASPPorcelette.API.Models.Identity
 {
-    // C'est votre classe d'utilisateur principale pour l'authentification
+    // Le modèle User hérite des fonctionnalités de base de l'authentification (Id, Email, UserName, HashPassword, etc.)
     public class User : IdentityUser
     {
-        // Propriétés personnelles ajoutées
+        // Propriétés de base de l'utilisateur (utiles même s'il n'est pas Sensei)
+
+        [Required]
+        [MaxLength(100)]
         public string Nom { get; set; }
+
+        [Required]
+        [MaxLength(100)]
         public string Prenom { get; set; }
 
-        // -----------------------------------------------------------------
-        // Clé Étrangère (Foreign Key)
-        // -----------------------------------------------------------------
+        // --- RELATIONS ---
 
-        // Lien vers le profil détaillé du Sensei (nullable car l'utilisateur n'est pas forcément un Sensei)
-        public int? SenseiId { get; set; }
-        // Note : Vous n'avez pas besoin de [ForeignKey] si vous utilisez la convention de nommage par défaut (SenseiId)
-
-        // -----------------------------------------------------------------
-        // Propriété de Navigation (Lien)
-        // -----------------------------------------------------------------
-
-        // Permet d'accéder au profil Sensei détaillé
-        public Sensei? SenseiProfil { get; set; }
-
-
+        // Propriété de navigation pour le profil Sensei (Relation One-to-One)
+        // La clé étrangère (UserId) est définie sur l'entité Sensei elle-même.
+        public Sensei? Sensei { get; set; }
+        
+        [Required]
+        public DateTime DateCreation { get; set; }
     }
 }
