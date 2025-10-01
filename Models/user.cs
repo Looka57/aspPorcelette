@@ -17,10 +17,6 @@ namespace ASPPorcelette.API.Models.Identity
         public string Prenom { get; set; }
 
         // --- RELATIONS ---
-
-        // Propriété de navigation pour le profil Sensei (Relation One-to-One)
-        // La clé étrangère (UserId) est définie sur l'entité Sensei elle-même.
-        public Sensei? Sensei { get; set; }
         
         [Required]
         public DateTime DateCreation { get; set; }

@@ -9,23 +9,35 @@ using ASPPorcelette.API.Repository.Implementation;
 using ASPPorcelette.API.MappingProfiles;
 using ASPPorcelette.API.Services.Interfaces;
 using ASPPorcelette.API.Services.Implementation;
+using ASPPorcelette.API.Models.Identity;
+using ASPPorcelette.API.Services.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer; // Ajouté
+using Microsoft.IdentityModel.Tokens; // Ajouté
+using System.Text;
+using ASPPorcelette.API.Seed;
+using ASPPorcelette.API.Model; // Ajouté
 
 var builder = WebApplication.CreateBuilder(args);
 
 // --- 1. CONFIGURATION DE LA BASE DE DONNÉES (DBContext) ---
+builder.Services.Configure<JwtSettings>(
+    builder.Configuration.GetSection("JwtSettings"));
+
+builder.Services.AddScoped<ITokenService, TokenService>(); 
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
     ?? throw new InvalidOperationException("La chaîne de connexion 'DefaultConnection' n'a pas été trouvée.");
 
+// ApplicationDbContext gère à la fois vos modèles d'application ET les tables Identity
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// --- 2. CONFIGURATION D'ASP.NET IDENTITY ---
+// --- 2. CONFIGURATION D'ASP.NET IDENTITY (VERSION CORRIGÉE) ---
 
-// !! CORRECTION IMPORTANTE !! Utiliser ApplicationUser au lieu de User
+// On utilise UNIQUEMENT AddIdentity qui inclut les User Manager, Role Manager, etc.
 builder.Services.AddIdentity<User, IdentityRole>(options =>
     {
-        // Configuration de la robustesse du mot de passe (à adapter selon vos besoins)
+        // Configuration de la robustesse du mot de passe
         options.Password.RequireDigit = true;
         options.Password.RequireLowercase = true;
         options.Password.RequireUppercase = true;
@@ -33,7 +45,7 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
         options.Password.RequiredLength = 8;
         options.User.RequireUniqueEmail = true;
     })
-    .AddEntityFrameworkStores<ApplicationDbContext>() // Utilise EF Core pour stocker les données Identity
+    .AddEntityFrameworkStores<ApplicationDbContext>() // Pointe UNIQUEMENT vers ApplicationDbContext
     .AddDefaultTokenProviders(); 
 
 // --- 3. CONFIGURATION DES SERVICES (Vos couches Repository et Service) ---
@@ -80,10 +92,14 @@ builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<ITarifRepository, TarifRepository>();
 builder.Services.AddScoped<ITarifService, TarifService>();
 
+// Enregistrement des services d'authentification
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 
 
-// Si vous utilisez un modèle avec le dossier 'Repository.Interfaces' etc., ajustez les 'using' ci-dessus.
+
+
 
 // Program.cs
 
@@ -94,19 +110,76 @@ builder.Services.AddControllers()
     {
         options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
     });
-    
 
-// ...
+// 4. Configuration de l'Authentification JWT
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"], // Doit correspondre à la valeur dans appsettings.json
+            ValidAudience = builder.Configuration["Jwt:Audience"], // Doit correspondre à la valeur dans appsettings.json
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)) // Doit correspondre à la clé secrète
+        };
+    });
+    
+    
 
 
 // Ajout des services Swagger
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    // Ajout de la configuration pour que Swagger comprenne le JWT
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "ASPPorcelette API", Version = "v1" });
+    options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = JwtBearerDefaults.AuthenticationScheme,
+        Description = "Entrez 'Bearer ' suivi de votre jeton JWT."
+    });
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = JwtBearerDefaults.AuthenticationScheme
+                },
+                Scheme = "oauth2",
+                Name = JwtBearerDefaults.AuthenticationScheme,
+                In = ParameterLocation.Header
+            },
+            new List<string>()
+        }
+    });
+});
 
 
 var app = builder.Build();
 
+
+
 // --- 5. CONFIGURATION DU PIPELINE HTTP ---
+
+// --- Exécution du Seeding des Rôles (Ajouté) ---
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    // Assurez-vous que la classe AuthDbContextSeed existe et contient la méthode SeedRolesAsync
+    await AuthDbContextSeed.SeedRolesAsync(roleManager);
+}
+// --- Fin du Seeding ---
+
 
 // Si l'environnement est en Développement, on active le Swagger UI
 if (app.Environment.IsDevelopment())
@@ -118,7 +191,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// app.UseHttpsRedirection(); // Cette ligne est souvent commentée en dev pour simplifier les tests localhost
+// app.UseHttpsRedirection(); 
 
 // Les services d'authentification et d'autorisation sont cruciaux pour une API sécurisée
 app.UseAuthentication();

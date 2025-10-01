@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using ASPPorcelette.API.Models;
+using ASPPorcelette.API.Models.Identity;
 
 namespace ASPPorcelette.API.Data
 {
