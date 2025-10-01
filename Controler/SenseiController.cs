@@ -1,13 +1,20 @@
 using ASPPorcelette.API.Models.Identity;
-using ASPPorcelette.API.Models.Identity.Dto; // Doit contenir AuthResultDto
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
 
-// Nous avons besoin de cette classe DTO pour le corps de la requête du service.
+// Importation des DTOs spécifiques
 using RegisterRequestDto = ASPPorcelette.API.Models.DTOs.RegisterRequestDto; 
 using AuthResultDto = ASPPorcelette.API.Models.Identity.Dto.AuthResultDto;
+
 using ASPPorcelette.API.Services.Identity;
+using ASPPorcelette.API.Services; 
+using Microsoft.AspNetCore.Http;
+using ASPPorcelette.API.Models.Identity.Dto;
+using ASPPorcelette.DTOs; // Nécessaire pour StatusCodes
 
 namespace ASPPorcelette.API.Controllers
 {
@@ -19,16 +26,49 @@ namespace ASPPorcelette.API.Controllers
     {
         private readonly UserManager<User> _userManager;
         private readonly IAuthService _authService; 
+        private readonly ISenseiService _senseiService; // Injecté pour l'orchestration métier
 
-        public SenseiController(UserManager<User> userManager, IAuthService authService)
+        // Constructeur mis à jour pour injecter ISenseiService
+        public SenseiController(
+            UserManager<User> userManager, 
+            IAuthService authService,
+            ISenseiService senseiService)
         {
             _userManager = userManager;
             _authService = authService;
+            _senseiService = senseiService;
         }
 
+
+        // POST: api/Sensei/CreateUserWithProfile
+        /// <summary>
+        /// Crée un nouvel utilisateur et lui associe immédiatement un profil métier (Adherent ou Sensei). 
+        /// Utilise le service d'orchestration ISenseiService.
+        /// </summary>
+        [HttpPost("CreateUserWithProfile")] // Nom de route clarifié
+        public async Task<IActionResult> CreateUserWithProfile([FromBody] UserCreationDto model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            
+            // Appel au service d'orchestration (utilise l'instance injectée)
+            var result = await _senseiService.CreateUserWithProfileAsync(model);
+            
+            if (result.Succeeded)
+            {
+                return Ok(new { Message = "Utilisateur et profil créés avec succès." });
+            }
+            else
+            {
+                return BadRequest(new { Errors = result.Errors });
+            }
+        }
+        
         // GET: api/Sensei/ListUsers
         /// <summary>
-        /// Liste tous les utilisateurs et leurs rôles (Sensei et Students).
+        /// Liste tous les utilisateurs et leurs rôles.
         /// </summary>
         [HttpGet("ListUsers")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserInfoDto>))]
@@ -52,24 +92,22 @@ namespace ASPPorcelette.API.Controllers
             return Ok(userList);
         }
 
-        // POST: api/Sensei/CreateUser
+        // POST: api/Sensei/RegisterUserWithRole
         /// <summary>
-        /// Crée un nouvel utilisateur (Student ou Sensei) avec le rôle spécifié.
-        /// Nécessite le rôle 'Sensei'.
+        /// Crée un nouvel utilisateur Identity et lui assigne un rôle (sans créer de profil métier associé).
+        /// Utilise le service d'authentification IAuthService.
         /// </summary>
-        [HttpPost("CreateUser")]
+        [HttpPost("RegisterUserWithRole")] // Nom de route clarifié
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AuthResultDto))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> CreateUser([FromBody] RegisterWithRoleDto model)
+        public async Task<IActionResult> RegisterUserWithRole([FromBody] RegisterWithRoleDto model)
         {
             // Vérifie que le rôle est valide
-            if (model.Role != "Student" && model.Role != "Sensei")
+            if (model.Role != "Adherent" && model.Role != "Sensei")
             {
-                // Utilisation de AuthResultDto
-                return BadRequest(new AuthResultDto { Errors = new[] { "Rôle non valide. Doit être 'Student' ou 'Sensei'." }, IsSuccess = false });
+                return BadRequest(new AuthResultDto { Errors = new[] { "Rôle non valide. Doit être 'Adherent' ou 'Sensei'." }, IsSuccess = false });
             }
 
-            // Le service d'authentification doit renvoyer un AuthResultDto
             var result = await _authService.RegisterAsync(
                 new RegisterRequestDto 
                 {
@@ -79,13 +117,11 @@ namespace ASPPorcelette.API.Controllers
                 model.Role 
             ); 
 
-            // Utilisation de AuthResultDto pour la vérification et le retour
             if (result.IsSuccess)
             {
                 return Ok(new AuthResultDto { IsSuccess = true, UserId = result.UserId });
             }
 
-            // Ici, nous accédons à result.Errors et result.IsSuccess, ce qui nécessite AuthResultDto.
             return BadRequest(new AuthResultDto { Errors = result.Errors, IsSuccess = false });
         }
 
@@ -105,7 +141,7 @@ namespace ASPPorcelette.API.Controllers
                 return NotFound($"Utilisateur avec l'ID {userId} non trouvé.");
             }
             
-            // Sécurité : Interdire au Sensei de se supprimer lui-même (facultatif mais recommandé)
+            // Sécurité : Interdire au Sensei de se supprimer lui-même
             if (user.Id == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
             {
                 return BadRequest("Vous ne pouvez pas supprimer votre propre compte Sensei.");

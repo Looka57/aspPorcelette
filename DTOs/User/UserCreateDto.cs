@@ -1,33 +1,39 @@
 using System.ComponentModel.DataAnnotations;
+using System;
 
-namespace ASPPorcelette.API.DTOs.User
+namespace ASPPorcelette.DTOs // Remplacez par votre namespace
 {
-    // Utilisé pour l'enregistrement (inscription) d'un nouvel utilisateur
-    public class UserCreateDto
+    /// <summary>
+    /// DTO utilisé pour la création unifiée d'un utilisateur ET de son profil métier (Adherent ou Sensei).
+    /// </summary>
+    public class UserCreationDto
     {
-        // --- Informations d'Authentification ---
-        
-        [Required(ErrorMessage = "L'adresse e-mail est requise.")]
-        [EmailAddress(ErrorMessage = "Format d'adresse e-mail invalide.")]
-        public string Email { get; set; } = string.Empty;
+        // Propriétés requises pour le compte User (Identity)
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
 
-        [Required(ErrorMessage = "Le mot de passe est requis.")]
-        [StringLength(100, ErrorMessage = "Le mot de passe doit contenir au moins {2} caractères.", MinimumLength = 6)]
+        [Required]
         [DataType(DataType.Password)]
-        public string Password { get; set; } = string.Empty;
+        [StringLength(100, ErrorMessage = "Le {0} doit faire au moins {2} caractères de long.", MinimumLength = 6)]
+        public string Password { get; set; }
 
-        // --- Informations de Profil ---
+        // Propriétés communes (pour User et Profil)
+        [Required]
+        public string Prenom { get; set; }
         
-        [Required(ErrorMessage = "Le prénom est requis.")]
-        public string Prenom { get; set; } = string.Empty;
+        [Required]
+        public string Nom { get; set; }
 
-        [Required(ErrorMessage = "Le nom est requis.")]
-        public string Nom { get; set; } = string.Empty;
-        
-        // Le nom d'utilisateur est souvent utilisé comme pseudo, peut être optionnel ou requis selon la politique
-        public string? Username { get; set; }
+        // Propriété de décision pour le profil à créer
+        [Required]
+        public bool IsSensei { get; set; } 
 
-        [Phone(ErrorMessage = "Format de numéro de téléphone invalide.")]
-        public string? Telephone { get; set; }
+        // Propriétés spécifiques aux profils métier (Adherent ou Sensei)
+        // Ajoutez ici les autres champs pertinents que vous avez sur Sensei et Adherent
+        public string Telephone { get; set; }
+        public DateTime? DateAdhesion { get; set; } 
+        public string Grade { get; set; } // Par exemple, "Kyu 4" ou "Ceinture Noire"
+        public string Bio { get; set; }
     }
 }

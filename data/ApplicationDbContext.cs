@@ -22,14 +22,22 @@ namespace ASPPorcelette.API.Data
         public DbSet<Evenement> Evenements { get; set; }
         public DbSet<Horaire> Horaires { get; set; }
         public DbSet<Sensei> Senseis { get; set; }
+        public DbSet<Sensei> SenseiProfiles { get; set; } 
         public DbSet<Tarif> Tarifs { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<TypeEvenement> TypeEvenements { get; set; }
-        public DbSet<User> User { get; set; }
+        // public DbSet<User> User { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+             // L'Adhérent est le profil détaillé associé au compte User (AspNetUsers)
+            modelBuilder.Entity<Adherent>()
+                .HasOne(a => a.User) // L'Adherent a une propriété de navigation vers User
+                .WithOne() // Relation One-to-One sans propriété de navigation inverse dans User
+                .HasForeignKey<Adherent>(a => a.UserId) // La clé étrangère se trouve dans la table Adherent
+                .IsRequired(false);
 
             // Relation N-N Adherent ↔ Discipline via Apprendre
             modelBuilder.Entity<Apprendre>()
