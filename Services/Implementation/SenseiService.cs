@@ -6,25 +6,32 @@ using System.Linq;
 using System.Threading.Tasks;
 
 // Assurez-vous que les using correspondent à l'emplacement de vos DTOs et Modèles
-using ASPPorcelette.DTOs; // UserCreationDto
-using ASPPorcelette.API.DTOs;
+using ASPPorcelette.DTOs; // UserCreationDto (Si c'est le namespace racine)
 using ASPPorcelette.API.DTOs.Sensei;
-using ASPPorcelette.API.Models;
-using ASPPorcelette.API.Models.Identity;
-using ASPPorcelette.API.Data;
+using ASPPorcelette.API.Models; // Sensei/Adherent
+using ASPPorcelette.API.Models.Identity; // User
+using ASPPorcelette.API.Data; // ApplicationDbContext
 using UserUpdateDto = ASPPorcelette.API.DTOs.User.UserUpdateDto; // Le DTO commun pour la mise à jour
 using System;
+using ASPPorcelette.API.DTOs;
 
 namespace ASPPorcelette.API.Services
 {
-    public class SenseiService : ISenseiService 
+    // Note : L'interface ISenseiService est supposée définie ci-dessous.
+
+    public class SenseiService : ISenseiService
     {
         private readonly UserManager<User> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager; // Ajouté pour gestion des rôles si nécessaire
         private readonly ApplicationDbContext _context; // Votre DbContext
 
-        public SenseiService(UserManager<User> userManager, ApplicationDbContext context)
+        public SenseiService(
+            UserManager<User> userManager,
+            RoleManager<IdentityRole> roleManager, // Injecter RoleManager est une bonne pratique
+            ApplicationDbContext context)
         {
             _userManager = userManager;
+            _roleManager = roleManager;
             _context = context;
         }
 
@@ -46,97 +53,139 @@ namespace ASPPorcelette.API.Services
 
             if (!result.Succeeded)
             {
-                return result; 
+                return result;
             }
+
+            // On s'assure que le rôle Adherent existe
+            if (!await _roleManager.RoleExistsAsync("Adherent"))
+            {
+                await _roleManager.CreateAsync(new IdentityRole("Adherent"));
+            }
+            // On s'assure que le rôle Sensei existe
+            if (!await _roleManager.RoleExistsAsync("Sensei"))
+            {
+                await _roleManager.CreateAsync(new IdentityRole("Sensei"));
+            }
+
 
             // 2. CRÉATION ET LIAISON DU PROFIL MÉTIER (Adherent ou Sensei)
             string newUserId = user.Id;
 
-            if (dto.IsSensei)
+            try
             {
-                var senseiProfile = new Sensei
+                if (dto.IsSensei)
                 {
-                    UserId = newUserId, 
-                    Nom = dto.Nom,
-                    Prenom = dto.Prenom,
-                    Email = dto.Email,
-                    Grade = dto.Grade,
-                    Bio = dto.Bio
-                };
+                    // Utiliser le DTO Sensei spécifique ici si besoin, sinon UserCreationDto
+                    var senseiProfile = new Sensei
+                    {
+                        UserId = newUserId,
+                        Nom = dto.Nom,
+                        Prenom = dto.Prenom,
+                        Email = dto.Email,
+                        Grade = dto.Grade, // Supposé exister sur UserCreationDto
+                        Bio = dto.Bio // Supposé exister sur UserCreationDto
+                    };
 
-                // NOTE: J'utilise 'Senseis' ou 'Adherents' en supposant que ce sont les noms de vos DbSet.
-                _context.Senseis.Add(senseiProfile); 
-                await _userManager.AddToRoleAsync(user, "Sensei"); 
+                    _context.Senseis.Add(senseiProfile);
+                    await _userManager.AddToRoleAsync(user, "Sensei");
+                }
+                else
+                {
+                    var adherentProfile = new Adherent
+                    {
+                        UserId = newUserId,
+                        Nom = dto.Nom,
+                        Prenom = dto.Prenom,
+                        Email = dto.Email,
+                        // Assurez-vous que Telephone/DateAdhesion sont gérés correctement s'ils sont dans le DTO
+                        Telephone = dto.Telephone,
+                        DateAdhesion = dto.DateAdhesion ?? DateTime.UtcNow
+                    };
+
+                    _context.Adherents.Add(adherentProfile);
+                    await _userManager.AddToRoleAsync(user, "Adherent");
+                }
+
+                // 3. SAUVEGARDE DANS LA BASE DE DONNÉES (DbContext)
+                await _context.SaveChangesAsync();
+
+                return IdentityResult.Success;
             }
-            else
+            catch (Exception ex)
             {
-                var adherentProfile = new Adherent
-                {
-                    UserId = newUserId, 
-                    Nom = dto.Nom,
-                    Prenom = dto.Prenom,
-                    Email = dto.Email,
-                    Telephone = dto.Telephone,
-                    DateAdhesion = dto.DateAdhesion ?? DateTime.UtcNow 
-                };
+                // **POINT CRITIQUE : ANNULER LA CRÉATION USER EN CAS D'ÉCHEC DE LA BDD MÉTIER**
+                // Si la sauvegarde du profil métier échoue (e.g., contrainte violée), on supprime 
+                // l'utilisateur Identity pour éviter un compte orphelin.
+                await _userManager.DeleteAsync(user);
 
-                _context.Adherents.Add(adherentProfile); 
-                await _userManager.AddToRoleAsync(user, "Adherent"); 
+                // Loguer l'erreur (ex) ici est fortement recommandé
+
+                return IdentityResult.Failed(new IdentityError { Description = $"Erreur lors de la création du profil métier : {ex.Message}" });
             }
-
-            // 3. SAUVEGARDE DANS LA BASE DE DONNÉES (DbContext)
-            await _context.SaveChangesAsync();
-
-            return IdentityResult.Success;
         }
 
         // ----------------------------------------------------------------------
-        // NOUVELLE MÉTHODE 2 : MISE À JOUR DU PROFIL COMMUN (Sensei OU Adherent)
+        // MÉTHODE 2 : MISE À JOUR DU PROFIL COMMUN (Sensei OU Adherent)
         // ----------------------------------------------------------------------
         public async Task<IdentityResult> UpdateUserProfileAsync(string userId, UserUpdateDto dto)
         {
+            // 1. Trouver l'utilisateur Identity 
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return IdentityResult.Failed(new IdentityError { Description = "Utilisateur Identity non trouvé." });
+            }
+
             try
             {
-                // 1. Trouver l'utilisateur Identity pour obtenir son rôle
-                var user = await _userManager.FindByIdAsync(userId);
-                if (user == null)
-                {
-                    return IdentityResult.Failed(new IdentityError { Description = "Utilisateur Identity non trouvé." });
-                }
+                // Mise à jour des champs communs Identity (Nom/Prénom)
+                user.Prenom = dto.Prenom ?? user.Prenom;
+                user.Nom = dto.Nom ?? user.Nom;
 
-                var roles = await _userManager.GetRolesAsync(user);
-                var isSensei = roles.Contains("Sensei");
-                var isAdherent = roles.Contains("Adherent");
-
-                // 2. Mise à jour des champs communs (Nom/Prénom) dans l'objet Identity (si vous stockez ces champs là aussi)
-                user.Prenom = dto.Prenom;
-                user.Nom = dto.Nom;
-                // Si l'Username est modifiable, mettez à jour l'Username Identity
+                // Mise à jour de l'Username Identity
                 if (!string.IsNullOrEmpty(dto.Username) && user.UserName != dto.Username)
                 {
                     var usernameResult = await _userManager.SetUserNameAsync(user, dto.Username);
                     if (!usernameResult.Succeeded) return usernameResult;
                 }
+
+                // Mise à jour de l'Email Identity
+                if (!string.IsNullOrEmpty(dto.Email) && user.Email != dto.Email)
+                {
+                    // L'email doit être géré avec un jeton si vous voulez un processus de confirmation
+                    // Pour simplifier, on le change directement ici, mais la vérification est désactivée
+                    user.Email = dto.Email;
+                }
+
                 var identityUpdateResult = await _userManager.UpdateAsync(user);
                 if (!identityUpdateResult.Succeeded) return identityUpdateResult;
 
 
                 // 3. Mise à jour spécifique au rôle dans la table métier
+                var roles = await _userManager.GetRolesAsync(user);
+                var isSensei = roles.Contains("Sensei");
+                var isAdherent = roles.Contains("Adherent");
+
                 if (isSensei)
                 {
                     var senseiProfile = await _context.Senseis.FirstOrDefaultAsync(s => s.UserId == userId);
 
                     if (senseiProfile == null)
                     {
-                        return IdentityResult.Failed(new IdentityError { Description = "Profil Sensei non trouvé pour cet utilisateur." });
+                        // Si le profil métier manque, on ne doit pas échouer l'update Identity, 
+                        // mais on peut loguer un avertissement/erreur.
+                        return IdentityResult.Failed(new IdentityError { Description = "Profil Sensei métier non trouvé." });
                     }
 
                     // Mapping des champs du DTO vers l'entité Sensei
-                    senseiProfile.Prenom = dto.Prenom;
-                    senseiProfile.Nom = dto.Nom;
+                    senseiProfile.Prenom = dto.Prenom ?? senseiProfile.Prenom;
+                    senseiProfile.Nom = dto.Nom ?? senseiProfile.Nom;
                     senseiProfile.Telephone = dto.Telephone;
-                    senseiProfile.PhotoUrl = dto.PhotoUrl; 
-                    
+                    senseiProfile.PhotoUrl = dto.PhotoUrl;
+                    // Ajoutez ici les champs spécifiques à Sensei (Grade, Bio, etc.)
+                    // senseiProfile.Grade = dto.Grade ?? senseiProfile.Grade; 
+                    // senseiProfile.Bio = dto.Bio ?? senseiProfile.Bio; 
+
                     _context.Senseis.Update(senseiProfile);
                 }
                 else if (isAdherent)
@@ -145,21 +194,20 @@ namespace ASPPorcelette.API.Services
 
                     if (adherentProfile == null)
                     {
-                        return IdentityResult.Failed(new IdentityError { Description = "Profil Adherent non trouvé pour cet utilisateur." });
+                        return IdentityResult.Failed(new IdentityError { Description = "Profil Adherent métier non trouvé." });
                     }
 
                     // Mapping des champs du DTO vers l'entité Adherent
-                    adherentProfile.Prenom = dto.Prenom;
-                    adherentProfile.Nom = dto.Nom;
-                    // adherentProfile.Telephone = dto.Telephone;
-                    // adherentProfile.PhotoUrl = dto.PhotoUrl;
-                    
+                    adherentProfile.Prenom = dto.Prenom ?? adherentProfile.Prenom;
+                    adherentProfile.Nom = dto.Nom ?? adherentProfile.Nom;
+                    adherentProfile.Telephone = dto.Telephone;
+
                     _context.Adherents.Update(adherentProfile);
                 }
                 else
                 {
-                    // L'utilisateur existe dans Identity, mais n'a pas de rôle Sensei/Adherent
-                    return IdentityResult.Failed(new IdentityError { Description = "L'utilisateur n'a pas de rôle de profil reconnu (Sensei ou Adherent)." });
+                    // L'utilisateur est mis à jour dans Identity, mais aucun profil métier n'a été trouvé.
+                    // On retourne le succès pour l'Identity, mais on pourrait retourner une alerte.
                 }
 
                 // 4. Sauvegarder les changements dans la base de données métier (Sensei/Adherent)
@@ -169,19 +217,19 @@ namespace ASPPorcelette.API.Services
             }
             catch (Exception ex)
             {
-                 // Gestion des erreurs générales, y compris les erreurs de DbUpdateException
+                // Gestion des erreurs générales
                 return IdentityResult.Failed(new IdentityError { Description = $"Une erreur inattendue est survenue lors de la mise à jour du profil : {ex.Message}" });
             }
         }
 
-        // ----------------------------------------------------
-        // Implémentations des méthodes existantes (Stubs)
-        // ----------------------------------------------------
-        public Task<IEnumerable<Sensei>> GetAllSenseisAsync() => throw new NotImplementedException();
-        public Task<Sensei?> GetSenseiByIdAsync(int id) => throw new NotImplementedException();
-        public Task<Sensei> CreateSenseiAsync(Sensei sensei) => throw new NotImplementedException();
-        public Task<Sensei> UpdateSenseiAsync(Sensei sensei) => throw new NotImplementedException();
-        public Task<(Sensei? Sensei, bool Success)> PartialUpdateSenseiAsync(int id, JsonPatchDocument<SenseiUpdateDto> patchDocument) => throw new NotImplementedException();
-        public Task<Sensei> DeleteSenseiAsync(int id) => throw new NotImplementedException();
+        // ----------------------------------------------------
+        // Implémentations des méthodes existantes (Stubs)
+        // ----------------------------------------------------
+        public Task<IEnumerable<ASPPorcelette.API.Models.Sensei>> GetAllSenseisAsync() => throw new NotImplementedException();
+        public Task<ASPPorcelette.API.Models.Sensei?> GetSenseiByIdAsync(int id) => throw new NotImplementedException();
+        public Task<ASPPorcelette.API.Models.Sensei> CreateSenseiAsync(ASPPorcelette.API.Models.Sensei sensei) => throw new NotImplementedException();
+        public Task<ASPPorcelette.API.Models.Sensei> UpdateSenseiAsync(ASPPorcelette.API.Models.Sensei sensei) => throw new NotImplementedException();
+        public Task<(ASPPorcelette.API.Models.Sensei? Sensei, bool Success)> PartialUpdateSenseiAsync(int id, JsonPatchDocument<SenseiUpdateDto> patchDocument) => throw new NotImplementedException();
+        public Task<ASPPorcelette.API.Models.Sensei> DeleteSenseiAsync(int id) => throw new NotImplementedException();
     }
 }

@@ -2,25 +2,25 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ASPPorcelette.API.DTOs.User
 {
-    // Utilisé pour la modification des informations de profil de base (Nom, Prénom, Téléphone)
+    // DTO utilisé pour la mise à jour du profil par l'utilisateur connecté.
+    // Tous les champs sont optionnels car l'utilisateur ne les envoie pas tous à chaque fois.
     public class UserUpdateDto
     {
-        [Required(ErrorMessage = "Le prénom est requis.")]
-        public string Prenom { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "Le nom est requis.")]
-        public string Nom { get; set; } = string.Empty;
-
-        
-        
-        // Le nom d'utilisateur pourrait être optionnel si non modifiable
-        public string? Username { get; set; }
-
-        // Le numéro de téléphone est souvent modifiable
-        [Phone(ErrorMessage = "Format de numéro de téléphone invalide.")]
-        public string? Telephone { get; set; }
-        
-        // L'URL de la photo de profil (si nous laissons l'utilisateur la définir)
+        // Champs Identity communs
+        public string? Email { get; set; }
+        public string? Username { get; set; } 
+        public string? Nom { get; set; }
+        public string? Prenom { get; set; }
         public string? PhotoUrl { get; set; }
+        public string? Telephone { get; set; }
+
+        // Mots de passe pour le changement de mot de passe (optionnel)
+        public string? CurrentPassword { get; set; }
+        public string? NewPassword { get; set; }
+        
+        // Champs spécifiques à Sensei (si vous les gérez via la même route d'update)
+        public string? Bio { get; set; }
+        public string? Grade { get; set; }
+        // ... ajoutez d'autres champs spécifiques ici
     }
 }
