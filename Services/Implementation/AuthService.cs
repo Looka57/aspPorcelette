@@ -1,18 +1,16 @@
-using ASPPorcelette.API.Models.DTOs;
 using ASPPorcelette.API.Models.Identity;
-using ASPPorcelette.API.Models.Identity.Dto; // Importation nécessaire pour AuthResultDto
+using ASPPorcelette.API.Models.Identity.Dto;
 using Microsoft.AspNetCore.Identity;
+using System;
+using System.Linq;
 using System.Threading.Tasks;
-using System.Linq; // Nécessaire pour Select().ToArray()
-using System; // Nécessaire pour Array.Empty<string>()
 
 namespace ASPPorcelette.API.Services.Identity
 {
-    // Le type de retour est maintenant cohérent avec IAuthService
     public class AuthService : IAuthService
     {
         private readonly UserManager<User> _userManager;
-        private readonly ITokenService _tokenService; // Assurez-vous que cette dépendance est disponible
+        private readonly ITokenService _tokenService;
 
         public AuthService(UserManager<User> userManager, ITokenService tokenService)
         {
@@ -20,14 +18,15 @@ namespace ASPPorcelette.API.Services.Identity
             _tokenService = tokenService;
         }
 
-        // Le type de retour correspond à l'interface
-        public async Task<AuthResultDto?> RegisterAsync(RegisterRequestDto request, string role)
+        /// <summary>
+        /// Inscription d'un nouvel utilisateur avec attribution de rôle
+        /// </summary>
+        public async Task<AuthResultDto> RegisterAsync(RegisterRequestDto request, string role)
         {
             // 1. Vérifier si l'utilisateur existe déjà
             var existingUser = await _userManager.FindByEmailAsync(request.Email);
             if (existingUser != null)
             {
-                // Retourne un échec au lieu de null, avec un message d'erreur
                 return new AuthResultDto
                 {
                     IsSuccess = false,
@@ -38,10 +37,12 @@ namespace ASPPorcelette.API.Services.Identity
             // 2. Créer l'objet utilisateur
             var newUser = new User
             {
-                // Si UserName n'est pas dans le DTO de requête, utilisez l'Email
-                UserName = request.Email,
+                UserName = request.UserName ?? request.Email,
                 Email = request.Email,
-                EmailConfirmed = true
+                Nom = request.Nom,
+                Prenom = request.Prenom,
+                EmailConfirmed = true,
+                SecurityStamp = Guid.NewGuid().ToString()
             };
 
             // 3. Créer l'utilisateur dans la base de données
@@ -49,7 +50,6 @@ namespace ASPPorcelette.API.Services.Identity
 
             if (!result.Succeeded)
             {
-                // Retourne les erreurs Identity en cas d'échec de création
                 return new AuthResultDto
                 {
                     IsSuccess = false,
@@ -58,24 +58,40 @@ namespace ASPPorcelette.API.Services.Identity
             }
 
             // 4. Attribuer le rôle spécifié
-            await _userManager.AddToRoleAsync(newUser, role);
+            var roleResult = await _userManager.AddToRoleAsync(newUser, role);
+            if (!roleResult.Succeeded)
+            {
+                // Supprimer l'utilisateur si l'attribution du rôle échoue
+                await _userManager.DeleteAsync(newUser);
+                return new AuthResultDto
+                {
+                    IsSuccess = false,
+                    Errors = roleResult.Errors.Select(e => e.Description).ToArray()
+                };
+            }
 
             // 5. Générer le token JWT
             var token = await _tokenService.CreateTokenAsync(newUser);
 
-            // 6. Retourner la réponse de succès (AuthResultDto)
+            // 6. Récupérer les rôles pour la réponse
+            var roles = await _userManager.GetRolesAsync(newUser);
+
+            // 7. Retourner la réponse de succès
             return new AuthResultDto
             {
                 IsSuccess = true,
                 UserId = newUser.Id,
                 Email = newUser.Email!,
                 Token = token,
+                Roles = roles.ToList(),
                 Errors = Array.Empty<string>()
             };
         }
 
-        // Le type de retour correspond à l'interface
-        public async Task<AuthResultDto?> LoginAsync(LoginDto request)
+        /// <summary>
+        /// Connexion d'un utilisateur existant
+        /// </summary>
+        public async Task<AuthResultDto> LoginAsync(LoginDto request)
         {
             // 1. Trouver l'utilisateur par Email
             var user = await _userManager.FindByEmailAsync(request.Email);
@@ -85,7 +101,7 @@ namespace ASPPorcelette.API.Services.Identity
                 return new AuthResultDto
                 {
                     IsSuccess = false,
-                    Errors = new[] { "Identifiants invalides (email ou mot de passe incorrect)." }
+                    Errors = new[] { "Identifiants invalides." }
                 };
             }
 
@@ -97,54 +113,57 @@ namespace ASPPorcelette.API.Services.Identity
                 return new AuthResultDto
                 {
                     IsSuccess = false,
-                    Errors = new[] { "Identifiants invalides (email ou mot de passe incorrect)." }
+                    Errors = new[] { "Identifiants invalides." }
                 };
             }
 
             // 3. Générer le token JWT
             var token = await _tokenService.CreateTokenAsync(user);
 
-            // 4. Retourner la réponse de succès (AuthResultDto)
+            // 4. Récupérer les rôles de l'utilisateur
+            var roles = await _userManager.GetRolesAsync(user);
+
+            // 5. Retourner la réponse de succès
             return new AuthResultDto
             {
                 IsSuccess = true,
                 UserId = user.Id,
                 Email = user.Email!,
                 Token = token,
+                Roles = roles.ToList(),
                 Errors = Array.Empty<string>()
             };
         }
-        
-         public async Task<bool> UpdateUserRoleAsync(string userId, string newRole)
+
+        /// <summary>
+        /// Met à jour le rôle d'un utilisateur (remplace tous les rôles existants)
+        /// </summary>
+        public async Task<bool> UpdateUserRoleAsync(string userId, string newRole)
         {
             var user = await _userManager.FindByIdAsync(userId);
 
             if (user == null)
             {
-                return false; // Utilisateur non trouvé
+                return false;
             }
 
             // 1. Récupérer les rôles actuels
             var currentRoles = await _userManager.GetRolesAsync(user);
 
             // 2. Supprimer tous les rôles actuels
-            var removeResult = await _userManager.RemoveFromRolesAsync(user, currentRoles);
-            if (!removeResult.Succeeded)
+            if (currentRoles.Any())
             {
-                // Enregistrez une erreur ou retournez false si la suppression échoue
-                // (Exemple : _logger.LogError($"Échec de la suppression des rôles pour l'utilisateur {userId}: {removeResult.Errors.First().Description}");)
-                return false;
+                var removeResult = await _userManager.RemoveFromRolesAsync(user, currentRoles);
+                if (!removeResult.Succeeded)
+                {
+                    return false;
+                }
             }
 
             // 3. Ajouter le nouveau rôle
             var addResult = await _userManager.AddToRoleAsync(user, newRole);
-            if (!addResult.Succeeded)
-            {
-                // Enregistrez une erreur si l'ajout échoue
-                return false;
-            }
-
-            return true; // Succès
+            
+            return addResult.Succeeded;
         }
     }
 }

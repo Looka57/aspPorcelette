@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using ASPPorcelette.API.DTOs.Adherent;
 using ASPPorcelette.API.DTOs.Sensei;
 
 namespace ASPPorcelette.API.DTOs
@@ -8,9 +9,12 @@ namespace ASPPorcelette.API.DTOs
     {
         [Required]
         public string Id { get; set; } = string.Empty;
-        
+
         [Required]
         public string UserName { get; set; } = string.Empty;
+
+        [Required]
+        public string Email { get; set; } = string.Empty;
 
         [Required]
         public string Prenom { get; set; } = string.Empty;
@@ -18,10 +22,17 @@ namespace ASPPorcelette.API.DTOs
         [Required]
         public string Nom { get; set; } = string.Empty;
 
-        [Required]
-        public string Email { get; set; } = string.Empty;
-        
-        // Permet de savoir et d'afficher si cet utilisateur est un Sensei.
-        public SenseiDto? Sensei { get; set; }
+        public string? Telephone { get; set; }
+
+        public string? PhotoUrl { get; set; }
+
+        // Rôles de l'utilisateur
+        public List<string> Roles { get; set; } = new List<string>();
+
+        // Profil Sensei (si l'utilisateur est Sensei)
+        public SenseiDto? ProfilSensei { get; set; }
+
+        // Profil Adherent (si l'utilisateur est Adherent)
+        public AdherentDto? ProfilAdherent { get; set; }
     }
 }
