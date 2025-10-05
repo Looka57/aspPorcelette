@@ -49,11 +49,11 @@ namespace ASPPorcelette.API.Controllers
         public async Task<IActionResult> GetMyProfile() // Nom cohérent avec l'action
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) 
+            if (userId == null)
                 return Unauthorized(new { Message = "Impossible de trouver l'identifiant utilisateur." });
 
             var user = await _userManager.FindByIdAsync(userId);
-            if (user == null) 
+            if (user == null)
                 return NotFound(new { Message = "Utilisateur non trouvé." });
 
             var roles = await _userManager.GetRolesAsync(user);
@@ -74,14 +74,14 @@ namespace ASPPorcelette.API.Controllers
         /// PUT: /api/User/profile
         /// </summary>
         [HttpPut("profile")]
-        [Authorize]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin, Sensei")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> UpdateMyProfile([FromBody] UserUpdateDto updateDto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) 
+            if (userId == null)
                 return Unauthorized(new { Message = "Impossible de trouver l'identifiant utilisateur." });
 
             var result = await _senseiService.UpdateUserProfileAsync(userId, updateDto);
@@ -109,7 +109,7 @@ namespace ASPPorcelette.API.Controllers
         {
             // Forcer IsSensei à true
             registrationDto.IsSensei = true;
-            
+
             var result = await _senseiService.CreateUserWithProfileAsync(registrationDto);
 
             if (result.Succeeded)
@@ -131,7 +131,7 @@ namespace ASPPorcelette.API.Controllers
         {
             // Forcer IsSensei à false pour un adhérent
             registrationDto.IsSensei = false;
-            
+
             var result = await _senseiService.CreateUserWithProfileAsync(registrationDto);
 
             if (result.Succeeded)
@@ -149,8 +149,8 @@ namespace ASPPorcelette.API.Controllers
         /// Liste tous les utilisateurs du système
         /// GET: /api/User/admin/list
         /// </summary>
-        [HttpGet("/api/User/admin/list")] 
-        [Authorize(Roles = "Admin,Sensei")]
+        [HttpGet("/api/User/admin/list")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin, Sensei")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetAllUsers()
@@ -179,7 +179,7 @@ namespace ASPPorcelette.API.Controllers
         /// GET: /api/User/admin/{userId}
         /// </summary>
         [HttpGet("admin/{userId}")]
-        [Authorize(Roles = "Admin,Sensei")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -207,7 +207,8 @@ namespace ASPPorcelette.API.Controllers
         /// POST: /api/User/admin/create
         /// </summary>
         [HttpPost("admin/create")]
-        [Authorize(Roles = "Admin,Sensei")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei")]
+
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateUser([FromBody] UserCreationDto createDto)
@@ -226,7 +227,8 @@ namespace ASPPorcelette.API.Controllers
         /// DELETE: /api/User/admin/{userId}
         /// </summary>
         [HttpDelete("admin/{userId}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -258,7 +260,8 @@ namespace ASPPorcelette.API.Controllers
         /// GET: /api/User/admin/roles
         /// </summary>
         [HttpGet("admin/roles")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IActionResult GetAllRoles()
         {
@@ -271,7 +274,8 @@ namespace ASPPorcelette.API.Controllers
         /// POST: /api/User/admin/roles/assign
         /// </summary>
         [HttpPost("admin/roles/assign")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -301,7 +305,8 @@ namespace ASPPorcelette.API.Controllers
         /// POST: /api/User/admin/roles/remove
         /// </summary>
         [HttpPost("admin/roles/remove")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -335,10 +340,10 @@ namespace ASPPorcelette.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IActionResult Test()
         {
-            return Ok(new 
-            { 
+            return Ok(new
+            {
                 Message = "UserController fonctionne correctement !",
-                DateTime = DateTime.UtcNow 
+                DateTime = DateTime.UtcNow
             });
         }
     }

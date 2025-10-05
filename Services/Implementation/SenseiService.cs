@@ -97,6 +97,7 @@ namespace ASPPorcelette.API.Services
                         Nom = dto.Nom,
                         Prenom = dto.Prenom,
                         Email = dto.Email,
+                         Adresse = dto.Adresse ?? string.Empty,
                         // Assurez-vous que Telephone/DateAdhesion sont gérés correctement s'ils sont dans le DTO
                         Telephone = dto.Telephone,
                         DateAdhesion = dto.DateAdhesion ?? DateTime.UtcNow

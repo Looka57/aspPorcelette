@@ -54,7 +54,8 @@ namespace ASPPorcelette.DTOs // Remplacez par votre namespace
         // === CHAMPS SPÉCIFIQUES ADHERENT ===
         public DateTime? DateDeNaissance { get; set; }
 
-        [MaxLength(200)]
+[Required(ErrorMessage = "L'adresse est requise.")]
+    [MaxLength(200)]
         public string? Adresse { get; set; }
 
         public DateTime? DateAdhesion { get; set; }
