@@ -9,6 +9,7 @@ using ASPPorcelette.DTOs;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace ASPPorcelette.API.Controllers
 {
@@ -42,10 +43,10 @@ namespace ASPPorcelette.API.Controllers
         /// GET: /api/User/profile
         /// </summary>
         [HttpGet("profile")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> GetProfileRoute()
+        public async Task<IActionResult> GetMyProfile() // Nom cohérent avec l'action
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) 
@@ -148,7 +149,7 @@ namespace ASPPorcelette.API.Controllers
         /// Liste tous les utilisateurs du système
         /// GET: /api/User/admin/list
         /// </summary>
-        [HttpGet("admin/list")]
+        [HttpGet("/api/User/admin/list")] 
         [Authorize(Roles = "Admin,Sensei")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]

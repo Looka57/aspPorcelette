@@ -15,7 +15,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer; // Ajouté
 using Microsoft.IdentityModel.Tokens; // Ajouté
 using System.Text;
 using ASPPorcelette.API.Seed;
-using ASPPorcelette.API.Model; // Ajouté
+using ASPPorcelette.API.Model;
+using Microsoft.AspNetCore.Mvc.Infrastructure; // Ajouté
+
+System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -126,6 +130,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)) // Doit correspondre à la clé secrète
         };
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = context =>
+            {
+                Console.WriteLine($"Authentication failed: {context.Exception.Message}");
+                return Task.CompletedTask;
+            },
+            OnTokenValidated = context =>
+            {
+                Console.WriteLine("Token validated successfully");
+                return Task.CompletedTask;
+            }
+        };
     });
     
     
@@ -135,16 +152,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    // Ajout de la configuration pour que Swagger comprenne le JWT
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "ASPPorcelette API", Version = "v1" });
-    options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme
+
+    // Définition du schéma de sécurité (JWT Bearer)
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = JwtBearerDefaults.AuthenticationScheme,
-        Description = "Entrez 'Bearer ' suivi de votre jeton JWT."
+        Description = "Entrez 'Bearer' suivi d'un espace et de votre jeton JWT.\n\nExemple : Bearer abc123xyz"
     });
+
+    // Application du schéma à toutes les routes protégées
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -153,16 +174,14 @@ builder.Services.AddSwaggerGen(options =>
                 Reference = new OpenApiReference
                 {
                     Type = ReferenceType.SecurityScheme,
-                    Id = JwtBearerDefaults.AuthenticationScheme
-                },
-                Scheme = "oauth2",
-                Name = JwtBearerDefaults.AuthenticationScheme,
-                In = ParameterLocation.Header
+                    Id = "Bearer"
+                }
             },
-            new List<string>()
+            Array.Empty<string>()
         }
     });
 });
+
 
 
 var app = builder.Build();
@@ -191,6 +210,21 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.MapGet("/debug/controllers", (IServiceProvider services) =>
+{
+    var actionDescriptorCollectionProvider = services.GetRequiredService<IActionDescriptorCollectionProvider>();
+    var routes = actionDescriptorCollectionProvider.ActionDescriptors.Items
+        .Select(x => new
+        {
+            Action = x.RouteValues["Action"],
+            Controller = x.RouteValues["Controller"],
+            Template = x.AttributeRouteInfo?.Template
+        })
+        .OrderBy(x => x.Controller)
+        .ToList();
+    
+    return Results.Ok(routes);
+});
 // app.UseHttpsRedirection(); 
 
 // Les services d'authentification et d'autorisation sont cruciaux pour une API sécurisée
