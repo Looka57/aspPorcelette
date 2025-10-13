@@ -22,6 +22,17 @@ System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeM
 
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("VueAppPolicy",
+        policy =>
+        {
+            // 🎯 L'URL du FRONT-END : vérifiez le port de votre projet Vue (Vite = 5173 par défaut)
+            policy.WithOrigins("http://localhost:5173") 
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
 
 // --- 1. CONFIGURATION DE LA BASE DE DONNÉES (DBContext) ---
 builder.Services.Configure<JwtSettings>(
@@ -230,6 +241,7 @@ app.MapGet("/debug/controllers", (IServiceProvider services) =>
 // Les services d'authentification et d'autorisation sont cruciaux pour une API sécurisée
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseCors("VueAppPolicy");
 
 // Mappe les requêtes HTTP aux méthodes de vos Controllers
 app.MapControllers();
