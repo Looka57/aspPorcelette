@@ -7,25 +7,41 @@ namespace ASPPorcelette.API.Models.Identity.Dto
     /// </summary>
     public class RegisterRequestDto
     {
-        [Required(ErrorMessage = "L'email est requis.")]
-        [EmailAddress(ErrorMessage = "Format d'email invalide.")]
-        public string Email { get; set; } = string.Empty;
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; }
 
-        [Required(ErrorMessage = "Le nom d'utilisateur est requis.")]
-        [MaxLength(100)]
-        public string UserName { get; set; } = string.Empty;
+        [Required]
+        [StringLength(100, MinimumLength = 6)]
+        public string Password { get; set; }
 
-        [Required(ErrorMessage = "Le nom est requis.")]
-        [MaxLength(100)]
-        public string Nom { get; set; } = string.Empty;
+        [Required]
+        public string Prenom { get; set; }
+        
+        [Required]
+        public string Nom { get; set; }
 
-        [Required(ErrorMessage = "Le prénom est requis.")]
-        [MaxLength(100)]
-        public string Prenom { get; set; } = string.Empty;
+        // --- NOUVELLES PROPRIÉTÉS REQUISES POUR L'INSCRIPTION ---
 
-        [Required(ErrorMessage = "Le mot de passe est requis.")]
-        [StringLength(100, MinimumLength = 6, ErrorMessage = "Le mot de passe doit contenir entre 6 et 100 caractères.")]
-        [DataType(DataType.Password)]
-        public string Password { get; set; } = string.Empty;
+        public string Telephone { get; set; }
+        
+        public DateTime DateNaissance { get; set; }
+
+        // Champs d'adresse
+        public string RueEtNumero { get; set; }
+        public string Ville { get; set; }
+        public string CodePostal { get; set; }
+
+        // Champs spécifiques ou facultatifs
+        public string Grade { get; set; }
+        public string PhotoUrl { get; set; } 
+        public string Bio { get; set; }
+        
+        public int Statut { get; set; } 
+        public int DisciplineId { get; set; } // Gardé au cas où il est nécessaire
+        
+        // Champs de date d'adhésion (Souvent générés par le serveur, mais inclus si le client doit les fournir)
+        public DateTime DateAdhesion { get; set; }
+        public DateTime DateRenouvellement { get; set; }
     }
 }

@@ -37,12 +37,28 @@ namespace ASPPorcelette.API.Services.Identity
             // 2. Créer l'objet utilisateur
             var newUser = new User
             {
-                UserName = request.UserName ?? request.Email,
+                UserName = request.Email,
                 Email = request.Email,
                 Nom = request.Nom,
                 Prenom = request.Prenom,
                 EmailConfirmed = true,
-                SecurityStamp = Guid.NewGuid().ToString()
+                SecurityStamp = Guid.NewGuid().ToString(),
+                // Informations personnelles
+                Telephone = request.Telephone,
+                DateNaissance = request.DateNaissance,
+
+                // Adresse
+                RueEtNumero = request.RueEtNumero,
+                Ville = request.Ville,
+                CodePostal = request.CodePostal,
+
+                // Détails de l'association
+                Grade = request.Grade,
+                PhotoUrl = request.PhotoUrl,
+                Bio = request.Bio,
+                Statut = request.Statut,
+                DateAdhesion = request.DateAdhesion,
+                DateRenouvellement = request.DateRenouvellement,
             };
 
             // 3. Créer l'utilisateur dans la base de données
@@ -162,7 +178,7 @@ namespace ASPPorcelette.API.Services.Identity
 
             // 3. Ajouter le nouveau rôle
             var addResult = await _userManager.AddToRoleAsync(user, newRole);
-            
+
             return addResult.Succeeded;
         }
     }
