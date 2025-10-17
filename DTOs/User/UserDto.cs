@@ -26,6 +26,14 @@ namespace ASPPorcelette.API.DTOs
 
         public string? PhotoUrl { get; set; }
 
+        public DateTime DateDeCreation { get; set; }
+
+        public string? Grade { get; set; }
+        public string? Statut { get; set; }
+        public string? Adresse { get; set; }
+        public string? Ville { get; set; }
+        public string? CodePostal { get; set; }
+
         // Rôles de l'utilisateur
         public List<string> Roles { get; set; } = new List<string>();
 

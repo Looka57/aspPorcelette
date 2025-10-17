@@ -183,9 +183,15 @@ namespace ASPPorcelette.API.Controllers
                     Email = user.Email,
                     Nom = user.Nom,
                     Prenom = user.Prenom,
-                    user.Telephone, // Ajout du téléphone pour la liste
-                    user.Grade,     // Ajout du grade
-                    user.Statut,    // Ajout du statut
+                    Adresse = user.RueEtNumero,
+                    DateDeNaissance = user.DateNaissance,
+                    user.Ville,
+                    user.Telephone,
+                    user.Grade,
+                    user.Statut,
+                    user.DateAdhesion,
+                    user.DateCreation,
+                    user.DateRenouvellement,
                     Roles = roles.ToList()
                 });
             }
