@@ -1,10 +1,13 @@
 using System.ComponentModel.DataAnnotations;
+using System;
 
 namespace ASPPorcelette.API.DTOs.User
 {
-    // DTO utilisé pour la mise à jour du profil par l'utilisateur connecté.
-    // Tous les champs sont optionnels car l'utilisateur ne les envoie pas tous à chaque fois.
-public class UserUpdateDto
+    /// <summary>
+    /// DTO utilisé pour la mise à jour du profil par l'utilisateur connecté.
+        /// Tous les champs sont optionnels car l'utilisateur ne les envoie pas tous à chaque fois.
+    /// </summary>
+    public class UserUpdateDto
     {
         // === IDENTITY ===
         [EmailAddress(ErrorMessage = "Format d'email invalide.")]
@@ -34,6 +37,17 @@ public class UserUpdateDto
         [StringLength(100, MinimumLength = 6)]
         public string? NewPassword { get; set; }
 
+        // --- ADRESSE (POUR LE MODÈLE UNIFIÉ) ---
+        [MaxLength(200)]
+        public string? Adresse { get; set; } // Mappé à User.RueEtNumero
+
+
+        [MaxLength(100)]
+        public string? Ville { get; set; } // <-- AJOUTÉ
+
+        [MaxLength(10)]
+        public string? CodePostal { get; set; } // <-- AJOUTÉ
+
         // === CHAMPS SPÉCIFIQUES SENSEI ===
         [MaxLength(50)]
         public string? Grade { get; set; }
@@ -41,15 +55,11 @@ public class UserUpdateDto
         [MaxLength(4000)]
         public string? Bio { get; set; }
 
-        [MaxLength(50)]
-        public string? Statut { get; set; }
+        public int? Statut { get; set; } = 0;
 
         public int? DisciplineId { get; set; }
 
         // === CHAMPS SPÉCIFIQUES ADHERENT ===
         public DateTime? DateDeNaissance { get; set; }
-
-        [MaxLength(200)]
-        public string? Adresse { get; set; }
     }
 }

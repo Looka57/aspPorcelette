@@ -39,6 +39,9 @@ namespace ASPPorcelette.API.Models.Identity
         
         // La bio est utile pour les Sensei
         public string Bio { get; set; }
+
+          // AJOUT CRITIQUE pour résoudre l'erreur CS0117 dans SenseiService
+        public int? DisciplineId { get; set; }
         
         [Required]
         public DateTime DateCreation { get; set; }

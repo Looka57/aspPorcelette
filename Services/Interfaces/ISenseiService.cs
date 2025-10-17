@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.JsonPatch;
 using ASPPorcelette.API.DTOs.Sensei;
 using ASPPorcelette.API.DTOs.User; // Assurez-vous que ce using est correct
 using Microsoft.AspNetCore.Identity;
-using ASPPorcelette.DTOs;
 using ASPPorcelette.API.DTOs; // À vérifier si ce DTO est toujours nécessaire
 
 namespace ASPPorcelette.API.Services
@@ -11,7 +10,7 @@ namespace ASPPorcelette.API.Services
     public interface ISenseiService
     {
         // CONSERVÉE (La bonne signature pour l'inscription)
-        Task<IdentityResult> CreateUserWithProfileAsync(UserCreationDto dto);
+        Task<IdentityResult> CreateUserWithProfileAsync(UserCreationDto dto, string role);
         
         // CONSERVÉE (La bonne signature pour la mise à jour de profil)
         Task<IdentityResult> UpdateUserProfileAsync(string userId, UserUpdateDto updateDto);

@@ -8,5 +8,8 @@ namespace ASPPorcelette.API.Constants
     {
         public const string Sensei = "Sensei"; // Rôle Administrateur/Professeur
         public const string Student = "Student"; // Rôle Utilisateur Standard/Étudiant
+
+        // Ajoutez d'autres rôles ici si nécessaire
+        public const string Comptable = "Comptable"; 
     }
 }

@@ -1,12 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using System;
 
-namespace ASPPorcelette.DTOs // Remplacez par votre namespace
+namespace ASPPorcelette.API.DTOs.User
 {
     /// <summary>
-    /// DTO utilisé pour la création unifiée d'un utilisateur ET de son profil métier (Adherent ou Sensei).
+    /// DTO utilisé pour la création unifiée d'un utilisateur ET de son profil métier (Adherent ou Sensei), 
+    /// car toutes les données sont stockées dans l'entité Identity 'User'.
     /// </summary>
-  public class UserCreationDto
+    public class UserCreationDto
     {
         // === INFORMATIONS IDENTITY (Obligatoires) ===
         [Required(ErrorMessage = "L'email est requis.")]
@@ -31,12 +32,25 @@ namespace ASPPorcelette.DTOs // Remplacez par votre namespace
         [Required(ErrorMessage = "Le type de profil est requis.")]
         public bool IsSensei { get; set; }
 
-        // === CHAMPS COMMUNS (Optionnels ou avec valeurs par défaut) ===
+        // === CHAMPS COMMUNS & ADRESSE (Optionnels ou avec valeurs par défaut) ===
         [Phone(ErrorMessage = "Le numéro de téléphone n'est pas valide.")]
         public string? Telephone { get; set; }
 
         [MaxLength(500)]
         public string? PhotoUrl { get; set; }
+
+        // --- ADRESSE (Requise pour l'adhérent) ---
+        [Required(ErrorMessage = "L'adresse est requise.")]
+        [MaxLength(200)]
+        public string? Adresse { get; set; } // Mappé à User.RueEtNumero
+        
+        [Required(ErrorMessage = "La ville est requise.")]
+        [MaxLength(100)]
+        public string? Ville { get; set; } // <-- AJOUTÉ
+        
+        [Required(ErrorMessage = "Le code postal est requis.")]
+        [MaxLength(10)]
+        public string? CodePostal { get; set; } // <-- AJOUTÉ
 
         // === CHAMPS SPÉCIFIQUES SENSEI ===
         [MaxLength(50)]
@@ -45,21 +59,14 @@ namespace ASPPorcelette.DTOs // Remplacez par votre namespace
         [MaxLength(4000)]
         public string? Bio { get; set; }
 
-        [MaxLength(50)]
-        public string? Statut { get; set; } = "Actif";
+        public int? Statut { get; set; } = 0;
 
         // CORRECTION : Discipline obligatoire pour Sensei
         public int? DisciplineId { get; set; }
 
         // === CHAMPS SPÉCIFIQUES ADHERENT ===
         public DateTime? DateDeNaissance { get; set; }
-
-[Required(ErrorMessage = "L'adresse est requise.")]
-    [MaxLength(200)]
-        public string? Adresse { get; set; }
-
         public DateTime? DateAdhesion { get; set; }
-
         public DateTime? DateRenouvellement { get; set; }
     }
 }

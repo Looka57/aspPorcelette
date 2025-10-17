@@ -5,11 +5,11 @@ using System.Security.Claims;
 using ASPPorcelette.API.Models.Identity;
 using ASPPorcelette.API.Services;
 using ASPPorcelette.API.DTOs.User;
-using ASPPorcelette.DTOs;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System; // Ajout pour DateTime.UtcNow dans Test()
 
 namespace ASPPorcelette.API.Controllers
 {
@@ -22,7 +22,7 @@ namespace ASPPorcelette.API.Controllers
     {
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly ISenseiService _senseiService;
+        private readonly ISenseiService _senseiService; // Note: Ce service doit contenir la logique d'enregistrement ET l'attribution de rôle
 
         public UserController(
             UserManager<User> userManager,
@@ -43,7 +43,8 @@ namespace ASPPorcelette.API.Controllers
         /// GET: /api/User/profile
         /// </summary>
         [HttpGet("profile")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+        // Rendre accessible à tout utilisateur authentifié (Admin, Sensei ou Adhérent)
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei,Adherent")] 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> GetMyProfile() // Nom cohérent avec l'action
@@ -58,6 +59,7 @@ namespace ASPPorcelette.API.Controllers
 
             var roles = await _userManager.GetRolesAsync(user);
 
+            // Ajout des champs étendus pour le retour
             return Ok(new
             {
                 user.Id,
@@ -65,6 +67,17 @@ namespace ASPPorcelette.API.Controllers
                 user.UserName,
                 user.Nom,
                 user.Prenom,
+                user.Telephone,
+                user.RueEtNumero,
+                user.Ville,
+                user.CodePostal,
+                user.Grade,
+                user.PhotoUrl,
+                user.Bio,
+                user.Statut,
+                user.DateNaissance,
+                user.DateAdhesion,
+                user.DateRenouvellement,
                 Roles = roles
             });
         }
@@ -74,7 +87,8 @@ namespace ASPPorcelette.API.Controllers
         /// PUT: /api/User/profile
         /// </summary>
         [HttpPut("profile")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin, Sensei")]
+        // Permettre à tous les utilisateurs (Admin, Sensei, Adhérent) de mettre à jour leur profil
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei,Adherent")] 
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -107,10 +121,11 @@ namespace ASPPorcelette.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> RegisterSensei([FromBody] UserCreationDto registrationDto)
         {
-            // Forcer IsSensei à true
+            // Forcer IsSensei à true et attribuer le rôle "Sensei"
             registrationDto.IsSensei = true;
 
-            var result = await _senseiService.CreateUserWithProfileAsync(registrationDto);
+            // La méthode CreateUserWithProfileAsync DOIT attribuer le rôle "Sensei" en interne
+            var result = await _senseiService.CreateUserWithProfileAsync(registrationDto, "Sensei"); 
 
             if (result.Succeeded)
                 return StatusCode(201, new { Message = "Inscription Sensei réussie." });
@@ -129,10 +144,11 @@ namespace ASPPorcelette.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> RegisterAdherent([FromBody] UserCreationDto registrationDto)
         {
-            // Forcer IsSensei à false pour un adhérent
+            // Forcer IsSensei à false pour un adhérent et attribuer le rôle "Adherent"
             registrationDto.IsSensei = false;
 
-            var result = await _senseiService.CreateUserWithProfileAsync(registrationDto);
+            // La méthode CreateUserWithProfileAsync DOIT attribuer le rôle "Adherent" en interne
+            var result = await _senseiService.CreateUserWithProfileAsync(registrationDto, "Adherent"); 
 
             if (result.Succeeded)
                 return StatusCode(201, new { Message = "Inscription Adhérent réussie." });
@@ -167,6 +183,9 @@ namespace ASPPorcelette.API.Controllers
                     Email = user.Email,
                     Nom = user.Nom,
                     Prenom = user.Prenom,
+                    user.Telephone, // Ajout du téléphone pour la liste
+                    user.Grade,     // Ajout du grade
+                    user.Statut,    // Ajout du statut
                     Roles = roles.ToList()
                 });
             }
@@ -191,6 +210,7 @@ namespace ASPPorcelette.API.Controllers
 
             var roles = await _userManager.GetRolesAsync(user);
 
+            // Ajout des champs étendus pour le retour
             return Ok(new
             {
                 user.Id,
@@ -198,6 +218,17 @@ namespace ASPPorcelette.API.Controllers
                 user.UserName,
                 user.Nom,
                 user.Prenom,
+                user.Telephone,
+                user.RueEtNumero,
+                user.Ville,
+                user.CodePostal,
+                user.Grade,
+                user.PhotoUrl,
+                user.Bio,
+                user.Statut,
+                user.DateNaissance,
+                user.DateAdhesion,
+                user.DateRenouvellement,
                 Roles = roles
             });
         }
@@ -213,7 +244,11 @@ namespace ASPPorcelette.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateUser([FromBody] UserCreationDto createDto)
         {
-            var result = await _senseiService.CreateUserWithProfileAsync(createDto);
+            // Déterminer le rôle en fonction du flag IsSensei (ou laisser le service le gérer)
+            // Pour l'enregistrement via l'admin, je vais forcer le rôle Adherent si non Sensei.
+            string role = createDto.IsSensei ? "Sensei" : "Adherent"; 
+
+            var result = await _senseiService.CreateUserWithProfileAsync(createDto, role);
 
             if (result.Succeeded)
                 return StatusCode(201, new { Message = "Utilisateur créé avec succès." });
