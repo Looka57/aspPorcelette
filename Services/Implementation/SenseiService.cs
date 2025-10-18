@@ -35,6 +35,49 @@ namespace ASPPorcelette.API.Services
             _context = context;
         }
 
+  public async Task<IEnumerable<UserDto>> GetAdminUserListAsync()
+        {
+            // 1. Récupère tous les utilisateurs
+            var users = await _userManager.Users.ToListAsync();
+
+            var userListDtos = new List<UserDto>();
+
+            foreach (var user in users)
+            {
+                // 2. Récupère les rôles (nécessaire pour le frontend)
+                var roles = await _userManager.GetRolesAsync(user);
+
+                // 3. Mappe l'entité User vers le DTO de sortie (UserDto)
+                var userDto = new UserDto
+                {
+                    Id = user.Id,
+                    UserName = user.UserName,
+                    Email = user.Email,
+                    Nom = user.Nom,
+                    Prenom = user.Prenom,
+                    Telephone = user.Telephone,
+                    PhotoUrl = user.PhotoUrl,
+                    DateDeCreation = user.DateCreation,
+                    Grade = user.Grade,
+                    Statut = user.Statut.ToString(), // Conversion Statut (int) en string si nécessaire pour l'affichage
+                    
+                    // Mappage des champs d'adresse
+                    Adresse = user.RueEtNumero, 
+                    Ville = user.Ville,
+                    CodePostal = user.CodePostal,
+
+                    // 🎯 L'élément CRITIQUE : on expose l'ID de la discipline
+                    DisciplineId = user.DisciplineId, 
+                    
+                    Roles = roles.ToList()
+                    // Les champs ProfilSensei/ProfilAdherent restent nulls si vous ne les remplissez pas ici
+                };
+                userListDtos.Add(userDto);
+            }
+
+            return userListDtos;
+        }
+        
         // ----------------------------------------------------
         // MÉTHODE 1 : Crée User (Identity) - Tous les champs sont sur l'objet User
         // ----------------------------------------------------
@@ -47,14 +90,14 @@ namespace ASPPorcelette.API.Services
                 Email = dto.Email,
                 Nom = dto.Nom,
                 Prenom = dto.Prenom,
-                
+
                 // --- CHAMPS DE PROFIL (maintenant tous dans l'entité User) ---
                 Telephone = dto.Telephone,
                 PhotoUrl = dto.PhotoUrl,
                 Grade = dto.Grade,
                 Bio = dto.Bio,
-                Statut = dto.Statut ?? 0 , // Si Statut est géré par l'utilisateur
-                
+                Statut = dto.Statut ?? 0, // Si Statut est géré par l'utilisateur
+
                 // Champs d'adresse (pour Adherent et/ou Sensei)
                 RueEtNumero = dto.Adresse, // Le champ 'Adresse' du DTO est mappé vers 'RueEtNumero'
                 Ville = dto.Ville,
@@ -74,7 +117,7 @@ namespace ASPPorcelette.API.Services
             {
                 return result;
             }
-            
+
             // 2. VÉRIFICATION ET ATTRIBUTION DU RÔLE IDENTITY
             if (!await _roleManager.RoleExistsAsync(role))
             {
@@ -95,7 +138,7 @@ namespace ASPPorcelette.API.Services
                 await _userManager.DeleteAsync(user);
                 return roleResult;
             }
-            
+
             // 3. RETRAIT DE LA LOGIQUE DE CRÉATION DE PROFIL SÉPARÉ
             // Les données de profil sont déjà sauvegardées avec _userManager.CreateAsync
             // et le rôle est assigné.

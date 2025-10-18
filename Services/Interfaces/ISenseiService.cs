@@ -11,9 +11,11 @@ namespace ASPPorcelette.API.Services
     {
         // CONSERVÉE (La bonne signature pour l'inscription)
         Task<IdentityResult> CreateUserWithProfileAsync(UserCreationDto dto, string role);
-        
+
         // CONSERVÉE (La bonne signature pour la mise à jour de profil)
         Task<IdentityResult> UpdateUserProfileAsync(string userId, UserUpdateDto updateDto);
+        
+          Task<IEnumerable<UserDto>> GetAdminUserListAsync();
 
         // --- Méthodes spécifiques à l'entité Sensei (pour l'Admin) ---
         

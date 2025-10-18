@@ -42,5 +42,7 @@ namespace ASPPorcelette.API.DTOs
 
         // Profil Adherent (si l'utilisateur est Adherent)
         public AdherentDto? ProfilAdherent { get; set; }
+
+        public int? DisciplineId { get; set; } 
     }
 }
