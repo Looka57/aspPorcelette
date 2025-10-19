@@ -11,25 +11,16 @@ namespace ASPPorcelette.API.Services
     {
         // CONSERVÉE (La bonne signature pour l'inscription)
         Task<IdentityResult> CreateUserWithProfileAsync(UserCreationDto dto, string role);
-
-        // CONSERVÉE (La bonne signature pour la mise à jour de profil)
         Task<IdentityResult> UpdateUserProfileAsync(string userId, UserUpdateDto updateDto);
-        
-          Task<IEnumerable<UserDto>> GetAdminUserListAsync();
+        Task<IEnumerable<UserDto>> GetAdminUserListAsync();
 
         // --- Méthodes spécifiques à l'entité Sensei (pour l'Admin) ---
-        
         Task<IEnumerable<Sensei>> GetAllSenseisAsync();
         Task<Sensei?> GetSenseiByIdAsync(int id);
         Task<Sensei> CreateSenseiAsync(Sensei sensei);
         Task<Sensei> UpdateSenseiAsync(Sensei sensei);
-        Task<(Sensei? Sensei, bool Success)> PartialUpdateSenseiAsync(
-            int id, 
-            JsonPatchDocument<SenseiUpdateDto> patchDocument
-        );
+        Task<(Sensei? Sensei, bool Success)> PartialUpdateSenseiAsync(int id,JsonPatchDocument<SenseiUpdateDto> patchDocument);
         Task<Sensei> DeleteSenseiAsync(int id);
-        
-        // L'ancienne ligne "Task CreateUserWithProfileAsync(object userCreateDto);" 
-        // a été supprimée.
+
     }
 }

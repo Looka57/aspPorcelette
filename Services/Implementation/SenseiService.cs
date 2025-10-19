@@ -24,29 +24,29 @@ namespace ASPPorcelette.API.Services
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ApplicationDbContext _context; // Maintenu pour les autres méthodes Sensei/Adherent si elles existent
+        IWebHostEnvironment _hostEnvironment;
 
         public SenseiService(
             UserManager<User> userManager,
             RoleManager<IdentityRole> roleManager,
-            ApplicationDbContext context)
+            ApplicationDbContext context,
+            IWebHostEnvironment hostEnvironment)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _context = context;
+            _hostEnvironment = hostEnvironment;
         }
 
-  public async Task<IEnumerable<UserDto>> GetAdminUserListAsync()
+        public async Task<IEnumerable<UserDto>> GetAdminUserListAsync()
         {
             // 1. Récupère tous les utilisateurs
             var users = await _userManager.Users.ToListAsync();
-
             var userListDtos = new List<UserDto>();
-
             foreach (var user in users)
             {
                 // 2. Récupère les rôles (nécessaire pour le frontend)
                 var roles = await _userManager.GetRolesAsync(user);
-
                 // 3. Mappe l'entité User vers le DTO de sortie (UserDto)
                 var userDto = new UserDto
                 {
@@ -60,15 +60,13 @@ namespace ASPPorcelette.API.Services
                     DateDeCreation = user.DateCreation,
                     Grade = user.Grade,
                     Statut = user.Statut.ToString(), // Conversion Statut (int) en string si nécessaire pour l'affichage
-                    
-                    // Mappage des champs d'adresse
-                    Adresse = user.RueEtNumero, 
+                    Adresse = user.RueEtNumero,
                     Ville = user.Ville,
                     CodePostal = user.CodePostal,
 
                     // 🎯 L'élément CRITIQUE : on expose l'ID de la discipline
-                    DisciplineId = user.DisciplineId, 
-                    
+                    DisciplineId = user.DisciplineId,
+
                     Roles = roles.ToList()
                     // Les champs ProfilSensei/ProfilAdherent restent nulls si vous ne les remplissez pas ici
                 };
@@ -77,13 +75,45 @@ namespace ASPPorcelette.API.Services
 
             return userListDtos;
         }
-        
+
+        // ------------------------------------
+        // SAUVEGARDE IMAGE: l'objet User
+        // ------------------------------------
+
+       private async Task<string> SaveProfilePicture(IFormFile? imageFile)
+{
+    if (imageFile == null || imageFile.Length == 0)
+        return string.Empty; // Aucun fichier fourni
+
+    var uploadsFolder = Path.Combine(_hostEnvironment.WebRootPath, "images", "profiles");
+    if (!Directory.Exists(uploadsFolder))
+        Directory.CreateDirectory(uploadsFolder);
+
+    var uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(imageFile.FileName);
+    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+    using (var fileStream = new FileStream(filePath, FileMode.Create))
+    {
+        await imageFile.CopyToAsync(fileStream);
+    }
+
+    // Retourne l'URL que ton front pourra utiliser pour afficher l'image
+    return $"/images/profiles/{uniqueFileName}";
+}
+
         // ----------------------------------------------------
         // MÉTHODE 1 : Crée User (Identity) - Tous les champs sont sur l'objet User
         // ----------------------------------------------------
         public async Task<IdentityResult> CreateUserWithProfileAsync(UserCreationDto dto, string role)
         {
+            Console.WriteLine("=== Début de CreateUserWithProfileAsync ===");
+    Console.WriteLine($"Email reçu : {dto.Email}");
+    Console.WriteLine($"Date de naissance reçue : {dto.DateNaissance}");
+    Console.WriteLine($"Fichier photo présent ? {(dto.PhotoFile != null ? "OUI" : "NON")}");
+            string? photoUrl = await SaveProfilePicture(dto.PhotoFile);
             // 1. CRÉATION DU COMPTE USER (Identity) - MAPPAGE DE TOUS LES CHAMPS DE PROFIL
+            Console.WriteLine($"PhotoUrl enregistrée : {photoUrl}");
+    Console.WriteLine($"DateNaissance reçue du DTO : {dto.DateNaissance}");
             var user = new User
             {
                 UserName = dto.Email,
@@ -93,7 +123,7 @@ namespace ASPPorcelette.API.Services
 
                 // --- CHAMPS DE PROFIL (maintenant tous dans l'entité User) ---
                 Telephone = dto.Telephone,
-                PhotoUrl = dto.PhotoUrl,
+                PhotoUrl = photoUrl,
                 Grade = dto.Grade,
                 Bio = dto.Bio,
                 Statut = dto.Statut ?? 0, // Si Statut est géré par l'utilisateur
@@ -104,12 +134,14 @@ namespace ASPPorcelette.API.Services
                 CodePostal = dto.CodePostal,
 
                 // Champs de dates et relations
-                DateNaissance = dto.DateDeNaissance,
+                DateNaissance = dto.DateNaissance,
                 DisciplineId = dto.DisciplineId,
                 DateAdhesion = dto.DateAdhesion != default ? dto.DateAdhesion : DateTime.UtcNow,
                 DateRenouvellement = dto.DateRenouvellement != default ? dto.DateRenouvellement : DateTime.UtcNow.AddYears(1)
             };
 
+Console.WriteLine($"➡️ DateNaissance envoyée dans User : {user.DateNaissance}");
+    Console.WriteLine($"➡️ PhotoUrl envoyée dans User : {user.PhotoUrl}");
             // Création de l'utilisateur dans AspNetUsers
             var result = await _userManager.CreateAsync(user, dto.Password);
 

@@ -28,16 +28,15 @@ namespace ASPPorcelette.API.DTOs.User
         [MaxLength(100)]
         public string Nom { get; set; } = string.Empty;
 
-        // === CHOIX DU TYPE DE PROFIL ===
-        [Required(ErrorMessage = "Le type de profil est requis.")]
-        public bool IsSensei { get; set; }
+        // // === CHOIX DU TYPE DE PROFIL ===
+        // [Required(ErrorMessage = "Le type de profil est requis.")]
+        // public bool IsSensei { get; set; }
 
         // === CHAMPS COMMUNS & ADRESSE (Optionnels ou avec valeurs par défaut) ===
         [Phone(ErrorMessage = "Le numéro de téléphone n'est pas valide.")]
         public string? Telephone { get; set; }
 
-        [MaxLength(500)]
-        public string? PhotoUrl { get; set; }
+        public IFormFile? PhotoFile { get; set; }
 
         // --- ADRESSE (Requise pour l'adhérent) ---
         [Required(ErrorMessage = "L'adresse est requise.")]
@@ -65,7 +64,7 @@ namespace ASPPorcelette.API.DTOs.User
         public int? DisciplineId { get; set; }
 
         // === CHAMPS SPÉCIFIQUES ADHERENT ===
-        public DateTime? DateDeNaissance { get; set; }
+        public DateTime? DateNaissance { get; set; }
         public DateTime? DateAdhesion { get; set; }
         public DateTime? DateRenouvellement { get; set; }
     }

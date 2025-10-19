@@ -92,7 +92,7 @@ namespace ASPPorcelette.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> UpdateMyProfile([FromBody] UserUpdateDto updateDto)
+        public async Task<IActionResult> UpdateMyProfile([FromForm] UserUpdateDto updateDto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
@@ -119,10 +119,20 @@ namespace ASPPorcelette.API.Controllers
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> RegisterSensei([FromBody] UserCreationDto registrationDto)
+        public async Task<IActionResult> RegisterSensei([FromForm] UserCreationDto registrationDto)
         {
-            // Forcer IsSensei à true et attribuer le rôle "Sensei"
-            registrationDto.IsSensei = true;
+            Console.WriteLine("---- REGISTER SENSEI ----");
+    Console.WriteLine($"Email : {registrationDto.Email}");
+    Console.WriteLine($"Nom : {registrationDto.Nom}");
+    Console.WriteLine($"Prenom : {registrationDto.Prenom}");
+    Console.WriteLine($"DateNaissance : {registrationDto.DateNaissance}");
+    Console.WriteLine($"PhotoFile : {registrationDto.PhotoFile?.FileName ?? "aucune"}");
+    Console.WriteLine("-------------------------");
+            
+             if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
             // La méthode CreateUserWithProfileAsync DOIT attribuer le rôle "Sensei" en interne
             var result = await _senseiService.CreateUserWithProfileAsync(registrationDto, "Sensei"); 
@@ -142,10 +152,12 @@ namespace ASPPorcelette.API.Controllers
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> RegisterAdherent([FromBody] UserCreationDto registrationDto)
+        public async Task<IActionResult> RegisterAdherent([FromForm] UserCreationDto registrationDto)
         {
-            // Forcer IsSensei à false pour un adhérent et attribuer le rôle "Adherent"
-            registrationDto.IsSensei = false;
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
             // La méthode CreateUserWithProfileAsync DOIT attribuer le rôle "Adherent" en interne
             var result = await _senseiService.CreateUserWithProfileAsync(registrationDto, "Adherent"); 
@@ -248,12 +260,14 @@ namespace ASPPorcelette.API.Controllers
 
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> CreateUser([FromBody] UserCreationDto createDto)
+        public async Task<IActionResult> CreateUser([FromBody] UserCreationDto createDto, [FromQuery] string role="Adherent")
         {
             // Déterminer le rôle en fonction du flag IsSensei (ou laisser le service le gérer)
             // Pour l'enregistrement via l'admin, je vais forcer le rôle Adherent si non Sensei.
-            string role = createDto.IsSensei ? "Sensei" : "Adherent"; 
-
+if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
             var result = await _senseiService.CreateUserWithProfileAsync(createDto, role);
 
             if (result.Succeeded)

@@ -221,6 +221,8 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+
+app.UseStaticFiles();
 app.MapGet("/debug/controllers", (IServiceProvider services) =>
 {
     var actionDescriptorCollectionProvider = services.GetRequiredService<IActionDescriptorCollectionProvider>();
