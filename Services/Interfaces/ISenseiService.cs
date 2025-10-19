@@ -11,6 +11,7 @@ namespace ASPPorcelette.API.Services
     {
         // CONSERVÉE (La bonne signature pour l'inscription)
         Task<IdentityResult> CreateUserWithProfileAsync(UserCreationDto dto, string role);
+
         Task<IdentityResult> UpdateUserProfileAsync(string userId, UserUpdateDto updateDto);
         Task<IEnumerable<UserDto>> GetAdminUserListAsync();
 
@@ -18,7 +19,8 @@ namespace ASPPorcelette.API.Services
         Task<IEnumerable<Sensei>> GetAllSenseisAsync();
         Task<Sensei?> GetSenseiByIdAsync(int id);
         Task<Sensei> CreateSenseiAsync(Sensei sensei);
-        Task<Sensei> UpdateSenseiAsync(Sensei sensei);
+        // Task<Sensei> UpdateSenseiAsync(Sensei sensei);
+     
         Task<(Sensei? Sensei, bool Success)> PartialUpdateSenseiAsync(int id,JsonPatchDocument<SenseiUpdateDto> patchDocument);
         Task<Sensei> DeleteSenseiAsync(int id);
 

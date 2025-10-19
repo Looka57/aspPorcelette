@@ -11,13 +11,13 @@ namespace ASPPorcelette.API.Seed
     public static class AuthDbContextSeed
     {
         // --- 1. SEEDING DES RÔLES ---
-        
+
         /// <summary>
         /// Crée les rôles définis dans RoleConstants s'ils n'existent pas.
         /// </summary>
         public static async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager)
         {
-            var rolesToSeed = new[] { RoleConstants.Sensei, RoleConstants.Student };
+            var rolesToSeed = new[] { RoleConstants.Admin, RoleConstants.Sensei, RoleConstants.Student };
 
             foreach (var roleName in rolesToSeed)
             {
@@ -34,49 +34,69 @@ namespace ASPPorcelette.API.Seed
         /// <summary>
         /// Crée un utilisateur Sensei par défaut s'il n'existe pas.
         /// </summary>
-        public static async Task SeedSenseiUserAsync(UserManager<User> userManager, IConfiguration configuration)
+        // Dans AuthDbContextSeed.cs
+        // Renommer la méthode pour plus de clarté
+        public static async Task SeedAdminUserAsync(UserManager<User> userManager, IConfiguration configuration)
         {
-            // Récupérer les informations de l'Admin depuis la configuration (appsettings.json)
-            var adminEmail = configuration["AdminSeed:Email"] ?? "admin@example.com";
-            var adminPassword = configuration["AdminSeed:Password"] ?? "ComplexP@ssword123";
-            var adminRole = RoleConstants.Sensei;
+            var adminEmail = configuration["AdminSeed:Email"] ?? "admin@porcelette.com"; // Email par défaut
+            var adminPassword = configuration["AdminSeed:Password"] ?? "Test123!!"; // Mot de passe par défaut (IMPORTANT : sécurisez-le!)
 
-            // 1. Vérifier si l'utilisateur Admin existe déjà par son email
+            // 💥 Changement : Utiliser le rôle ADMIN pour cet utilisateur
+            var adminRole = RoleConstants.Admin;
+
+            // 1. Vérifier si l'utilisateur Admin existe déjà
             if (await userManager.FindByEmailAsync(adminEmail) == null)
             {
-                var senseiUser = new User 
-                { 
-                    UserName = adminEmail, 
+                var adminUser = new User
+                {
+                    UserName = adminEmail,
                     Email = adminEmail,
-                    EmailConfirmed = true // Considérer l'admin comme confirmé
-                    // Si vous avez d'autres propriétés (FirstName, LastName), ajoutez-les ici.
+                    EmailConfirmed = true,
+
+                    // --- L'AJOUT CRITIQUE POUR RÉSOUDRE L'ERREUR ---
+                    Bio = string.Empty, // <--- AJOUTER CETTE LIGNE (OU une valeur par défaut)
+
+                    // Autres propriétés obligatoires (vérifiez votre modèle User) :
+                    Nom = "Super",
+                    Prenom = "Admin",
+                    // Assurez-vous que tous les autres champs VARCHAR/NVARCHAR NON-NULLABLE ont une valeur (même vide)
+                    RueEtNumero = string.Empty,
+                    Ville = string.Empty,
+                    CodePostal = string.Empty,
+                    Telephone = string.Empty,
+                    Grade = string.Empty,
+                    PhotoUrl = string.Empty,
+
+                    // Pour les DateTime, assurez-vous qu'elles ont une valeur valide si elles sont non-nullable
+                    DateNaissance = new DateTime(1980, 1, 1),
+                    DateAdhesion = DateTime.UtcNow,
+                    DateRenouvellement = DateTime.UtcNow,
+                    Statut = 1, // Si Statut est un int non-nullable
                 };
 
-                // 2. Créer l'utilisateur avec le mot de passe défini
-                var result = await userManager.CreateAsync(senseiUser, adminPassword);
+                var result = await userManager.CreateAsync(adminUser, adminPassword);
 
                 if (result.Succeeded)
                 {
-                    Console.WriteLine($"[SEED] Utilisateur Sensei '{adminEmail}' créé.");
-                    
-                    // 3. Lui attribuer le rôle Sensei
-                    if (await userManager.IsInRoleAsync(senseiUser, adminRole) == false)
+                    Console.WriteLine($"[SEED] Utilisateur Admin '{adminEmail}' créé.");
+
+                    // 3. Lui attribuer le rôle ADMIN
+                    if (await userManager.IsInRoleAsync(adminUser, adminRole) == false)
                     {
-                        await userManager.AddToRoleAsync(senseiUser, adminRole);
+                        await userManager.AddToRoleAsync(adminUser, adminRole);
                         Console.WriteLine($"[SEED] Rôle '{adminRole}' attribué à l'utilisateur.");
                     }
-                    
-                    // Optionnel : Ajouter des Claims (utile si vous utilisez des politiques)
-                    // await userManager.AddClaimAsync(senseiUser, new Claim("Role", "Admin"));
+
+                    // Laissez les claims commentés pour l'instant
                 }
                 else
                 {
-                    Console.WriteLine($"[ERREUR SEED] Échec de la création du Sensei: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+                    Console.WriteLine($"[ERREUR SEED] Échec de la création de l'Admin: {string.Join(", ", result.Errors.Select(e => e.Description))}");
                 }
             }
             else
             {
-                Console.WriteLine($"[SEED] Utilisateur Sensei '{adminEmail}' existe déjà.");
+                Console.WriteLine($"[SEED] Utilisateur Admin '{adminEmail}' existe déjà.");
             }
         }
     }

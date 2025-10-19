@@ -33,6 +33,7 @@ namespace ASPPorcelette.API.DTOs
         public string? Adresse { get; set; }
         public string? Ville { get; set; }
         public string? CodePostal { get; set; }
+        public string? Bio { get; set; }
 
         // Rôles de l'utilisateur
         public List<string> Roles { get; set; } = new List<string>();

@@ -6,6 +6,7 @@ namespace ASPPorcelette.API.Constants
     /// </summary>
     public static class RoleConstants
     {
+        public const string Admin = "Admin"; // Rôle Administrateur
         public const string Sensei = "Sensei"; // Rôle Administrateur/Professeur
         public const string Student = "Student"; // Rôle Utilisateur Standard/Étudiant
 

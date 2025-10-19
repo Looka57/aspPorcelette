@@ -202,13 +202,26 @@ var app = builder.Build();
 // --- 5. CONFIGURATION DU PIPELINE HTTP ---
 
 // --- Exécution du Seeding des Rôles (Ajouté) ---
+
+// --- Exécution du Seeding des Rôles et de l'Admin ---
 using (var scope = app.Services.CreateScope())
 {
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    // Assurez-vous que la classe AuthDbContextSeed existe et contient la méthode SeedRolesAsync
+    var serviceProvider = scope.ServiceProvider;
+    
+    // Récupérer les managers nécessaires
+    var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = serviceProvider.GetRequiredService<UserManager<User>>();
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>(); // <-- AJOUTÉ
+
+    // 1. Seeding des Rôles
     await AuthDbContextSeed.SeedRolesAsync(roleManager);
+    
+    // 2. Seeding du Super Admin
+    // 💥 CHANGEMENT DE NOM DE MÉTHODE
+    await AuthDbContextSeed.SeedAdminUserAsync(userManager, configuration); 
 }
 // --- Fin du Seeding ---
+
 
 
 // Si l'environnement est en Développement, on active le Swagger UI

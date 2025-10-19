@@ -9,6 +9,7 @@ namespace ASPPorcelette.API.DTOs.User
     /// </summary>
     public class UserUpdateDto
     {
+        public string? UserId { get; set; }
         // === IDENTITY ===
         [EmailAddress(ErrorMessage = "Format d'email invalide.")]
         public string? Email { get; set; }
