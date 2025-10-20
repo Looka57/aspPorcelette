@@ -21,7 +21,7 @@ namespace ASPPorcelette.API.Models
         
         // Optionnel si l'événement n'a pas toujours une fin définie (ex: journée complète)
         public DateTime? DateFin { get; set; }
-        public string ImageUrl { get; set; }
+        public string? ImageUrl { get; set; }
 
         // --- Clé Étrangère vers TypeEvenement ---
         // L'ID du Type (Ex: Conférence, Assemblée, Tournoi, Fête)
