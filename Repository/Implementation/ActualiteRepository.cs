@@ -22,19 +22,33 @@ namespace ASPPorcelette.API.Repository.Implementation
         {
             // Requête de base pour inclure toutes les relations de navigation
             return _dbSet
-                .Include(a => a.SenseiAuteur)
-                .Include(a => a.EvenementAssocie);
-             
+         .Include(a => a.User)               // ← navigation vers User (Sensei)
+         .Include(a => a.EvenementAssocie);
+
         }
 
         // -----------------------------------------------------------------
         // Méthodes de Lecture (READ)
         // -----------------------------------------------------------------
 
+        // Dans ActualiteRepository.cs
+
         public async Task<IEnumerable<Actualite>> GetAllWithDetailsAsync()
         {
-            return await GetQueryWithDetails()
-                .OrderByDescending(a => a.DateDePublication) // Trier par date récente
+            // Au lieu d'utiliser GetQueryWithDetails().ToListAsync(),
+            // utilise une projection pour forcer une requête propre et garantir
+            // que l'ancienne colonne SenseiId n'est pas sélectionnée.
+
+            return await _dbSet // Utilise _dbSet au lieu de GetQueryWithDetails() temporairement
+                .Include(a => a.User)
+                .Include(a => a.EvenementAssocie)
+                .OrderByDescending(a => a.DateDePublication)
+
+                // 🚨 SOLUTION : FORCER UNE PROJECTION PROPRE (si le problème persiste)
+                // Note: Tu devras créer une classe DTO qui ne contient pas la propriété de navigation User/Evenement
+                // ou simplement retourner l'objet Actualite complet si la projection n'est pas l'objectif.
+                // MAIS pour tester l'exclusion de l'ancienne colonne, essayons juste la requête sans la méthode utilitaire :
+
                 .ToListAsync();
         }
 
@@ -68,10 +82,10 @@ namespace ASPPorcelette.API.Repository.Implementation
             {
                 return false;
             }
-            
+
             // Met à jour toutes les propriétés de l'entité existante avec celles de l'entité passée
             _context.Entry(existingEntity).CurrentValues.SetValues(actualite);
-            
+
             await _context.SaveChangesAsync();
             return true;
         }

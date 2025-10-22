@@ -1,8 +1,11 @@
+using ASPPorcelette.API.Data;
 using ASPPorcelette.API.DTOs.Actualite;
 using ASPPorcelette.API.Models;
+using ASPPorcelette.API.Models.Identity;
 using ASPPorcelette.API.Repository.Interfaces;
 using ASPPorcelette.API.Services.Interfaces;
 using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.JsonPatch;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -13,11 +16,15 @@ namespace ASPPorcelette.API.Services.Implementation
     {
         private readonly IActualiteRepository _actualiteRepository;
         private readonly IMapper _mapper;
+        private readonly UserManager<User> _userManager;
+        private readonly ApplicationDbContext _context;
 
-        public ActualiteService(IActualiteRepository actualiteRepository, IMapper mapper)
+        public ActualiteService(IActualiteRepository actualiteRepository, IMapper mapper, UserManager<User> userManager,  ApplicationDbContext context)
         {
             _actualiteRepository = actualiteRepository;
             _mapper = mapper;
+            _userManager = userManager;
+            _context = context;
         }
 
         // -----------------------------------------------------------------
@@ -26,25 +33,41 @@ namespace ASPPorcelette.API.Services.Implementation
 
         public async Task<IEnumerable<Actualite>> GetAllAsync()
         {
-            // Utilise la méthode du repository qui charge les relations
-            return await _actualiteRepository.GetAllWithDetailsAsync();
+        return await _actualiteRepository.GetAllWithDetailsAsync();
         }
 
         public async Task<Actualite?> GetByIdAsync(int id)
         {
-            // Utilise la méthode du repository qui charge les relations
-            return await _actualiteRepository.GetByIdWithDetailsAsync(id);
+               return await _actualiteRepository.GetByIdWithDetailsAsync(id);
         }
 
         // -----------------------------------------------------------------
         // Création (CREATE)
         // -----------------------------------------------------------------
 
-        public async Task<Actualite> CreateAsync(ActualiteCreateDto createDto)
-        {
-            var actualiteEntity = _mapper.Map<Actualite>(createDto);
-            return await _actualiteRepository.AddAsync(actualiteEntity);
-        }
+      public async Task<Actualite> CreateAsync(ActualiteCreateDto createDto)
+{
+    // On récupère l'utilisateur (Sensei) via le UserId
+    var user = await _userManager.FindByIdAsync(createDto.UserId);
+    if (user == null)
+    {
+        throw new Exception("Utilisateur introuvable");
+    }
+
+    var actualite = new Actualite
+    {
+        Titre = createDto.Titre,
+        Contenu = createDto.Contenu,
+        ImageUrl = createDto.ImageUrl,
+        UserId = user.Id,
+        DateDePublication = DateTime.UtcNow,
+    };
+
+    _context.Actualites.Add(actualite);
+    await _context.SaveChangesAsync();
+
+    return actualite;
+}
 
         // -----------------------------------------------------------------
         // Mise à Jour (UPDATE - PUT)

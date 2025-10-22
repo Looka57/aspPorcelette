@@ -12,8 +12,9 @@ public class ActualiteCreateDto
 
         public string? ImageUrl { get; set; }
 
-        [Required(ErrorMessage = "L'ID du Sensei auteur est requis.")]
-        public int SenseiId { get; set; }
+      [Required(ErrorMessage = "L'ID de l'utilisateur (auteur) est requis.")]
+public string UserId { get; set; } = string.Empty;
+
 
         public int? DisciplineId { get; set; }
     }

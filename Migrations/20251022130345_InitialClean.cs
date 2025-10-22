@@ -6,32 +6,11 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ASPPorcelette.API.Migrations
 {
     /// <inheritdoc />
-    public partial class FinalModelConfiguration_V2 : Migration
+    public partial class InitialClean : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "Adherents",
-                columns: table => new
-                {
-                    AdherentId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Nom = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Prenom = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    DateDeNaissance = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Adresse = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Telephone = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    DateAdhesion = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    DateRenouvellement = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    Statut = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Adherents", x => x.AdherentId);
-                });
-
             migrationBuilder.CreateTable(
                 name: "AspNetRoles",
                 columns: table => new
@@ -51,7 +30,21 @@ namespace ASPPorcelette.API.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    SenseiId = table.Column<int>(type: "int", nullable: true),
+                    Nom = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Prenom = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Telephone = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DateNaissance = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RueEtNumero = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Ville = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CodePostal = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Grade = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PhotoUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DateAdhesion = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DateRenouvellement = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Statut = table.Column<int>(type: "int", nullable: false),
+                    Bio = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DisciplineId = table.Column<int>(type: "int", nullable: true),
+                    DateCreation = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -78,8 +71,8 @@ namespace ASPPorcelette.API.Migrations
                 {
                     CategorieTransactionId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Nom = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    TypeCategorie = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Nom = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
+                    TypeFlux = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -92,7 +85,8 @@ namespace ASPPorcelette.API.Migrations
                 {
                     CompteId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Nom = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Nom = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
+                    TypeCompte = table.Column<int>(type: "int", nullable: false),
                     Solde = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Epargne = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
                 },
@@ -122,7 +116,7 @@ namespace ASPPorcelette.API.Migrations
                 {
                     TypeEvenementId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Libelle = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Libelle = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -148,6 +142,33 @@ namespace ASPPorcelette.API.Migrations
                         principalTable: "AspNetRoles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Adherents",
+                columns: table => new
+                {
+                    AdherentId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    Nom = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Prenom = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DateDeNaissance = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Adresse = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Telephone = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DateAdhesion = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateRenouvellement = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Statut = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Adherents", x => x.AdherentId);
+                    table.ForeignKey(
+                        name: "FK_Adherents_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -236,57 +257,32 @@ namespace ASPPorcelette.API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Apprendre",
-                columns: table => new
-                {
-                    AdherentsApprenantAdherentId = table.Column<int>(type: "int", nullable: false),
-                    DisciplinesPratiqueesDisciplineId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Apprendre", x => new { x.AdherentsApprenantAdherentId, x.DisciplinesPratiqueesDisciplineId });
-                    table.ForeignKey(
-                        name: "FK_Apprendre_Adherents_AdherentsApprenantAdherentId",
-                        column: x => x.AdherentsApprenantAdherentId,
-                        principalTable: "Adherents",
-                        principalColumn: "AdherentId",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Apprendre_Disciplines_DisciplinesPratiqueesDisciplineId",
-                        column: x => x.DisciplinesPratiqueesDisciplineId,
-                        principalTable: "Disciplines",
-                        principalColumn: "DisciplineId",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Senseis",
+                name: "Sensei",
                 columns: table => new
                 {
                     SenseiId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Nom = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Prenom = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Grade = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Bio = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Telephone = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PhotoUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Statut = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Nom = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Prenom = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Grade = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Bio = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Telephone = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhotoUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Statut = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     DisciplineId = table.Column<int>(type: "int", nullable: false),
-                    UtilisateurId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UtilisateurId1 = table.Column<string>(type: "nvarchar(450)", nullable: true)
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Senseis", x => x.SenseiId);
+                    table.PrimaryKey("PK_Sensei", x => x.SenseiId);
                     table.ForeignKey(
-                        name: "FK_Senseis_AspNetUsers_UtilisateurId1",
-                        column: x => x.UtilisateurId1,
+                        name: "FK_Sensei_AspNetUsers_UserId",
+                        column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_Senseis_Disciplines_DisciplineId",
+                        name: "FK_Sensei_Disciplines_DisciplineId",
                         column: x => x.DisciplineId,
                         principalTable: "Disciplines",
                         principalColumn: "DisciplineId",
@@ -299,9 +295,10 @@ namespace ASPPorcelette.API.Migrations
                 {
                     TarifId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Libelle = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Prix = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Nom = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Montant = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Periodicite = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    EstActif = table.Column<bool>(type: "bit", nullable: false),
                     DisciplineId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -321,12 +318,12 @@ namespace ASPPorcelette.API.Migrations
                 {
                     TransactionId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Montant = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     DateTransaction = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Montant = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     CompteId = table.Column<int>(type: "int", nullable: false),
                     CategorieTransactionId = table.Column<int>(type: "int", nullable: false),
-                    DisciplineId = table.Column<int>(type: "int", nullable: true)
+                    DisciplineId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -347,7 +344,8 @@ namespace ASPPorcelette.API.Migrations
                         name: "FK_Transactions_Disciplines_DisciplineId",
                         column: x => x.DisciplineId,
                         principalTable: "Disciplines",
-                        principalColumn: "DisciplineId");
+                        principalColumn: "DisciplineId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -356,13 +354,13 @@ namespace ASPPorcelette.API.Migrations
                 {
                     EvenementId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Titre = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Titre = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     DateDebut = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    DateFin = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DateFin = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     TypeEvenementId = table.Column<int>(type: "int", nullable: false),
-                    DisciplineId = table.Column<int>(type: "int", nullable: false)
+                    DisciplineId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -371,8 +369,7 @@ namespace ASPPorcelette.API.Migrations
                         name: "FK_Evenements_Disciplines_DisciplineId",
                         column: x => x.DisciplineId,
                         principalTable: "Disciplines",
-                        principalColumn: "DisciplineId",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "DisciplineId");
                     table.ForeignKey(
                         name: "FK_Evenements_TypeEvenements_TypeEvenementId",
                         column: x => x.TypeEvenementId,
@@ -382,12 +379,60 @@ namespace ASPPorcelette.API.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AdherentDiscipline",
+                columns: table => new
+                {
+                    AdherentsApprenantAdherentId = table.Column<int>(type: "int", nullable: false),
+                    DisciplinesPratiqueesDisciplineId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AdherentDiscipline", x => new { x.AdherentsApprenantAdherentId, x.DisciplinesPratiqueesDisciplineId });
+                    table.ForeignKey(
+                        name: "FK_AdherentDiscipline_Adherents_AdherentsApprenantAdherentId",
+                        column: x => x.AdherentsApprenantAdherentId,
+                        principalTable: "Adherents",
+                        principalColumn: "AdherentId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_AdherentDiscipline_Disciplines_DisciplinesPratiqueesDisciplineId",
+                        column: x => x.DisciplinesPratiqueesDisciplineId,
+                        principalTable: "Disciplines",
+                        principalColumn: "DisciplineId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Apprendre",
+                columns: table => new
+                {
+                    AdherentId = table.Column<int>(type: "int", nullable: false),
+                    DisciplineId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Apprendre", x => new { x.AdherentId, x.DisciplineId });
+                    table.ForeignKey(
+                        name: "FK_Apprendre_Adherents_AdherentId",
+                        column: x => x.AdherentId,
+                        principalTable: "Adherents",
+                        principalColumn: "AdherentId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Apprendre_Disciplines_DisciplineId",
+                        column: x => x.DisciplineId,
+                        principalTable: "Disciplines",
+                        principalColumn: "DisciplineId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Cours",
                 columns: table => new
                 {
                     CoursId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Libelle = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Libelle = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     DisciplineId = table.Column<int>(type: "int", nullable: false),
                     SenseiId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -401,9 +446,9 @@ namespace ASPPorcelette.API.Migrations
                         principalColumn: "DisciplineId",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Cours_Senseis_SenseiId",
+                        name: "FK_Cours_Sensei_SenseiId",
                         column: x => x.SenseiId,
-                        principalTable: "Senseis",
+                        principalTable: "Sensei",
                         principalColumn: "SenseiId",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -414,27 +459,33 @@ namespace ASPPorcelette.API.Migrations
                 {
                     ActualiteId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Titre = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Titre = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
                     Contenu = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     DateDePublication = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    SenseiId = table.Column<int>(type: "int", nullable: false),
-                    EvenementId = table.Column<int>(type: "int", nullable: true)
+                    ImageUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    EvenementId = table.Column<int>(type: "int", nullable: true),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    SenseiId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Actualites", x => x.ActualiteId);
+                    table.ForeignKey(
+                        name: "FK_Actualites_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Actualites_Evenements_EvenementId",
                         column: x => x.EvenementId,
                         principalTable: "Evenements",
                         principalColumn: "EvenementId");
                     table.ForeignKey(
-                        name: "FK_Actualites_Senseis_SenseiId",
+                        name: "FK_Actualites_Sensei_SenseiId",
                         column: x => x.SenseiId,
-                        principalTable: "Senseis",
-                        principalColumn: "SenseiId",
-                        onDelete: ReferentialAction.Cascade);
+                        principalTable: "Sensei",
+                        principalColumn: "SenseiId");
                 });
 
             migrationBuilder.CreateTable(
@@ -443,7 +494,7 @@ namespace ASPPorcelette.API.Migrations
                 {
                     HoraireId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Jour = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Jour = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     HeureDebut = table.Column<TimeSpan>(type: "time", nullable: false),
                     HeureFin = table.Column<TimeSpan>(type: "time", nullable: false),
                     CoursId = table.Column<int>(type: "int", nullable: false)
@@ -470,9 +521,26 @@ namespace ASPPorcelette.API.Migrations
                 column: "SenseiId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Apprendre_DisciplinesPratiqueesDisciplineId",
-                table: "Apprendre",
+                name: "IX_Actualites_UserId",
+                table: "Actualites",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AdherentDiscipline_DisciplinesPratiqueesDisciplineId",
+                table: "AdherentDiscipline",
                 column: "DisciplinesPratiqueesDisciplineId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Adherents_UserId",
+                table: "Adherents",
+                column: "UserId",
+                unique: true,
+                filter: "[UserId] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Apprendre_DisciplineId",
+                table: "Apprendre",
+                column: "DisciplineId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -539,14 +607,14 @@ namespace ASPPorcelette.API.Migrations
                 column: "CoursId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Senseis_DisciplineId",
-                table: "Senseis",
+                name: "IX_Sensei_DisciplineId",
+                table: "Sensei",
                 column: "DisciplineId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Senseis_UtilisateurId1",
-                table: "Senseis",
-                column: "UtilisateurId1");
+                name: "IX_Sensei_UserId",
+                table: "Sensei",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tarifs_DisciplineId",
@@ -574,6 +642,9 @@ namespace ASPPorcelette.API.Migrations
         {
             migrationBuilder.DropTable(
                 name: "Actualites");
+
+            migrationBuilder.DropTable(
+                name: "AdherentDiscipline");
 
             migrationBuilder.DropTable(
                 name: "Apprendre");
@@ -624,7 +695,7 @@ namespace ASPPorcelette.API.Migrations
                 name: "TypeEvenements");
 
             migrationBuilder.DropTable(
-                name: "Senseis");
+                name: "Sensei");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

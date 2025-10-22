@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ASPPorcelette.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250930085237_AjoutTypeCompteEnum")]
-    partial class AjoutTypeCompteEnum
+    [Migration("20251022130345_InitialClean")]
+    partial class InitialClean
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,45 +24,6 @@ namespace ASPPorcelette.API.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("ASPPorcelette.API.Models.Actualite", b =>
-                {
-                    b.Property<int>("ActualiteId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ActualiteId"));
-
-                    b.Property<string>("Contenu")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("DateDePublication")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("EvenementId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ImageUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("SenseiId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Titre")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.HasKey("ActualiteId");
-
-                    b.HasIndex("EvenementId");
-
-                    b.HasIndex("SenseiId");
-
-                    b.ToTable("Actualites");
-                });
 
             modelBuilder.Entity("ASPPorcelette.API.Models.Adherent", b =>
                 {
@@ -105,7 +66,14 @@ namespace ASPPorcelette.API.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("AdherentId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasFilter("[UserId] IS NOT NULL");
 
                     b.ToTable("Adherents");
                 });
@@ -249,7 +217,6 @@ namespace ASPPorcelette.API.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("ImageUrl")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Titre")
@@ -298,6 +265,127 @@ namespace ASPPorcelette.API.Migrations
                     b.ToTable("Horaires");
                 });
 
+            modelBuilder.Entity("ASPPorcelette.API.Models.Identity.User", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Bio")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CodePostal")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DateAdhesion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateCreation")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateNaissance")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DateRenouvellement")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DisciplineId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Grade")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Nom")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PhotoUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Prenom")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("RueEtNumero")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Statut")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Telephone")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("Ville")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex")
+                        .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.ToTable("AspNetUsers", (string)null);
+                });
+
             modelBuilder.Entity("ASPPorcelette.API.Models.Sensei", b =>
                 {
                     b.Property<int>("SenseiId")
@@ -341,19 +429,16 @@ namespace ASPPorcelette.API.Migrations
                     b.Property<string>("Telephone")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("UtilisateurId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UtilisateurId1")
+                    b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("SenseiId");
 
                     b.HasIndex("DisciplineId");
 
-                    b.HasIndex("UtilisateurId1");
+                    b.HasIndex("UserId");
 
-                    b.ToTable("Senseis");
+                    b.ToTable("Sensei");
                 });
 
             modelBuilder.Entity("ASPPorcelette.API.Models.Tarif", b =>
@@ -364,19 +449,24 @@ namespace ASPPorcelette.API.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TarifId"));
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("DisciplineId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Libelle")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<bool>("EstActif")
+                        .HasColumnType("bit");
 
-                    b.Property<decimal>("Prix")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<decimal>("Montant")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<string>("Nom")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Periodicite")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("TarifId");
 
@@ -403,14 +493,14 @@ namespace ASPPorcelette.API.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
-                    b.Property<int?>("DisciplineId")
+                    b.Property<int>("DisciplineId")
                         .HasColumnType("int");
 
                     b.Property<decimal>("Montant")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.HasKey("TransactionId");
 
@@ -441,80 +531,49 @@ namespace ASPPorcelette.API.Migrations
                     b.ToTable("TypeEvenements");
                 });
 
-            modelBuilder.Entity("ASPPorcelette.API.Models.User", b =>
+            modelBuilder.Entity("Actualite", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("AccessFailedCount")
+                    b.Property<int>("ActualiteId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ActualiteId"));
 
-                    b.Property<string>("Email")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("Nom")
+                    b.Property<string>("Contenu")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("NormalizedEmail")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                    b.Property<DateTime>("DateDePublication")
+                        .HasColumnType("datetime2");
 
-                    b.Property<string>("NormalizedUserName")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                    b.Property<int?>("EvenementId")
+                        .HasColumnType("int");
 
-                    b.Property<string>("PasswordHash")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Prenom")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SecurityStamp")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<int?>("SenseiId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("bit");
+                    b.Property<string>("Titre")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
-                    b.Property<string>("UserName")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
-                    b.HasKey("Id");
+                    b.HasKey("ActualiteId");
 
-                    b.HasIndex("NormalizedEmail")
-                        .HasDatabaseName("EmailIndex");
+                    b.HasIndex("EvenementId");
 
-                    b.HasIndex("NormalizedUserName")
-                        .IsUnique()
-                        .HasDatabaseName("UserNameIndex")
-                        .HasFilter("[NormalizedUserName] IS NOT NULL");
+                    b.HasIndex("SenseiId");
 
-                    b.ToTable("AspNetUsers", (string)null);
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Actualites");
                 });
 
             modelBuilder.Entity("AdherentDiscipline", b =>
@@ -665,21 +724,13 @@ namespace ASPPorcelette.API.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("ASPPorcelette.API.Models.Actualite", b =>
+            modelBuilder.Entity("ASPPorcelette.API.Models.Adherent", b =>
                 {
-                    b.HasOne("ASPPorcelette.API.Models.Evenement", "EvenementAssocie")
-                        .WithMany()
-                        .HasForeignKey("EvenementId");
+                    b.HasOne("ASPPorcelette.API.Models.Identity.User", "User")
+                        .WithOne()
+                        .HasForeignKey("ASPPorcelette.API.Models.Adherent", "UserId");
 
-                    b.HasOne("ASPPorcelette.API.Models.Sensei", "SenseiAuteur")
-                        .WithMany("ActualitesPubliees")
-                        .HasForeignKey("SenseiId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("EvenementAssocie");
-
-                    b.Navigation("SenseiAuteur");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ASPPorcelette.API.Models.Apprendre", b =>
@@ -756,24 +807,24 @@ namespace ASPPorcelette.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ASPPorcelette.API.Models.User", "Utilisateur")
+                    b.HasOne("ASPPorcelette.API.Models.Identity.User", "User")
                         .WithMany()
-                        .HasForeignKey("UtilisateurId1");
+                        .HasForeignKey("UserId");
 
                     b.Navigation("DisciplinePrincipale");
 
-                    b.Navigation("Utilisateur");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ASPPorcelette.API.Models.Tarif", b =>
                 {
-                    b.HasOne("ASPPorcelette.API.Models.Discipline", "DisciplineConcernee")
+                    b.HasOne("ASPPorcelette.API.Models.Discipline", "Discipline")
                         .WithMany("Tarifs")
                         .HasForeignKey("DisciplineId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("DisciplineConcernee");
+                    b.Navigation("Discipline");
                 });
 
             modelBuilder.Entity("ASPPorcelette.API.Models.Transaction", b =>
@@ -790,15 +841,38 @@ namespace ASPPorcelette.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ASPPorcelette.API.Models.Discipline", "DisciplineAssociee")
+                    b.HasOne("ASPPorcelette.API.Models.Discipline", "Discipline")
                         .WithMany("TransactionsAssociees")
-                        .HasForeignKey("DisciplineId");
+                        .HasForeignKey("DisciplineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Categorie");
 
                     b.Navigation("Compte");
 
-                    b.Navigation("DisciplineAssociee");
+                    b.Navigation("Discipline");
+                });
+
+            modelBuilder.Entity("Actualite", b =>
+                {
+                    b.HasOne("ASPPorcelette.API.Models.Evenement", "EvenementAssocie")
+                        .WithMany()
+                        .HasForeignKey("EvenementId");
+
+                    b.HasOne("ASPPorcelette.API.Models.Sensei", null)
+                        .WithMany("ActualitesPubliees")
+                        .HasForeignKey("SenseiId");
+
+                    b.HasOne("ASPPorcelette.API.Models.Identity.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EvenementAssocie");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("AdherentDiscipline", b =>
@@ -827,7 +901,7 @@ namespace ASPPorcelette.API.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("ASPPorcelette.API.Models.User", null)
+                    b.HasOne("ASPPorcelette.API.Models.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -836,7 +910,7 @@ namespace ASPPorcelette.API.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("ASPPorcelette.API.Models.User", null)
+                    b.HasOne("ASPPorcelette.API.Models.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -851,7 +925,7 @@ namespace ASPPorcelette.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ASPPorcelette.API.Models.User", null)
+                    b.HasOne("ASPPorcelette.API.Models.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -860,7 +934,7 @@ namespace ASPPorcelette.API.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("ASPPorcelette.API.Models.User", null)
+                    b.HasOne("ASPPorcelette.API.Models.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

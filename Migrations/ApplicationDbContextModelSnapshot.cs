@@ -22,45 +22,6 @@ namespace ASPPorcelette.API.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("ASPPorcelette.API.Models.Actualite", b =>
-                {
-                    b.Property<int>("ActualiteId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ActualiteId"));
-
-                    b.Property<string>("Contenu")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("DateDePublication")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("EvenementId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ImageUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("SenseiId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Titre")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.HasKey("ActualiteId");
-
-                    b.HasIndex("EvenementId");
-
-                    b.HasIndex("SenseiId");
-
-                    b.ToTable("Actualites");
-                });
-
             modelBuilder.Entity("ASPPorcelette.API.Models.Adherent", b =>
                 {
                     b.Property<int>("AdherentId")
@@ -567,6 +528,51 @@ namespace ASPPorcelette.API.Migrations
                     b.ToTable("TypeEvenements");
                 });
 
+            modelBuilder.Entity("Actualite", b =>
+                {
+                    b.Property<int>("ActualiteId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ActualiteId"));
+
+                    b.Property<string>("Contenu")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DateDePublication")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("EvenementId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("SenseiId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Titre")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("ActualiteId");
+
+                    b.HasIndex("EvenementId");
+
+                    b.HasIndex("SenseiId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Actualites");
+                });
+
             modelBuilder.Entity("AdherentDiscipline", b =>
                 {
                     b.Property<int>("AdherentsApprenantAdherentId")
@@ -715,23 +721,6 @@ namespace ASPPorcelette.API.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("ASPPorcelette.API.Models.Actualite", b =>
-                {
-                    b.HasOne("ASPPorcelette.API.Models.Evenement", "EvenementAssocie")
-                        .WithMany()
-                        .HasForeignKey("EvenementId");
-
-                    b.HasOne("ASPPorcelette.API.Models.Sensei", "SenseiAuteur")
-                        .WithMany("ActualitesPubliees")
-                        .HasForeignKey("SenseiId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("EvenementAssocie");
-
-                    b.Navigation("SenseiAuteur");
-                });
-
             modelBuilder.Entity("ASPPorcelette.API.Models.Adherent", b =>
                 {
                     b.HasOne("ASPPorcelette.API.Models.Identity.User", "User")
@@ -860,6 +849,27 @@ namespace ASPPorcelette.API.Migrations
                     b.Navigation("Compte");
 
                     b.Navigation("Discipline");
+                });
+
+            modelBuilder.Entity("Actualite", b =>
+                {
+                    b.HasOne("ASPPorcelette.API.Models.Evenement", "EvenementAssocie")
+                        .WithMany()
+                        .HasForeignKey("EvenementId");
+
+                    b.HasOne("ASPPorcelette.API.Models.Sensei", null)
+                        .WithMany("ActualitesPubliees")
+                        .HasForeignKey("SenseiId");
+
+                    b.HasOne("ASPPorcelette.API.Models.Identity.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EvenementAssocie");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("AdherentDiscipline", b =>
