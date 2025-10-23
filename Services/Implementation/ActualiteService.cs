@@ -122,9 +122,36 @@ namespace ASPPorcelette.API.Services.Implementation
         // Suppression (DELETE)
         // -----------------------------------------------------------------
 
-        public async Task<bool> DeleteAsync(int id)
+      public async Task<bool> DeleteAsync(int id, string webRootPath)
+{
+    // 1️⃣ Récupérer l'article pour avoir ImageUrl
+    var actualite = await _actualiteRepository.GetByIdWithDetailsAsync(id);
+    if (actualite == null) return false;
+
+    // 2️⃣ Supprimer l'image physique si elle existe
+    if (!string.IsNullOrEmpty(actualite.ImageUrl))
+    {
+        // Attention : retire les '/' initiaux pour Path.Combine
+        var relativePath = actualite.ImageUrl.TrimStart('/').Replace("/", Path.DirectorySeparatorChar.ToString());
+        var imagePath = Path.Combine(webRootPath, relativePath);
+
+        if (System.IO.File.Exists(imagePath))
         {
-            return await _actualiteRepository.DeleteAsync(id);
+            try
+            {
+                System.IO.File.Delete(imagePath);
+                Console.WriteLine($"✅ Image supprimée : {imagePath}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Erreur suppression image : {ex.Message}");
+            }
         }
+    }
+
+    // 3️⃣ Supprimer l'article en base
+    return await _actualiteRepository.DeleteAsync(id);
+}
+
     }
 }

@@ -18,16 +18,16 @@ namespace ASPPorcelette.API.Controllers
         private readonly IActualiteService _actualiteService;
         private readonly IMapper _mapper;
         private readonly IWebHostEnvironment _env; // 🎯 NOUVEAU : Pour l'environnement hôte
-public ActualiteController(
-            IActualiteService actualiteService, 
-            IMapper mapper,
-            IWebHostEnvironment env
-             ) 
+        public ActualiteController(
+                    IActualiteService actualiteService,
+                    IMapper mapper,
+                    IWebHostEnvironment env
+                     )
         {
             _actualiteService = actualiteService;
             _mapper = mapper;
             _env = env;
-            
+
         }
 
         // GET: api/Actualite
@@ -60,9 +60,9 @@ public ActualiteController(
         /// <summary>
         /// Crée une nouvelle actualité.
         /// </summary>
-       [HttpPost]
+        [HttpPost]
         [Consumes("multipart/form-data")] // 🎯 ESSENTIEL : Résout le 415
-        public async Task<ActionResult<ActualiteDto>> CreateActualite([FromForm] ActualiteCreateDto createDto) 
+        public async Task<ActionResult<ActualiteDto>> CreateActualite([FromForm] ActualiteCreateDto createDto)
         // 🎯 ESSENTIEL : Résout le 415
         {
 
@@ -70,7 +70,7 @@ public ActualiteController(
             {
                 return BadRequest(ModelState);
             }
-            
+
 
             string imageUrl = null;
 
@@ -85,7 +85,7 @@ public ActualiteController(
                 {
                     Directory.CreateDirectory(uploadFolder);
                 }
-                
+
                 // 2. Créer un nom de fichier unique
                 var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(createDto.ImageFile.FileName);
                 var filePath = Path.Combine(uploadFolder, uniqueFileName);
@@ -100,21 +100,21 @@ public ActualiteController(
                 imageUrl = $"/images/actualites/{uniqueFileName}";
             }
             // -----------------------------------------------------
-            
+
             // Assigner l'URL générée au DTO AVANT de l'envoyer au service
-            createDto.ImageUrl = imageUrl; 
+            createDto.ImageUrl = imageUrl;
 
             var createdActualite = await _actualiteService.CreateAsync(createDto);
 
             // ... (suite inchangée) ...
-            
+
             return CreatedAtAction(
-                nameof(GetActualiteById), 
+                nameof(GetActualiteById),
                 new { id = createdActualite.ActualiteId }, // Utilisez createdActualite.ActualiteId
                 _mapper.Map<ActualiteDto>(createdActualite)
             );
         }
-    
+
 
         // PUT: api/Actualite/5
         /// <summary>
@@ -127,9 +127,9 @@ public ActualiteController(
             {
                 return BadRequest(ModelState);
             }
-            
+
             var success = await _actualiteService.UpdateAsync(id, updateDto);
-            
+
             if (!success)
             {
                 return NotFound();
@@ -155,7 +155,7 @@ public ActualiteController(
             {
                 return NotFound();
             }
-            
+
             return Ok(_mapper.Map<ActualiteDto>(updatedActualite));
         }
 
@@ -166,11 +166,10 @@ public ActualiteController(
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteActualite(int id)
         {
-            var success = await _actualiteService.DeleteAsync(id);
+            var success = await _actualiteService.DeleteAsync(id, _env.WebRootPath);
             if (!success)
-            {
                 return NotFound();
-            }
+
             return NoContent();
         }
     }
