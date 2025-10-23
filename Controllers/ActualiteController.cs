@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting; // 🎯 NOUVEAU
+using System.IO; 
+using System;
 
 namespace ASPPorcelette.API.Controllers
 {
@@ -14,11 +17,17 @@ namespace ASPPorcelette.API.Controllers
     {
         private readonly IActualiteService _actualiteService;
         private readonly IMapper _mapper;
-
-        public ActualiteController(IActualiteService actualiteService, IMapper mapper)
+        private readonly IWebHostEnvironment _env; // 🎯 NOUVEAU : Pour l'environnement hôte
+public ActualiteController(
+            IActualiteService actualiteService, 
+            IMapper mapper,
+            IWebHostEnvironment env
+             ) 
         {
             _actualiteService = actualiteService;
             _mapper = mapper;
+            _env = env;
+            
         }
 
         // GET: api/Actualite
@@ -51,28 +60,61 @@ namespace ASPPorcelette.API.Controllers
         /// <summary>
         /// Crée une nouvelle actualité.
         /// </summary>
-        [HttpPost]
-        public async Task<ActionResult<ActualiteDto>> CreateActualite(ActualiteCreateDto createDto)
+       [HttpPost]
+        [Consumes("multipart/form-data")] // 🎯 ESSENTIEL : Résout le 415
+        public async Task<ActionResult<ActualiteDto>> CreateActualite([FromForm] ActualiteCreateDto createDto) 
+        // 🎯 ESSENTIEL : Résout le 415
         {
-            // Vérification de la validité de l'objet de création (SenseiId, etc.)
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
+            
+
+            string imageUrl = null;
+
+            // -----------------------------------------------------
+            // 🎯 LOGIQUE DE SAUVEGARDE DU FICHIER (Méthode Profil simplifiée)
+            // -----------------------------------------------------
+            if (createDto.ImageFile != null)
+            {
+                // 1. Définir le chemin du dossier cible (ex: dans wwwroot)
+                var uploadFolder = Path.Combine(_env.WebRootPath, "images", "actualites");
+                if (!Directory.Exists(uploadFolder))
+                {
+                    Directory.CreateDirectory(uploadFolder);
+                }
+                
+                // 2. Créer un nom de fichier unique
+                var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(createDto.ImageFile.FileName);
+                var filePath = Path.Combine(uploadFolder, uniqueFileName);
+
+                // 3. Sauvegarder le fichier sur le disque
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await createDto.ImageFile.CopyToAsync(fileStream);
+                }
+
+                // 4. Définir l'URL relative à stocker en base de données
+                imageUrl = $"/images/actualites/{uniqueFileName}";
+            }
+            // -----------------------------------------------------
+            
+            // Assigner l'URL générée au DTO AVANT de l'envoyer au service
+            createDto.ImageUrl = imageUrl; 
 
             var createdActualite = await _actualiteService.CreateAsync(createDto);
 
-            // Recharger l'entité avec les relations pour le retour au client
-            var actualiteWithDetails = await _actualiteService.GetByIdAsync(createdActualite.ActualiteId);
-
-            var actualiteToReturn = _mapper.Map<ActualiteDto>(actualiteWithDetails);
+            // ... (suite inchangée) ...
             
             return CreatedAtAction(
                 nameof(GetActualiteById), 
-                new { id = actualiteToReturn.ActualiteId }, 
-                actualiteToReturn
+                new { id = createdActualite.ActualiteId }, // Utilisez createdActualite.ActualiteId
+                _mapper.Map<ActualiteDto>(createdActualite)
             );
         }
+    
 
         // PUT: api/Actualite/5
         /// <summary>

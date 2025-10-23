@@ -236,6 +236,8 @@ if (app.Environment.IsDevelopment())
 
 
 app.UseStaticFiles();
+app.UseRouting();
+app.UseCors("VueAppPolicy");
 app.MapGet("/debug/controllers", (IServiceProvider services) =>
 {
     var actionDescriptorCollectionProvider = services.GetRequiredService<IActionDescriptorCollectionProvider>();
@@ -256,7 +258,7 @@ app.MapGet("/debug/controllers", (IServiceProvider services) =>
 // Les services d'authentification et d'autorisation sont cruciaux pour une API sécurisée
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseCors("VueAppPolicy");
+
 
 // Mappe les requêtes HTTP aux méthodes de vos Controllers
 app.MapControllers();
