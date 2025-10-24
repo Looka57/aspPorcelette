@@ -82,10 +82,13 @@ namespace ASPPorcelette.API.MappingProfiles
             // ----------------------------------------------------
             CreateMap<Actualite, ActualiteDto>();  // AutoMapper mappera automatiquement Sensei à SenseiDto et Discipline à DisciplineDto
             CreateMap<Actualite, ActualiteUpdateDto>();  // 2. Entité
-            CreateMap<ActualiteCreateDto, Actualite>();  // 3. DTO de création vers Entité (POST)
-            CreateMap<ActualiteUpdateDto, Actualite>();// 4. DTO de mise
+            CreateMap<ActualiteCreateDto, Actualite>();  // 3. DTO de création vers Entité (POST
+            CreateMap<ActualiteUpdateDto, Actualite>()
+                .ForMember(dest => dest.ActualiteId, opt => opt.Ignore())
+                .ForMember(dest => dest.ImageUrl, opt => opt.Ignore())
+                .ForMember(dest => dest.ImageUrl, opt => opt.Ignore());
             CreateMap<User, UserDto>();
-            
+
 
             // / ----------------------------------------------------
             // Mappings pour la ressource CategorieTransaction

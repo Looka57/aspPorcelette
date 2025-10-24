@@ -12,7 +12,7 @@ namespace ASPPorcelette.API.Services.Interfaces
         Task<IEnumerable<Actualite>> GetAllAsync();
         Task<Actualite?> GetByIdAsync(int id);
         Task<Actualite> CreateAsync(ActualiteCreateDto createDto);
-        Task<bool> UpdateAsync(int id, ActualiteUpdateDto updateDto);
+        Task<bool> UpdateAsync(int id, ActualiteUpdateDto updateDto, string webRootPath);
         Task<(Actualite? Actualite, bool Success)> PartialUpdateAsync(
             int id, 
             JsonPatchDocument<ActualiteUpdateDto> patchDocument

@@ -66,6 +66,9 @@ namespace ASPPorcelette.API.Controllers
         // 🎯 ESSENTIEL : Résout le 415
         {
 
+Console.WriteLine($"[CONTROLLER] EvenementId reçu : {createDto.EvenementId}");
+
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -121,22 +124,23 @@ namespace ASPPorcelette.API.Controllers
         /// Met à jour complètement une actualité existante.
         /// </summary>
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateActualite(int id, ActualiteUpdateDto updateDto)
+        [Consumes("multipart/form-data")] // <--- NÉCESSAIRE POUR LIRE LE FORMDATA AVEC FICHIER
+        public async Task<IActionResult> UpdateActualite(int id, [FromForm] ActualiteUpdateDto updateDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var success = await _actualiteService.UpdateAsync(id, updateDto);
+            var success = await _actualiteService.UpdateAsync(id, updateDto, _env.WebRootPath);
 
             if (!success)
             {
                 return NotFound();
             }
 
-            // Retourne 204 No Content si la mise à jour a réussi
-            return NoContent();
+            var updatedActualite = await _actualiteService.GetByIdAsync(id); 
+            return Ok(_mapper.Map<ActualiteDto>(updatedActualite));
         }
 
         // PATCH: api/Actualite/5
