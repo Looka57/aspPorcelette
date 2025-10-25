@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting; // 🎯 NOUVEAU
+using Microsoft.AspNetCore.Hosting; 
 using System.IO; 
 using System;
 
@@ -17,23 +17,25 @@ namespace ASPPorcelette.API.Controllers
     {
         private readonly IActualiteService _actualiteService;
         private readonly IMapper _mapper;
-        private readonly IWebHostEnvironment _env; // 🎯 NOUVEAU : Pour l'environnement hôte
+        private readonly IWebHostEnvironment _env; 
+
+        // -----------------------------------------------------------------
+        // CONSTRUCTEUR
+        // -----------------------------------------------------------------
         public ActualiteController(
-                    IActualiteService actualiteService,
-                    IMapper mapper,
-                    IWebHostEnvironment env
-                     )
+            IActualiteService actualiteService,
+            IMapper mapper,
+            IWebHostEnvironment env
+        )
         {
             _actualiteService = actualiteService;
             _mapper = mapper;
             _env = env;
-
         }
 
-        // GET: api/Actualite
-        /// <summary>
-        /// Récupère toutes les actualités avec les détails du Sensei, de l'Événement et de la Discipline associés.
-        /// </summary>
+        // -----------------------------------------------------------------
+        // GET: Toutes les actualités
+        // -----------------------------------------------------------------
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ActualiteDto>>> GetAllActualites()
         {
@@ -41,10 +43,9 @@ namespace ASPPorcelette.API.Controllers
             return Ok(_mapper.Map<IEnumerable<ActualiteDto>>(actualites));
         }
 
-        // GET: api/Actualite/5
-        /// <summary>
-        /// Récupère une actualité spécifique par ID avec tous les détails.
-        /// </summary>
+        // -----------------------------------------------------------------
+        // GET: Une actualité spécifique par ID
+        // -----------------------------------------------------------------
         [HttpGet("{id}")]
         public async Task<ActionResult<ActualiteDto>> GetActualiteById(int id)
         {
@@ -56,75 +57,57 @@ namespace ASPPorcelette.API.Controllers
             return Ok(_mapper.Map<ActualiteDto>(actualite));
         }
 
-        // POST: api/Actualite
-        /// <summary>
-        /// Crée une nouvelle actualité.
-        /// </summary>
+        // -----------------------------------------------------------------
+        // POST: Créer une nouvelle actualité
+        // -----------------------------------------------------------------
         [HttpPost]
-        [Consumes("multipart/form-data")] // 🎯 ESSENTIEL : Résout le 415
+        [Consumes("multipart/form-data")] 
         public async Task<ActionResult<ActualiteDto>> CreateActualite([FromForm] ActualiteCreateDto createDto)
-        // 🎯 ESSENTIEL : Résout le 415
         {
-
-Console.WriteLine($"[CONTROLLER] EvenementId reçu : {createDto.EvenementId}");
-
-
+            // Vérification du modèle
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-
             string imageUrl = null;
 
-            // -----------------------------------------------------
-            // 🎯 LOGIQUE DE SAUVEGARDE DU FICHIER (Méthode Profil simplifiée)
-            // -----------------------------------------------------
+            // Gestion du fichier image
             if (createDto.ImageFile != null)
             {
-                // 1. Définir le chemin du dossier cible (ex: dans wwwroot)
                 var uploadFolder = Path.Combine(_env.WebRootPath, "images", "actualites");
                 if (!Directory.Exists(uploadFolder))
                 {
                     Directory.CreateDirectory(uploadFolder);
                 }
 
-                // 2. Créer un nom de fichier unique
                 var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(createDto.ImageFile.FileName);
                 var filePath = Path.Combine(uploadFolder, uniqueFileName);
 
-                // 3. Sauvegarder le fichier sur le disque
                 using (var fileStream = new FileStream(filePath, FileMode.Create))
                 {
                     await createDto.ImageFile.CopyToAsync(fileStream);
                 }
 
-                // 4. Définir l'URL relative à stocker en base de données
                 imageUrl = $"/images/actualites/{uniqueFileName}";
             }
-            // -----------------------------------------------------
 
-            // Assigner l'URL générée au DTO AVANT de l'envoyer au service
             createDto.ImageUrl = imageUrl;
 
             var createdActualite = await _actualiteService.CreateAsync(createDto);
 
-            // ... (suite inchangée) ...
-
             return CreatedAtAction(
                 nameof(GetActualiteById),
-                new { id = createdActualite.ActualiteId }, // Utilisez createdActualite.ActualiteId
+                new { id = createdActualite.ActualiteId },
                 _mapper.Map<ActualiteDto>(createdActualite)
             );
         }
 
-
-        // PUT: api/Actualite/5
-        /// <summary>
-        /// Met à jour complètement une actualité existante.
-        /// </summary>
+        // -----------------------------------------------------------------
+        // PUT: Mise à jour complète d'une actualité existante
+        // -----------------------------------------------------------------
         [HttpPut("{id}")]
-        [Consumes("multipart/form-data")] // <--- NÉCESSAIRE POUR LIRE LE FORMDATA AVEC FICHIER
+        [Consumes("multipart/form-data")]
         public async Task<IActionResult> UpdateActualite(int id, [FromForm] ActualiteUpdateDto updateDto)
         {
             if (!ModelState.IsValid)
@@ -143,10 +126,9 @@ Console.WriteLine($"[CONTROLLER] EvenementId reçu : {createDto.EvenementId}");
             return Ok(_mapper.Map<ActualiteDto>(updatedActualite));
         }
 
-        // PATCH: api/Actualite/5
-        /// <summary>
-        /// Met à jour partiellement une actualité (JSON Patch).
-        /// </summary>
+        // -----------------------------------------------------------------
+        // PATCH: Mise à jour partielle d'une actualité (JSON Patch)
+        // -----------------------------------------------------------------
         [HttpPatch("{id}")]
         public async Task<ActionResult<ActualiteDto>> PartialUpdateActualite(
             int id,
@@ -163,10 +145,9 @@ Console.WriteLine($"[CONTROLLER] EvenementId reçu : {createDto.EvenementId}");
             return Ok(_mapper.Map<ActualiteDto>(updatedActualite));
         }
 
-        // DELETE: api/Actualite/5
-        /// <summary>
-        /// Supprime une actualité par ID.
-        /// </summary>
+        // -----------------------------------------------------------------
+        // DELETE: Supprimer une actualité par ID
+        // -----------------------------------------------------------------
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteActualite(int id)
         {
