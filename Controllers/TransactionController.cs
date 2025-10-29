@@ -37,7 +37,7 @@ namespace ASPPorcelette.API.Controllers
             {
                 return NotFound("Aucune transaction trouvée.");
             }
-            
+
             // Mappe les entités Transaction sur le DTO de lecture avec détails
             var transactionDtos = _mapper.Map<IEnumerable<TransactionDto>>(transactions);
             return Ok(transactionDtos);
