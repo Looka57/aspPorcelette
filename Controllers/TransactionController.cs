@@ -43,6 +43,8 @@ namespace ASPPorcelette.API.Controllers
             return Ok(transactionDtos);
         }
 
+        
+
         // GET: api/Transaction/5
         /// <summary>
         /// Récupère une transaction spécifique par ID avec tous ses détails.
@@ -63,6 +65,49 @@ namespace ASPPorcelette.API.Controllers
 
             return Ok(_mapper.Map<TransactionDto>(transaction));
         }
+
+
+// GET: api/Transaction/compte/5
+/// <summary>
+/// Récupère toutes les transactions associées à un compte donné.
+/// </summary>
+/// <param name="compteId">L'ID du compte.</param>
+/// <returns>Une liste de TransactionDto.</returns>
+// GET: api/Transaction/compte/5
+
+
+// GET: api/Transaction/compte/5
+/// <summary>
+/// Récupère toutes les transactions liées à un compte donné.
+/// </summary>
+/// <param name="compteId">L'ID du compte.</param>
+/// <returns>Liste de transactions avec leurs détails.</returns>
+[HttpGet("compte/{compteId}")]
+[ProducesResponseType(StatusCodes.Status200OK)]
+[ProducesResponseType(StatusCodes.Status404NotFound)]
+public async Task<ActionResult<IEnumerable<TransactionDto>>> GetTransactionsByCompte(int compteId)
+{
+    var transactions = await _transactionService.GetTransactionsByCompteIdAsync(compteId);
+
+    if (transactions == null || !transactions.Any())
+        return NotFound($"Aucune transaction trouvée pour le compte ID {compteId}.");
+
+    var transactionDtos = _mapper.Map<IEnumerable<TransactionDto>>(transactions);
+    return Ok(transactionDtos);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         // POST: api/Transaction
         /// <summary>

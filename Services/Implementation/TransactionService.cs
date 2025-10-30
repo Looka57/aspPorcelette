@@ -42,6 +42,11 @@ namespace ASPPorcelette.API.Services.Implementation
             return await _transactionRepository.GetByIdWithDetailsAsync(id);
         }
 
+  public async Task<IEnumerable<Transaction>> GetTransactionsByCompteIdAsync(int compteId)
+        {
+            return await _transactionRepository.GetByCompteIdWithDetailsAsync(compteId);
+        }
+
         // ============================================================
         // 🔹 Calcul du montant signé selon le TypeFlux
         // ============================================================
@@ -108,17 +113,7 @@ namespace ASPPorcelette.API.Services.Implementation
             return await _transactionRepository.GetByIdWithDetailsAsync(createdTransaction.TransactionId);
         }
 
-// -----------------------------------------------------------------
-// Récupérer les 5 dernières transactions (triées par date décroissante)
-// -----------------------------------------------------------------
-public async Task<IEnumerable<Transaction>> GetLast5TransactionsAsync()
-{
-    var allTransactions = await _transactionRepository.GetAllWithDetailsAsync();
-    return allTransactions
-        .OrderByDescending(t => t.DateTransaction)
-        .Take(5);
-}
-
+       
 
 
 
