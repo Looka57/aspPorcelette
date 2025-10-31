@@ -48,12 +48,12 @@ namespace ASPPorcelette.API.Repository.Implementation
         }
 
         public async Task<IEnumerable<Transaction>> GetByCompteIdWithDetailsAsync(int compteId)
-{
-    return await GetQueryWithDetails()
-        .Where(t => t.CompteId == compteId)
-        .OrderByDescending(t => t.DateTransaction)
-        .ToListAsync();
-}
+        {
+            return await GetQueryWithDetails()
+                .Where(t => t.CompteId == compteId)
+                .OrderByDescending(t => t.DateTransaction)
+                .ToListAsync();
+        }
 
 
         public async Task<Transaction> AddAsync(Transaction transaction)
