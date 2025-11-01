@@ -11,7 +11,7 @@ namespace ASPPorcelette.API.Models
 
         // Navigation
         public ICollection<Cours> CoursAssocies { get; set; } = new List<Cours>();
-        public ICollection<Sensei> SenseisEnseignants { get; set; } = new List<Sensei>();
+        // public ICollection<Sensei> SenseisEnseignants { get; set; } = new List<Sensei>();
         public ICollection<Evenement> EvenementsAssocies { get; set; } = new List<Evenement>();
         public ICollection<Adherent> AdherentsApprenant { get; set; } = new List<Adherent>();
         public ICollection<Tarif> Tarifs { get; set; } = new List<Tarif>();

@@ -71,6 +71,9 @@ builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
 // builder.Services.AddScoped<ISenseiRepository, SenseiRepository>();
 // builder.Services.AddScoped<ISenseiService, SenseiService>();
 
+
+builder.Services.AddScoped<IUserService, UserService>();
+
 builder.Services.AddScoped<IDisciplineRepository, DisciplineRepository>();
 builder.Services.AddScoped<IDisciplineService, DisciplineService>();
 

@@ -12,51 +12,37 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using System; // Ajout pour DateTime.UtcNow dans Test()
+using System;
 
-// -------------------------
-// CONFIGURATION DU CONTRÔLEUR
-// -------------------------
 namespace ASPPorcelette.API.Controllers
 {
-    /// <summary>
-    /// Gestion complète des utilisateurs (profil personnel + administration)
-    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
-        // -------------------------
-        // INJECTION DE DÉPENDANCES
-        // -------------------------
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly ISenseiService _senseiService;
+        private readonly IUserService _userService; // ✅ Renommez ISenseiService en IUserService
 
         public UserController(
             UserManager<User> userManager,
             RoleManager<IdentityRole> roleManager,
-            ISenseiService senseiService)
+            IUserService userService) // ✅ Changez ici
         {
             _userManager = userManager;
             _roleManager = roleManager;
-            _senseiService = senseiService;
+            _userService = userService; // ✅ Et ici
         }
 
         // -------------------------
         // GESTION DU PROFIL UTILISATEUR
         // -------------------------
 
-        /// <summary>
-        /// Récupère les informations du profil de l'utilisateur connecté
-        /// GET: /api/User/profile
-        /// </summary>
         [HttpGet("profile")]
-        // Rendre accessible à tout utilisateur authentifié (Admin, Sensei ou Adhérent)
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei,Adherent")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> GetMyProfile() // Nom cohérent avec l'action
+        public async Task<IActionResult> GetMyProfile()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
@@ -68,7 +54,6 @@ namespace ASPPorcelette.API.Controllers
 
             var roles = await _userManager.GetRolesAsync(user);
 
-            // Ajout des champs étendus pour le retour
             return Ok(new
             {
                 user.Id,
@@ -87,16 +72,12 @@ namespace ASPPorcelette.API.Controllers
                 user.DateNaissance,
                 user.DateAdhesion,
                 user.DateRenouvellement,
+                user.DisciplineId, // ✅ Pour les Sensei
                 Roles = roles
             });
         }
 
-        /// <summary>
-        /// Met à jour le profil de l'utilisateur connecté
-        /// PUT: /api/User/profile
-        /// </summary>
         [HttpPut("profile")]
-        // Permettre à tous les utilisateurs (Admin, Sensei, Adhérent) de mettre à jour leur profil
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei,Adherent")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -107,7 +88,7 @@ namespace ASPPorcelette.API.Controllers
             if (userId == null)
                 return Unauthorized(new { Message = "Impossible de trouver l'identifiant utilisateur." });
 
-            var result = await _senseiService.UpdateUserProfileAsync(userId, updateDto);
+            var result = await _userService.UpdateUserProfileAsync(userId, updateDto);
 
             if (result.Succeeded)
                 return Ok(new { Message = "Profil mis à jour avec succès." });
@@ -116,34 +97,25 @@ namespace ASPPorcelette.API.Controllers
             return BadRequest(new { Errors = errors, Message = "Échec de la mise à jour du profil." });
         }
 
-        // UserController ou SenseiController C#
-
-        // ... (votre méthode UpdateMyProfile est conservée) ...
-
-        // 🟢 NOUVELLE MÉTHODE : ÉDITION ADMINISTRATIVE PAR ID
         [HttpPut("admin/{id}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> UpdateSenseiByAdmin([FromRoute] Guid id, [FromForm] UserUpdateDto updateDto)
+        public async Task<IActionResult> UpdateUserByAdmin([FromRoute] Guid id, [FromForm] UserUpdateDto updateDto)
         {
-            // 1. Vérification de cohérence (optionnel, mais recommandé)
-        if (string.IsNullOrEmpty(updateDto.UserId) || !Guid.TryParse(updateDto.UserId, out var dtoGuid) || id != dtoGuid)
-    {
-        return BadRequest(new { Message = "L'ID dans la route ne correspond pas à l'ID utilisateur dans les données ou l'ID est invalide." });
-    }
+            if (string.IsNullOrEmpty(updateDto.UserId) || !Guid.TryParse(updateDto.UserId, out var dtoGuid) || id != dtoGuid)
+            {
+                return BadRequest(new { Message = "L'ID dans la route ne correspond pas à l'ID utilisateur dans les données ou l'ID est invalide." });
+            }
 
-            // 2. Appel du service pour la mise à jour
-            // Si votre service gère la mise à jour d'un utilisateur par son ID...
-            var result = await _senseiService.UpdateUserProfileAsync(id.ToString(), updateDto);
+            var result = await _userService.UpdateUserProfileAsync(id.ToString(), updateDto);
 
             if (result.Succeeded)
             {
                 return Ok(new { Message = "Utilisateur mis à jour par l'Administrateur avec succès." });
             }
 
-            // Gérer les erreurs (utilisateur non trouvé, échec de la mise à jour, etc.)
             var errors = result.Errors.Select(e => e.Description).ToList();
             return BadRequest(new { Errors = errors, Message = "Échec de la mise à jour de l'utilisateur." });
         }
@@ -151,33 +123,17 @@ namespace ASPPorcelette.API.Controllers
         // -------------------------
         // GESTION DES INSCRIPTIONS
         // -------------------------
-        // Endpoints publics pour l'inscription des nouveaux utilisateurs
 
-        /// <summary>
-        /// Inscription d'un nouveau Sensei (publique)
-        /// POST: /api/User/register/sensei
-        /// </summary>
         [HttpPost("register/sensei")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> RegisterSensei([FromForm] UserCreationDto registrationDto)
         {
-            Console.WriteLine("---- REGISTER SENSEI ----");
-            Console.WriteLine($"Email : {registrationDto.Email}");
-            Console.WriteLine($"Nom : {registrationDto.Nom}");
-            Console.WriteLine($"Prenom : {registrationDto.Prenom}");
-            Console.WriteLine($"DateNaissance : {registrationDto.DateNaissance}");
-            Console.WriteLine($"PhotoFile : {registrationDto.PhotoFile?.FileName ?? "aucune"}");
-            Console.WriteLine("-------------------------");
-
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
-            // La méthode CreateUserWithProfileAsync DOIT attribuer le rôle "Sensei" en interne
-            var result = await _senseiService.CreateUserWithProfileAsync(registrationDto, "Sensei");
+            var result = await _userService.CreateUserWithProfileAsync(registrationDto, "Sensei");
 
             if (result.Succeeded)
                 return StatusCode(201, new { Message = "Inscription Sensei réussie." });
@@ -186,10 +142,6 @@ namespace ASPPorcelette.API.Controllers
             return BadRequest(new { Errors = errors, Message = "Échec de l'inscription Sensei." });
         }
 
-        /// <summary>
-        /// Inscription d'un nouvel Adhérent (publique)
-        /// POST: /api/User/register/adherent
-        /// </summary>
         [HttpPost("register/adherent")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status201Created)]
@@ -197,12 +149,9 @@ namespace ASPPorcelette.API.Controllers
         public async Task<IActionResult> RegisterAdherent([FromForm] UserCreationDto registrationDto)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
 
-            // La méthode CreateUserWithProfileAsync DOIT attribuer le rôle "Adherent" en interne
-            var result = await _senseiService.CreateUserWithProfileAsync(registrationDto, "Adherent");
+            var result = await _userService.CreateUserWithProfileAsync(registrationDto, "Adherent");
 
             if (result.Succeeded)
                 return StatusCode(201, new { Message = "Inscription Adhérent réussie." });
@@ -214,14 +163,9 @@ namespace ASPPorcelette.API.Controllers
         // -------------------------
         // ADMINISTRATION
         // -------------------------
-        // Endpoints réservés aux administrateurs
 
-        /// <summary>
-        /// Liste tous les utilisateurs du système
-        /// GET: /api/User/admin/list
-        /// </summary>
-        [HttpGet("/api/User/admin/list")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin, Sensei")]
+        [HttpGet("admin/list")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetAllUsers()
@@ -238,16 +182,18 @@ namespace ASPPorcelette.API.Controllers
                     Email = user.Email,
                     Nom = user.Nom,
                     Prenom = user.Prenom,
-                    Adresse = user.RueEtNumero,
-                    DateDeNaissance = user.DateNaissance,
+                    RueEtNumero = user.RueEtNumero,
+                    DateNaissance = user.DateNaissance,
                     user.Ville,
+                    user.CodePostal,
                     user.Telephone,
                     user.Grade,
-                    user.Bio,    
+                    user.Bio,
                     user.Statut,
                     user.DateAdhesion,
                     user.DateCreation,
                     user.DateRenouvellement,
+                    user.DisciplineId, // Pour les Sensei
                     Roles = roles.ToList()
                 });
             }
@@ -255,10 +201,6 @@ namespace ASPPorcelette.API.Controllers
             return Ok(userList);
         }
 
-        /// <summary>
-        /// Récupère un utilisateur spécifique par son ID
-        /// GET: /api/User/admin/{userId}
-        /// </summary>
         [HttpGet("admin/{userId}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -272,7 +214,6 @@ namespace ASPPorcelette.API.Controllers
 
             var roles = await _userManager.GetRolesAsync(user);
 
-            // Ajout des champs étendus pour le retour
             return Ok(new
             {
                 user.Id,
@@ -291,28 +232,21 @@ namespace ASPPorcelette.API.Controllers
                 user.DateNaissance,
                 user.DateAdhesion,
                 user.DateRenouvellement,
+                user.DisciplineId,
                 Roles = roles
             });
         }
 
-        /// <summary>
-        /// Crée un nouvel utilisateur (Admin/Sensei uniquement)
-        /// POST: /api/User/admin/create
-        /// </summary>
         [HttpPost("admin/create")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei")]
-
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> CreateUser([FromBody] UserCreationDto createDto, [FromQuery] string role = "Adherent")
+        public async Task<IActionResult> CreateUser([FromForm] UserCreationDto createDto, [FromQuery] string role = "Adherent")
         {
-            // Déterminer le rôle en fonction du flag IsSensei (ou laisser le service le gérer)
-            // Pour l'enregistrement via l'admin, je vais forcer le rôle Adherent si non Sensei.
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
-            var result = await _senseiService.CreateUserWithProfileAsync(createDto, role);
+
+            var result = await _userService.CreateUserWithProfileAsync(createDto, role);
 
             if (result.Succeeded)
                 return StatusCode(201, new { Message = "Utilisateur créé avec succès." });
@@ -321,13 +255,8 @@ namespace ASPPorcelette.API.Controllers
             return BadRequest(new { Errors = errors });
         }
 
-        /// <summary>
-        /// Supprime un utilisateur (Admin uniquement)
-        /// DELETE: /api/User/admin/{userId}
-        /// </summary>
         [HttpDelete("admin/{userId}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
-
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -337,7 +266,6 @@ namespace ASPPorcelette.API.Controllers
             if (user == null)
                 return NotFound(new { Message = $"Utilisateur avec ID {userId} non trouvé." });
 
-            // Sécurité : Empêcher la suppression de son propre compte
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (user.Id == currentUserId)
                 return BadRequest(new { Message = "Vous ne pouvez pas supprimer votre propre compte." });
@@ -353,15 +281,9 @@ namespace ASPPorcelette.API.Controllers
         // -------------------------
         // GESTION DES RÔLES
         // -------------------------
-        // Endpoints réservés aux administrateurs
 
-        /// <summary>
-        /// Liste tous les rôles disponibles
-        /// GET: /api/User/admin/roles
-        /// </summary>
         [HttpGet("admin/roles")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
-
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IActionResult GetAllRoles()
         {
@@ -369,13 +291,8 @@ namespace ASPPorcelette.API.Controllers
             return Ok(roles);
         }
 
-        /// <summary>
-        /// Attribue un rôle à un utilisateur
-        /// POST: /api/User/admin/roles/assign
-        /// </summary>
         [HttpPost("admin/roles/assign")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
-
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -400,13 +317,8 @@ namespace ASPPorcelette.API.Controllers
             return BadRequest(new { Errors = result.Errors.Select(e => e.Description) });
         }
 
-        /// <summary>
-        /// Retire un rôle d'un utilisateur
-        /// POST: /api/User/admin/roles/remove
-        /// </summary>
         [HttpPost("admin/roles/remove")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
-
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -427,14 +339,6 @@ namespace ASPPorcelette.API.Controllers
             return BadRequest(new { Errors = result.Errors.Select(e => e.Description) });
         }
 
-        // -------------------------
-        // ENDPOINTS UTILITAIRES
-        // -------------------------
-
-        /// <summary>
-        /// Test simple pour vérifier que le contrôleur fonctionne
-        /// GET: /api/User/test
-        /// </summary>
         [HttpGet("test")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -447,10 +351,6 @@ namespace ASPPorcelette.API.Controllers
             });
         }
 
-        // -------------------------
-        // MODÈLES DE DONNÉES
-        // -------------------------
-        // DTOs et modèles utilisés dans le contrôleur
         public class AssignRoleDto
         {
             public string UserId { get; set; } = string.Empty;

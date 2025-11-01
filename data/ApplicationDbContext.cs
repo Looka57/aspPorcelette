@@ -21,8 +21,8 @@ namespace ASPPorcelette.API.Data
         public DbSet<Discipline> Disciplines { get; set; }
         public DbSet<Evenement> Evenements { get; set; }
         public DbSet<Horaire> Horaires { get; set; }
-        public DbSet<Sensei> Senseis { get; set; }
-        public DbSet<Sensei> SenseiProfiles { get; set; } 
+        // public DbSet<Sensei> Senseis { get; set; }
+        // public DbSet<Sensei> SenseiProfiles { get; set; } 
         public DbSet<Tarif> Tarifs { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<TypeEvenement> TypeEvenements { get; set; }
