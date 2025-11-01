@@ -45,5 +45,7 @@ namespace ASPPorcelette.API.Models.Identity
         
         [Required]
         public DateTime DateCreation { get; set; }
+
+        public ICollection<Cours> CoursEnseignes { get; set; } = new List<Cours>();
     }
 }

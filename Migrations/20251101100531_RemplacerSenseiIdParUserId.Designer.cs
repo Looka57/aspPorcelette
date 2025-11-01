@@ -4,6 +4,7 @@ using ASPPorcelette.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ASPPorcelette.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251101100531_RemplacerSenseiIdParUserId")]
+    partial class RemplacerSenseiIdParUserId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -151,20 +154,17 @@ namespace ASPPorcelette.API.Migrations
 
                     b.Property<string>("Libelle")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("SenseiId")
-                        .HasColumnType("int");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("UserId");
 
                     b.HasKey("CoursId");
 
                     b.HasIndex("DisciplineId");
-
-                    b.HasIndex("SenseiId");
 
                     b.HasIndex("UserId");
 
@@ -434,7 +434,6 @@ namespace ASPPorcelette.API.Migrations
                     b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
 
-                    b.HasKey("SenseiId");
 
                     b.HasIndex("DisciplineId");
 
@@ -555,9 +554,6 @@ namespace ASPPorcelette.API.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<int?>("SenseiId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Titre")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -571,7 +567,6 @@ namespace ASPPorcelette.API.Migrations
 
                     b.HasIndex("EvenementId");
 
-                    b.HasIndex("SenseiId");
 
                     b.HasIndex("UserId");
 
@@ -762,9 +757,6 @@ namespace ASPPorcelette.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ASPPorcelette.API.Models.Sensei", null)
-                        .WithMany("CoursEnseignes")
-                        .HasForeignKey("SenseiId");
 
                     b.HasOne("ASPPorcelette.API.Models.Identity.User", "User")
                         .WithMany("CoursEnseignes")
@@ -866,9 +858,7 @@ namespace ASPPorcelette.API.Migrations
                         .WithMany()
                         .HasForeignKey("EvenementId");
 
-                    b.HasOne("ASPPorcelette.API.Models.Sensei", null)
-                        .WithMany("ActualitesPubliees")
-                        .HasForeignKey("SenseiId");
+                    
 
                     b.HasOne("ASPPorcelette.API.Models.Identity.User", "User")
                         .WithMany()

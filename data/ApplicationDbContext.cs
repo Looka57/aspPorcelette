@@ -32,7 +32,7 @@ namespace ASPPorcelette.API.Data
         {
             base.OnModelCreating(modelBuilder);
 
-             // L'Adhérent est le profil détaillé associé au compte User (AspNetUsers)
+            // L'Adhérent est le profil détaillé associé au compte User (AspNetUsers)
             modelBuilder.Entity<Adherent>()
                 .HasOne(a => a.User) // L'Adherent a une propriété de navigation vers User
                 .WithOne() // Relation One-to-One sans propriété de navigation inverse dans User
@@ -41,7 +41,7 @@ namespace ASPPorcelette.API.Data
 
             // Relation N-N Adherent ↔ Discipline via Apprendre
             modelBuilder.Entity<Apprendre>()
-            .ToTable("Apprendre") 
+            .ToTable("Apprendre")
                 .HasKey(a => new { a.AdherentId, a.DisciplineId }); // clé composite
 
             modelBuilder.Entity<Apprendre>()
@@ -55,10 +55,10 @@ namespace ASPPorcelette.API.Data
                 .HasForeignKey(a => a.DisciplineId);
 
             modelBuilder.Entity<Cours>()
-                .HasOne(c => c.Sensei)
-                .WithMany(s => s.CoursEnseignes)
-                .HasForeignKey(c => c.SenseiId)
+                .HasOne(c => c.User) // Propriété de navigation de type User
+                .WithMany(user => user.CoursEnseignes) // Collection dans la classe User
+                .HasForeignKey(c => c.UserId) // La clé étrangère (string)
                 .OnDelete(DeleteBehavior.Restrict);
-        }
+                }
     }
 }

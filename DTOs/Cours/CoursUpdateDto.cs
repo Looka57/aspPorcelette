@@ -8,7 +8,7 @@ namespace ASPPorcelette.API.DTOs.Cours
         // Pas de [Required] ici pour faciliter le PATCH
         public string? Libelle { get; set; }
         public int? DisciplineId { get; set; }
-        public int? SenseiId { get; set; }
+           public string? UserId { get; set; } 
 
     }
 }

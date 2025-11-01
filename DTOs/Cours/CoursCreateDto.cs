@@ -13,7 +13,7 @@ namespace ASPPorcelette.API.DTOs.Cours
         public int DisciplineId { get; set; }
         
         [Required]
-        public int SenseiId { get; set; }
+        public string? UserId { get; set; }
         
     }
 }

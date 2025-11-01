@@ -24,7 +24,7 @@ namespace ASPPorcelette.API.Repository.Implementation
         {
             return await _context.Cours
                 // Chargement des relations N-1
-                .Include(c => c.Sensei)
+                .Include(c => c.User)
                 .Include(c => c.Discipline)
                 // Chargement des relations 1-N (Horaires)
                 .Include(c => c.Horaires)
@@ -35,7 +35,7 @@ namespace ASPPorcelette.API.Repository.Implementation
         {
             return await _context.Cours
                 // Chargement des relations N-1
-                .Include(c => c.Sensei)
+                .Include(c => c.User)
                 .Include(c => c.Discipline)
                 // Chargement des relations 1-N (Horaires)
                 .Include(c => c.Horaires)

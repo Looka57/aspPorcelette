@@ -7,7 +7,7 @@ namespace ASPPorcelette.API.DTOs.Cours
         
         // Inclut les DTOs des relations
         public DTOs.Discipline.DisciplineDto Discipline { get; set; } 
-        public DTOs.Sensei.SenseiDto Sensei { get; set; } 
+        public string UserId { get; set; }
 
       
     }

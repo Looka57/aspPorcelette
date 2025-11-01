@@ -68,8 +68,8 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 // *********** INJECTIONS DE DÉPENDANCES ***********
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
 
-builder.Services.AddScoped<ISenseiRepository, SenseiRepository>();
-builder.Services.AddScoped<ISenseiService, SenseiService>();
+// builder.Services.AddScoped<ISenseiRepository, SenseiRepository>();
+// builder.Services.AddScoped<ISenseiService, SenseiService>();
 
 builder.Services.AddScoped<IDisciplineRepository, DisciplineRepository>();
 builder.Services.AddScoped<IDisciplineService, DisciplineService>();

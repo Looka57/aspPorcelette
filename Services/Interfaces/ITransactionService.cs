@@ -13,12 +13,9 @@ namespace ASPPorcelette.API.Services.Interfaces
 
         Task<IEnumerable<Transaction>> GetTransactionsByCompteIdAsync(int compteId);
 
-
-
-
-
         // Création avec logique de mise à jour du solde du compte
         Task<Transaction> CreateTransactionAsync(TransactionCreateDto transactionDto);
+        
 
         // Mise à jour (PUT) avec logique de mise à jour du solde du compte
         Task<Transaction?> UpdateTransactionAsync(int id, TransactionUpdateDto transactionDto);
