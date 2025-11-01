@@ -18,14 +18,23 @@ namespace ASPPorcelette.API.Repository.Implementation
 
         public async Task<IEnumerable<Discipline>> GetAllAsync()
         {
-            // On s'assure de retourner la liste sans Inclure Sensei pour éviter les boucles, 
-            // la configuration AddNewtonsoftJson devrait gérer le reste.
-            return await _context.Disciplines.ToListAsync();
+            return await _context.Disciplines
+                .Include(d => d.CoursAssocies)
+                    .ThenInclude(c => c.Horaires) // 🔹 Charge les horaires du cours
+                .Include(d => d.CoursAssocies)
+                    .ThenInclude(c => c.User) // Charge le sensei
+                .ToListAsync();
         }
 
         public async Task<Discipline?> GetByIdAsync(int id)
         {
-            return await _context.Disciplines.FindAsync(id);
+            return await _context.Disciplines
+                .Include(d => d.CoursAssocies)
+                    .ThenInclude(c => c.Horaires)
+                .Include(d => d.CoursAssocies)
+                    .ThenInclude(c => c.User)
+                .FirstOrDefaultAsync(d => d.DisciplineId == id);
         }
+
     }
 }

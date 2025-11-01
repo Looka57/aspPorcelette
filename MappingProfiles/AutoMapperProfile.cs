@@ -11,6 +11,8 @@ using ASPPorcelette.API.DTOs.Compte;
 using ASPPorcelette.API.DTOs.Transaction;
 using ASPPorcelette.API.DTOs.Tarif;
 using ASPPorcelette.API.Models.Identity;
+using ASPPorcelette.API.DTOs.Cours;
+using ASPPorcelette.API.DTOs.Horaire;
 
 namespace ASPPorcelette.API.MappingProfiles
 {
@@ -23,7 +25,13 @@ namespace ASPPorcelette.API.MappingProfiles
         {
             // ----------------------------------------------------
             // Mapping pour Discipline (Modèle vers DTO)     
-            CreateMap<Discipline, DisciplineDto>();
+            CreateMap<Discipline, DisciplineDto>()
+            .ForMember(dest => dest.Cours, opt => opt.MapFrom(src => src.CoursAssocies));
+
+            CreateMap<Cours, CoursDto>();
+            CreateMap<Horaire, HoraireDto>();
+            CreateMap<User, UserDto>();
+
             // ----------------------------------------------------
 
             // ----------------------------------------------------

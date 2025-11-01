@@ -24,16 +24,16 @@ namespace ASPPorcelette.API.Controllers
 
         // GET: api/Discipline
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<DisciplineDto>>> GetDisciplines()
-        {
-            var disciplineModels = await _disciplineService.GetAllDisciplinesAsync();
-            if (disciplineModels == null)
-            {
-                return NotFound();
-            }
+     [HttpGet]
+public async Task<ActionResult<IEnumerable<DisciplineDto>>> GetDisciplines()
+{
+    var disciplineModels = await _disciplineService.GetAllDisciplinesAsync();
+    if (disciplineModels == null)
+        return NotFound();
 
-            var disciplineDtos = _mapper.Map<IEnumerable<DisciplineDto>>(disciplineModels);
-            return Ok(disciplineDtos);
-        }
+    var disciplineDtos = _mapper.Map<IEnumerable<DisciplineDto>>(disciplineModels);
+    return Ok(disciplineDtos);
+}
+
     }
 }
