@@ -12,14 +12,15 @@ namespace ASPPorcelette.API.Services
         // Mise à jour du profil utilisateur
         Task<IdentityResult> UpdateUserProfileAsync(string userId, UserUpdateDto updateDto);
 
+        // 👈 NOUVELLE méthode pour la mise à jour SANS mot de passe par l'admin
+        Task<IdentityResult> UpdateUserByAdminAsync(string userId, UserAdminUpdateDto dto);
+
         // Liste des utilisateurs pour l'admin
         Task<IEnumerable<UserDto>> GetAdminUserListAsync();
 
-        // ❌ SUPPRIMEZ toutes les méthodes liées à Sensei :
-        // Task<IEnumerable<Sensei>> GetAllSenseisAsync();
-        // Task<Sensei?> GetSenseiByIdAsync(int id);
-        // Task<Sensei> CreateSenseiAsync(Sensei sensei);
-        // Task<(Sensei? Sensei, bool Success)> PartialUpdateSenseiAsync(int id, JsonPatchDocument<SenseiUpdateDto> patchDocument);
-        // Task<Sensei> DeleteSenseiAsync(int id);
+        // Fichier : IUserService.cs
+
+
+        Task<IdentityResult> DeleteUserAsync(string userId);
     }
 }

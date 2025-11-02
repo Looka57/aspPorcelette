@@ -19,6 +19,9 @@ namespace ASPPorcelette.API.DTOs.Adherent
         [MaxLength(200, ErrorMessage = "L'adresse ne peut pas dépasser 200 caractères.")]
         public string Adresse { get; set; }
 
+        public string CodePostal { get; set; }
+        public string Ville { get; set; }
+
         [Required(ErrorMessage = "L'email est requis.")]
         [EmailAddress(ErrorMessage = "L'email n'est pas valide.")]
         public string Email { get; set; }
@@ -29,5 +32,7 @@ namespace ASPPorcelette.API.DTOs.Adherent
         public DateTime DateAdhesion { get; set; } = DateTime.UtcNow;
         public DateTime DateRenouvellement { get; set; } = DateTime.UtcNow.AddYears(1);
         public string Statut { get; set; } = "Actif";
+        public int? DisciplineId { get; set; } // nullable si pas obligatoire
+
     }
 }

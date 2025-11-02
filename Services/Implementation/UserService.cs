@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ASPPorcelette.API.DTOs.User; 
+using ASPPorcelette.API.DTOs.User;
 using ASPPorcelette.API.Models.Identity;
 using ASPPorcelette.API.Data;
 using System;
@@ -34,7 +34,7 @@ namespace ASPPorcelette.API.Services
         {
             var users = await _userManager.Users.ToListAsync();
             var userListDtos = new List<UserDto>();
-            
+
             foreach (var user in users)
             {
                 var roles = await _userManager.GetRolesAsync(user);
@@ -92,12 +92,12 @@ namespace ASPPorcelette.API.Services
             Console.WriteLine($"Email reçu : {dto.Email}");
             Console.WriteLine($"Date de naissance reçue : {dto.DateNaissance}");
             Console.WriteLine($"Fichier photo présent ? {(dto.PhotoFile != null ? "OUI" : "NON")}");
-            
+
             string? photoUrl = await SaveProfilePicture(dto.PhotoFile);
-            
+
             Console.WriteLine($"PhotoUrl enregistrée : {photoUrl}");
             Console.WriteLine($"DateNaissance reçue du DTO : {dto.DateNaissance}");
-            
+
             var user = new User
             {
                 UserName = dto.Email,
@@ -121,7 +121,7 @@ namespace ASPPorcelette.API.Services
 
             Console.WriteLine($"➡️ DateNaissance envoyée dans User : {user.DateNaissance}");
             Console.WriteLine($"➡️ PhotoUrl envoyée dans User : {user.PhotoUrl}");
-            
+
             var result = await _userManager.CreateAsync(user, dto.Password);
 
             if (!result.Succeeded)
@@ -149,7 +149,94 @@ namespace ASPPorcelette.API.Services
             return IdentityResult.Success;
         }
 
-        public async Task<IdentityResult> UpdateUserProfileAsync(string userId, UserUpdateDto dto)
+
+
+
+
+// Fichier : UserService.cs (Ajoutez ceci avant ou après UpdateUserByAdminAsync)
+
+public async Task<IdentityResult> UpdateUserProfileAsync(string userId, UserUpdateDto dto)
+{
+    var user = await _userManager.FindByIdAsync(userId);
+    if (user == null)
+    {
+        return IdentityResult.Failed(new IdentityError { Description = "Utilisateur Identity non trouvé." });
+    }
+
+    try
+    {
+        // 🚨 IMPORTANT : Utiliser le DTO complet (UserUpdateDto) qui contient tous les champs, y compris ceux pour l'adresse (RueEtNumero vs Adresse)
+        user.Prenom = dto.Prenom ?? user.Prenom;
+        user.Nom = dto.Nom ?? user.Nom;
+        user.Telephone = dto.Telephone ?? user.Telephone; 
+        user.PhotoUrl = dto.PhotoUrl ?? user.PhotoUrl;
+        user.Grade = dto.Grade ?? user.Grade; 
+        user.Bio = dto.Bio ?? user.Bio; 
+        
+        if (dto.Statut.HasValue) 
+        {
+            user.Statut = dto.Statut.Value;
+        }
+        
+        if (dto.DisciplineId.HasValue)
+        {
+            user.DisciplineId = dto.DisciplineId.Value;
+        }
+
+        // ⚠️ Attention au mapping RueEtNumero (modèle User) vs Adresse (DTO)
+        // J'utilise ici 'Adresse' comme c'était dans votre code précédent. Vérifiez si votre modèle User utilise 'RueEtNumero'
+        user.RueEtNumero = dto.Adresse ?? user.RueEtNumero; 
+        user.Ville = dto.Ville ?? user.Ville;
+        user.CodePostal = dto.CodePostal ?? user.CodePostal;
+        
+        if (dto.DateDeNaissance.HasValue)
+        {
+            user.DateNaissance = dto.DateDeNaissance.Value;
+        }
+
+        if (!string.IsNullOrEmpty(dto.Username) && user.UserName != dto.Username)
+        {
+            var usernameResult = await _userManager.SetUserNameAsync(user, dto.Username);
+            if (!usernameResult.Succeeded) return usernameResult;
+        }
+
+        if (!string.IsNullOrEmpty(dto.Email) && user.Email != dto.Email)
+        {
+            user.Email = dto.Email;
+        }
+        
+        // LOGIQUE DE MOT DE PASSE (C'EST CE QUI DIFFÉRENCIE LES DEUX MÉTHODES)
+        if (!string.IsNullOrEmpty(dto.CurrentPassword) && !string.IsNullOrEmpty(dto.NewPassword))
+        {
+            var passwordChangeResult = await _userManager.ChangePasswordAsync(user, dto.CurrentPassword, dto.NewPassword);
+            if (!passwordChangeResult.Succeeded)
+            {
+                return passwordChangeResult;
+            }
+        }
+
+        var identityUpdateResult = await _userManager.UpdateAsync(user);
+        
+        return identityUpdateResult;
+    }
+    catch (Exception ex)
+    {
+        return IdentityResult.Failed(new IdentityError { Description = $"Une erreur inattendue est survenue lors de la mise à jour du profil : {ex.Message}" });
+    }
+}
+
+// ... et juste après, votre méthode UpdateUserByAdminAsync doit toujours être présente ...
+
+
+
+
+
+
+
+
+
+
+        public async Task<IdentityResult> UpdateUserByAdminAsync(string userId, UserAdminUpdateDto dto)
         {
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
@@ -157,66 +244,59 @@ namespace ASPPorcelette.API.Services
                 return IdentityResult.Failed(new IdentityError { Description = "Utilisateur Identity non trouvé." });
             }
 
-            try
+            // Mappage:
+            user.Prenom = dto.Prenom ?? user.Prenom;
+            user.Nom = dto.Nom ?? user.Nom;
+            user.Telephone = dto.Telephone ?? user.Telephone;
+            user.PhotoUrl = dto.PhotoUrl ?? user.PhotoUrl;
+            user.Grade = dto.Grade ?? user.Grade;
+            user.Bio = dto.Bio ?? user.Bio;
+
+            if (dto.Statut.HasValue) user.Statut = dto.Statut.Value;
+            if (dto.DisciplineId.HasValue) user.DisciplineId = dto.DisciplineId.Value;
+
+            user.RueEtNumero = dto.Adresse ?? user.RueEtNumero;
+            user.Ville = dto.Ville ?? user.Ville;
+            user.CodePostal = dto.CodePostal ?? user.CodePostal;
+
+            if (dto.DateDeNaissance.HasValue) user.DateNaissance = dto.DateDeNaissance.Value;
+            // Gérer DateAdhesion/Renouvellement si elles sont dans UserAdminUpdateDto
+
+            if (!string.IsNullOrEmpty(dto.Username) && user.UserName != dto.Username)
             {
-                user.Prenom = dto.Prenom ?? user.Prenom;
-                user.Nom = dto.Nom ?? user.Nom;
-                user.Telephone = dto.Telephone ?? user.Telephone; 
-                user.PhotoUrl = dto.PhotoUrl ?? user.PhotoUrl;
-                user.Grade = dto.Grade ?? user.Grade; 
-                user.Bio = dto.Bio ?? user.Bio; 
-                
-                if (dto.Statut.HasValue) 
-                {
-                    user.Statut = dto.Statut.Value;
-                }
-                
-                if (dto.DisciplineId.HasValue)
-                {
-                    user.DisciplineId = dto.DisciplineId.Value;
-                }
-
-                user.RueEtNumero = dto.Adresse ?? user.RueEtNumero; 
-                user.Ville = dto.Ville ?? user.Ville;
-                user.CodePostal = dto.CodePostal ?? user.CodePostal;
-                
-                if (dto.DateDeNaissance.HasValue)
-                {
-                    user.DateNaissance = dto.DateDeNaissance.Value;
-                }
-
-                if (!string.IsNullOrEmpty(dto.Username) && user.UserName != dto.Username)
-                {
-                    var usernameResult = await _userManager.SetUserNameAsync(user, dto.Username);
-                    if (!usernameResult.Succeeded) return usernameResult;
-                }
-
-                if (!string.IsNullOrEmpty(dto.Email) && user.Email != dto.Email)
-                {
-                    user.Email = dto.Email;
-                }
-                
-                if (!string.IsNullOrEmpty(dto.CurrentPassword) && !string.IsNullOrEmpty(dto.NewPassword))
-                {
-                    var passwordChangeResult = await _userManager.ChangePasswordAsync(user, dto.CurrentPassword, dto.NewPassword);
-                    if (!passwordChangeResult.Succeeded)
-                    {
-                        return passwordChangeResult;
-                    }
-                }
-
-                var identityUpdateResult = await _userManager.UpdateAsync(user);
-                
-                return identityUpdateResult;
+                var usernameResult = await _userManager.SetUserNameAsync(user, dto.Username);
+                if (!usernameResult.Succeeded) return usernameResult;
             }
-            catch (Exception ex)
+
+            if (!string.IsNullOrEmpty(dto.Email) && user.Email != dto.Email)
             {
-                return IdentityResult.Failed(new IdentityError { Description = $"Une erreur inattendue est survenue lors de la mise à jour du profil : {ex.Message}" });
+                // Si l'email change, on peut aussi changer l'UserName (s'ils sont liés)
+                user.Email = dto.Email;
             }
+
+    
+
+            return await _userManager.UpdateAsync(user);
         }
 
-        // ❌ SUPPRIMEZ toutes ces méthodes NotImplementedException :
-        // public Task<IEnumerable<ASPPorcelette.API.Models.Sensei>> GetAllSenseisAsync() => throw new NotImplementedException();
-        // etc.
+      public async Task<IdentityResult> DeleteUserAsync(string userId)
+{
+    var user = await _userManager.FindByIdAsync(userId);
+    
+    if (user == null)
+    {
+        return IdentityResult.Failed(new IdentityError { Description = "Utilisateur non trouvé." });
+    }
+
+    // La méthode DeleteAsync de UserManager supprime l'utilisateur de la base de données
+    // et gère les liens Identity.
+    var result = await _userManager.DeleteAsync(user);
+
+    // ⚠️ NOTE : Si l'utilisateur a des relations étrangères (ex: des entités liées),
+    // vous pourriez devoir gérer leur suppression ou désactivation ici avant d'appeler DeleteAsync,
+    // ou configurer ces relations en CASCADE DELETE dans votre modèle EF Core.
+
+    return result;
+}
     }
 }

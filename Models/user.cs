@@ -38,7 +38,7 @@ namespace ASPPorcelette.API.Models.Identity
         public int Statut { get; set; } // 0: Inactif, 1: Actif, etc.
         
         // La bio est utile pour les Sensei
-        public string Bio { get; set; }
+        public string? Bio { get; set; }
 
          
         public int? DisciplineId { get; set; }

@@ -153,9 +153,6 @@ namespace ASPPorcelette.API.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("SenseiId")
-                        .HasColumnType("int");
-
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -163,8 +160,6 @@ namespace ASPPorcelette.API.Migrations
                     b.HasKey("CoursId");
 
                     b.HasIndex("DisciplineId");
-
-                    b.HasIndex("SenseiId");
 
                     b.HasIndex("UserId");
 
@@ -276,7 +271,6 @@ namespace ASPPorcelette.API.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Bio")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CodePostal")
@@ -386,61 +380,6 @@ namespace ASPPorcelette.API.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
-                });
-
-            modelBuilder.Entity("ASPPorcelette.API.Models.Sensei", b =>
-                {
-                    b.Property<int>("SenseiId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SenseiId"));
-
-                    b.Property<string>("Bio")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("DisciplineId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Grade")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Nom")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("PhotoUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("Prenom")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Statut")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Telephone")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("SenseiId");
-
-                    b.HasIndex("DisciplineId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Sensei");
                 });
 
             modelBuilder.Entity("ASPPorcelette.API.Models.Tarif", b =>
@@ -555,9 +494,6 @@ namespace ASPPorcelette.API.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<int?>("SenseiId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Titre")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -570,8 +506,6 @@ namespace ASPPorcelette.API.Migrations
                     b.HasKey("ActualiteId");
 
                     b.HasIndex("EvenementId");
-
-                    b.HasIndex("SenseiId");
 
                     b.HasIndex("UserId");
 
@@ -762,10 +696,6 @@ namespace ASPPorcelette.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ASPPorcelette.API.Models.Sensei", null)
-                        .WithMany("CoursEnseignes")
-                        .HasForeignKey("SenseiId");
-
                     b.HasOne("ASPPorcelette.API.Models.Identity.User", "User")
                         .WithMany("CoursEnseignes")
                         .HasForeignKey("UserId")
@@ -803,23 +733,6 @@ namespace ASPPorcelette.API.Migrations
                         .IsRequired();
 
                     b.Navigation("Cours");
-                });
-
-            modelBuilder.Entity("ASPPorcelette.API.Models.Sensei", b =>
-                {
-                    b.HasOne("ASPPorcelette.API.Models.Discipline", "DisciplinePrincipale")
-                        .WithMany("SenseisEnseignants")
-                        .HasForeignKey("DisciplineId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ASPPorcelette.API.Models.Identity.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
-
-                    b.Navigation("DisciplinePrincipale");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ASPPorcelette.API.Models.Tarif", b =>
@@ -865,10 +778,6 @@ namespace ASPPorcelette.API.Migrations
                     b.HasOne("ASPPorcelette.API.Models.Evenement", "EvenementAssocie")
                         .WithMany()
                         .HasForeignKey("EvenementId");
-
-                    b.HasOne("ASPPorcelette.API.Models.Sensei", null)
-                        .WithMany("ActualitesPubliees")
-                        .HasForeignKey("SenseiId");
 
                     b.HasOne("ASPPorcelette.API.Models.Identity.User", "User")
                         .WithMany()
@@ -975,8 +884,6 @@ namespace ASPPorcelette.API.Migrations
 
                     b.Navigation("EvenementsAssocies");
 
-                    b.Navigation("SenseisEnseignants");
-
                     b.Navigation("Tarifs");
 
                     b.Navigation("TransactionsAssociees");
@@ -984,13 +891,6 @@ namespace ASPPorcelette.API.Migrations
 
             modelBuilder.Entity("ASPPorcelette.API.Models.Identity.User", b =>
                 {
-                    b.Navigation("CoursEnseignes");
-                });
-
-            modelBuilder.Entity("ASPPorcelette.API.Models.Sensei", b =>
-                {
-                    b.Navigation("ActualitesPubliees");
-
                     b.Navigation("CoursEnseignes");
                 });
 

@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System;
+using ASPPorcelette.API.DTOs.Adherent;
 
 namespace ASPPorcelette.API.Controllers
 {
@@ -37,7 +38,6 @@ namespace ASPPorcelette.API.Controllers
         // -------------------------
         // GESTION DU PROFIL UTILISATEUR
         // -------------------------
-
         [HttpGet("profile")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei,Adherent")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -77,39 +77,44 @@ namespace ASPPorcelette.API.Controllers
             });
         }
 
-        [HttpPut("profile")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei,Adherent")]
+        [HttpPut("{userId}/profile")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> UpdateMyProfile([FromForm] UserUpdateDto updateDto)
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateUserProfile(string userId, [FromForm] UserUpdateDto updateDto)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null)
-                return Unauthorized(new { Message = "Impossible de trouver l'identifiant utilisateur." });
+            // Vérifie si l’utilisateur existe
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return NotFound(new { Message = "Utilisateur introuvable." });
 
+            // Appelle ton service avec l’ID du user ciblé
             var result = await _userService.UpdateUserProfileAsync(userId, updateDto);
 
             if (result.Succeeded)
-                return Ok(new { Message = "Profil mis à jour avec succès." });
+                return Ok(new { Message = "Profil de l’utilisateur mis à jour avec succès." });
 
             var errors = result.Errors.Select(e => e.Description).ToList();
             return BadRequest(new { Errors = errors, Message = "Échec de la mise à jour du profil." });
         }
+
 
         [HttpPut("admin/{id}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> UpdateUserByAdmin([FromRoute] Guid id, [FromForm] UserUpdateDto updateDto)
+        public async Task<IActionResult> UpdateUserByAdmin([FromRoute] Guid id, [FromForm] UserAdminUpdateDto updateDto)
         {
             if (string.IsNullOrEmpty(updateDto.UserId) || !Guid.TryParse(updateDto.UserId, out var dtoGuid) || id != dtoGuid)
             {
                 return BadRequest(new { Message = "L'ID dans la route ne correspond pas à l'ID utilisateur dans les données ou l'ID est invalide." });
             }
 
-            var result = await _userService.UpdateUserProfileAsync(id.ToString(), updateDto);
+            // 🚨 CORRECTION ICI : Appeler la nouvelle méthode de service
+            var result = await _userService.UpdateUserByAdminAsync(id.ToString(), updateDto); // 👈 Utilisez UpdateUserByAdminAsync
 
             if (result.Succeeded)
             {
@@ -119,7 +124,6 @@ namespace ASPPorcelette.API.Controllers
             var errors = result.Errors.Select(e => e.Description).ToList();
             return BadRequest(new { Errors = errors, Message = "Échec de la mise à jour de l'utilisateur." });
         }
-
         // -------------------------
         // GESTION DES INSCRIPTIONS
         // -------------------------
@@ -143,22 +147,45 @@ namespace ASPPorcelette.API.Controllers
         }
 
         [HttpPost("register/adherent")]
-        [AllowAnonymous]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> RegisterAdherent([FromForm] UserCreationDto registrationDto)
+        public async Task<IActionResult> CreateAdherent([FromBody] AdherentCreateDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var result = await _userService.CreateUserWithProfileAsync(registrationDto, "Adherent");
+            // On crée un nouvel utilisateur
+            var newUser = new User
+            {
+                UserName = dto.Email,
+                Email = dto.Email,
+                Nom = dto.Nom,
+                Prenom = dto.Prenom,
+                Telephone = dto.Telephone,
+                RueEtNumero = dto.Adresse,
+                Ville = dto.Ville ?? "N/A",          // Utiliser le DTO si renseigné
+                CodePostal = dto.CodePostal ?? "00000", // idem
+                Statut = 1, // actif par défaut
+                DateNaissance = dto.DateDeNaissance,
+                DateAdhesion = dto.DateAdhesion,
+                DateRenouvellement = dto.DateRenouvellement,
+                DateCreation = DateTime.Now,
+                Bio = "",   // valeur par défaut
+                Grade = "", // valeur par défaut
+                PhotoUrl = "",
+                DisciplineId = dto.DisciplineId    // affectation si fournie
+            };
 
-            if (result.Succeeded)
-                return StatusCode(201, new { Message = "Inscription Adhérent réussie." });
+            // Créer l'utilisateur sans mot de passe
+            var result = await _userManager.CreateAsync(newUser);
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
 
-            var errors = result.Errors.Select(e => e.Description).ToList();
-            return BadRequest(new { Errors = errors, Message = "Échec de l'inscription Adhérent." });
+            // Ajouter le rôle Adherent
+            await _userManager.AddToRoleAsync(newUser, "Adherent");
+
+            return Ok(new { message = "Adhérent créé avec succès", userId = newUser.Id });
         }
+
+
 
         // -------------------------
         // ADMINISTRATION
