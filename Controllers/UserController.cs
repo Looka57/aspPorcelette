@@ -8,12 +8,8 @@ using System.Security.Claims;
 using ASPPorcelette.API.Models.Identity;
 using ASPPorcelette.API.Services;
 using ASPPorcelette.API.DTOs.User;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using System;
 using ASPPorcelette.API.DTOs.Adherent;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace ASPPorcelette.API.Controllers
 {
@@ -21,27 +17,33 @@ namespace ASPPorcelette.API.Controllers
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
-        private readonly UserManager<User> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly IUserService _userService; // ✅ Renommez ISenseiService en IUserService
+        // -------------------------
+        // 🔹 Dépendances injectées
+        // -------------------------
+        private readonly UserManager<User> _userManager;      // Gestion des utilisateurs ASP.NET Identity
+        private readonly RoleManager<IdentityRole> _roleManager; // Gestion des rôles
+        private readonly IUserService _userService;           // Service métier pour la logique utilisateur
 
         public UserController(
             UserManager<User> userManager,
             RoleManager<IdentityRole> roleManager,
-            IUserService userService) // ✅ Changez ici
+            IUserService userService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
-            _userService = userService; // ✅ Et ici
+            _userService = userService;
         }
 
-        // -------------------------
-        // GESTION DU PROFIL UTILISATEUR
-        // -------------------------
+        // ================================================================
+        // 🧩 SECTION 1 : GESTION DU PROFIL UTILISATEUR
+        // ================================================================
+
+        /// <summary>
+        /// 🔹 Récupère les informations du profil de l'utilisateur connecté.
+        /// Accessible par tous les rôles (Admin, Sensei, Adhérent).
+        /// </summary>
         [HttpGet("profile")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei,Adherent")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> GetMyProfile()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -72,66 +74,81 @@ namespace ASPPorcelette.API.Controllers
                 user.DateNaissance,
                 user.DateAdhesion,
                 user.DateRenouvellement,
-                user.DisciplineId, // ✅ Pour les Sensei
+                user.DisciplineId,
                 Roles = roles
             });
         }
 
+        /// <summary>
+        /// 🔹 Mise à jour du profil utilisateur.
+        /// Accessible uniquement à l’utilisateur concerné ou à un administrateur.
+        /// </summary>
         [HttpPut("{userId}/profile")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateUserProfile(string userId, [FromForm] UserUpdateDto updateDto)
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei,Adherent")]
+        public async Task<IActionResult> UpdateUserProfile(string userId, [FromBody] UserUpdateDto updateDto)
         {
-            // Vérifie si l’utilisateur existe
+            // ✅ Vérifie si l'utilisateur courant est soit admin, soit propriétaire du profil
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            bool isAdmin = User.IsInRole("Admin");
+            bool isOwner = currentUserId == userId;
+
+            if (!isAdmin && !isOwner)
+                return Forbid();
+
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound(new { Message = "Utilisateur introuvable." });
 
-            // Appelle ton service avec l’ID du user ciblé
+            // ✅ Appel au service métier pour faire la mise à jour
             var result = await _userService.UpdateUserProfileAsync(userId, updateDto);
 
             if (result.Succeeded)
-                return Ok(new { Message = "Profil de l’utilisateur mis à jour avec succès." });
+                return Ok(new { Message = "Profil mis à jour avec succès." });
 
-            var errors = result.Errors.Select(e => e.Description).ToList();
-            return BadRequest(new { Errors = errors, Message = "Échec de la mise à jour du profil." });
+            return BadRequest(new
+            {
+                Errors = result.Errors.Select(e => e.Description),
+                Message = "Échec de la mise à jour du profil."
+            });
         }
 
+        // ================================================================
+        // 🧩 SECTION 2 : GESTION ADMIN / SENSEI (Modification complète)
+        // ================================================================
 
+        /// <summary>
+        /// 🔹 Mise à jour d’un utilisateur par un administrateur ou un sensei.
+        /// Utilisé dans le back-office.
+        /// </summary>
         [HttpPut("admin/{id}")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin, Sensei")]
         public async Task<IActionResult> UpdateUserByAdmin([FromRoute] Guid id, [FromForm] UserAdminUpdateDto updateDto)
         {
+            // Vérifie cohérence entre l’ID du DTO et celui de la route
             if (string.IsNullOrEmpty(updateDto.UserId) || !Guid.TryParse(updateDto.UserId, out var dtoGuid) || id != dtoGuid)
-            {
-                return BadRequest(new { Message = "L'ID dans la route ne correspond pas à l'ID utilisateur dans les données ou l'ID est invalide." });
-            }
+                return BadRequest(new { Message = "L'ID ne correspond pas ou est invalide." });
 
-            // 🚨 CORRECTION ICI : Appeler la nouvelle méthode de service
-            var result = await _userService.UpdateUserByAdminAsync(id.ToString(), updateDto); // 👈 Utilisez UpdateUserByAdminAsync
+            var result = await _userService.UpdateUserByAdminAsync(id.ToString(), updateDto);
 
             if (result.Succeeded)
+                return Ok(new { Message = "Utilisateur mis à jour avec succès par l'administrateur." });
+
+            return BadRequest(new
             {
-                return Ok(new { Message = "Utilisateur mis à jour par l'Administrateur avec succès." });
-            }
-
-            var errors = result.Errors.Select(e => e.Description).ToList();
-            return BadRequest(new { Errors = errors, Message = "Échec de la mise à jour de l'utilisateur." });
+                Errors = result.Errors.Select(e => e.Description),
+                Message = "Échec de la mise à jour de l'utilisateur."
+            });
         }
-        // -------------------------
-        // GESTION DES INSCRIPTIONS
-        // -------------------------
 
+        // ================================================================
+        // 🧩 SECTION 3 : GESTION DES INSCRIPTIONS
+        // ================================================================
+
+        /// <summary>
+        /// 🔹 Enregistre un nouveau Sensei (compte enseignant).
+        /// </summary>
         [HttpPost("register/sensei")]
         [AllowAnonymous]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> RegisterSensei([FromForm] UserCreationDto registrationDto)
         {
             if (!ModelState.IsValid)
@@ -142,17 +159,27 @@ namespace ASPPorcelette.API.Controllers
             if (result.Succeeded)
                 return StatusCode(201, new { Message = "Inscription Sensei réussie." });
 
-            var errors = result.Errors.Select(e => e.Description).ToList();
-            return BadRequest(new { Errors = errors, Message = "Échec de l'inscription Sensei." });
+            return BadRequest(new
+            {
+                Errors = result.Errors.Select(e => e.Description),
+                Message = "Échec de l'inscription Sensei."
+            });
         }
 
+        /// <summary>
+        /// 🔹 Crée un adhérent (utilisateur sans mot de passe).
+        /// </summary>
         [HttpPost("register/adherent")]
         public async Task<IActionResult> CreateAdherent([FromBody] AdherentCreateDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // On crée un nouvel utilisateur
+            var existingUser = await _userManager.FindByEmailAsync(dto.Email);
+            if (existingUser != null)
+                return BadRequest(new { Message = "Cette adresse e-mail est déjà utilisée." });
+
+            // Création d’un nouvel utilisateur Adhérent
             var newUser = new User
             {
                 UserName = dto.Email,
@@ -161,40 +188,45 @@ namespace ASPPorcelette.API.Controllers
                 Prenom = dto.Prenom,
                 Telephone = dto.Telephone,
                 RueEtNumero = dto.Adresse,
-                Ville = dto.Ville ?? "N/A",          // Utiliser le DTO si renseigné
-                CodePostal = dto.CodePostal ?? "00000", // idem
-                Statut = 1, // actif par défaut
+                Ville = dto.Ville ?? "N/A",
+                CodePostal = dto.CodePostal ?? "00000",
+                Statut = 1,
                 DateNaissance = dto.DateDeNaissance,
                 DateAdhesion = dto.DateAdhesion,
                 DateRenouvellement = dto.DateRenouvellement,
                 DateCreation = DateTime.Now,
-                Bio = "",   // valeur par défaut
-                Grade = "", // valeur par défaut
+                Bio = "",
+                Grade = "",
                 PhotoUrl = "",
-                DisciplineId = dto.DisciplineId    // affectation si fournie
+                DisciplineId = dto.DisciplineId
             };
 
-            // Créer l'utilisateur sans mot de passe
             var result = await _userManager.CreateAsync(newUser);
             if (!result.Succeeded)
-                return BadRequest(result.Errors);
+            {
+                var duplicateError = result.Errors.FirstOrDefault(e =>
+                    e.Code == "DuplicateEmail" || e.Code == "DuplicateUserName");
 
-            // Ajouter le rôle Adherent
+                if (duplicateError != null)
+                    return BadRequest(new { Message = "Cette adresse e-mail est déjà utilisée." });
+
+                return BadRequest(new { Errors = result.Errors.Select(e => e.Description) });
+            }
+
             await _userManager.AddToRoleAsync(newUser, "Adherent");
 
-            return Ok(new { message = "Adhérent créé avec succès", userId = newUser.Id });
+            return Ok(new { Message = "Adhérent créé avec succès", userId = newUser.Id });
         }
 
+        // ================================================================
+        // 🧩 SECTION 4 : ADMINISTRATION GÉNÉRALE
+        // ================================================================
 
-
-        // -------------------------
-        // ADMINISTRATION
-        // -------------------------
-
+        /// <summary>
+        /// 🔹 Liste tous les utilisateurs pour l’administration.
+        /// </summary>
         [HttpGet("admin/list")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetAllUsers()
         {
             var users = _userManager.Users.ToList();
@@ -205,22 +237,21 @@ namespace ASPPorcelette.API.Controllers
                 var roles = await _userManager.GetRolesAsync(user);
                 userList.Add(new
                 {
-                    UserId = user.Id,
-                    Email = user.Email,
-                    Nom = user.Nom,
-                    Prenom = user.Prenom,
-                    RueEtNumero = user.RueEtNumero,
-                    DateNaissance = user.DateNaissance,
+                    user.Id,
+                    user.Email,
+                    user.Nom,
+                    user.Prenom,
+                    user.RueEtNumero,
                     user.Ville,
                     user.CodePostal,
                     user.Telephone,
                     user.Grade,
                     user.Bio,
                     user.Statut,
+                    user.DateNaissance,
                     user.DateAdhesion,
-                    user.DateCreation,
                     user.DateRenouvellement,
-                    user.DisciplineId, // Pour les Sensei
+                    user.DisciplineId,
                     Roles = roles.ToList()
                 });
             }
@@ -228,11 +259,11 @@ namespace ASPPorcelette.API.Controllers
             return Ok(userList);
         }
 
+        /// <summary>
+        /// 🔹 Récupère un utilisateur spécifique via son ID.
+        /// </summary>
         [HttpGet("admin/{userId}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetUserById(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
@@ -264,10 +295,11 @@ namespace ASPPorcelette.API.Controllers
             });
         }
 
+        /// <summary>
+        /// 🔹 Crée un utilisateur (Admin/Sensei).
+        /// </summary>
         [HttpPost("admin/create")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei")]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateUser([FromForm] UserCreationDto createDto, [FromQuery] string role = "Adherent")
         {
             if (!ModelState.IsValid)
@@ -278,15 +310,14 @@ namespace ASPPorcelette.API.Controllers
             if (result.Succeeded)
                 return StatusCode(201, new { Message = "Utilisateur créé avec succès." });
 
-            var errors = result.Errors.Select(e => e.Description).ToList();
-            return BadRequest(new { Errors = errors });
+            return BadRequest(new { Errors = result.Errors.Select(e => e.Description) });
         }
 
+        /// <summary>
+        /// 🔹 Supprime un utilisateur (seulement par un Admin).
+        /// </summary>
         [HttpDelete("admin/{userId}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> DeleteUser(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
@@ -298,35 +329,36 @@ namespace ASPPorcelette.API.Controllers
                 return BadRequest(new { Message = "Vous ne pouvez pas supprimer votre propre compte." });
 
             var result = await _userManager.DeleteAsync(user);
-
             if (result.Succeeded)
                 return NoContent();
 
             return BadRequest(new { Errors = result.Errors.Select(e => e.Description) });
         }
 
-        // -------------------------
-        // GESTION DES RÔLES
-        // -------------------------
+        // ================================================================
+        // 🧩 SECTION 5 : GESTION DES RÔLES
+        // ================================================================
 
+        /// <summary>
+        /// 🔹 Liste tous les rôles disponibles.
+        /// </summary>
         [HttpGet("admin/roles")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
         public IActionResult GetAllRoles()
         {
             var roles = _roleManager.Roles.Select(r => r.Name).ToList();
             return Ok(roles);
         }
 
+        /// <summary>
+        /// 🔹 Attribue un rôle à un utilisateur.
+        /// </summary>
         [HttpPost("admin/roles/assign")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> AssignRole([FromBody] AssignRoleDto model)
         {
             if (string.IsNullOrEmpty(model.UserId) || string.IsNullOrEmpty(model.RoleName))
-                return BadRequest(new { Message = "L'identifiant utilisateur et le nom du rôle sont requis." });
+                return BadRequest(new { Message = "L'identifiant utilisateur et le rôle sont requis." });
 
             var user = await _userManager.FindByIdAsync(model.UserId);
             if (user == null)
@@ -337,47 +369,51 @@ namespace ASPPorcelette.API.Controllers
                 return NotFound(new { Message = $"Le rôle '{model.RoleName}' n'existe pas." });
 
             var result = await _userManager.AddToRoleAsync(user, model.RoleName);
-
             if (result.Succeeded)
-                return Ok(new { Message = $"Le rôle '{model.RoleName}' a été attribué à l'utilisateur." });
+                return Ok(new { Message = $"Rôle '{model.RoleName}' attribué avec succès." });
 
             return BadRequest(new { Errors = result.Errors.Select(e => e.Description) });
         }
 
+        /// <summary>
+        /// 🔹 Retire un rôle à un utilisateur.
+        /// </summary>
         [HttpPost("admin/roles/remove")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> RemoveRole([FromBody] AssignRoleDto model)
         {
             if (string.IsNullOrEmpty(model.UserId) || string.IsNullOrEmpty(model.RoleName))
-                return BadRequest(new { Message = "L'identifiant utilisateur et le nom du rôle sont requis." });
+                return BadRequest(new { Message = "L'identifiant utilisateur et le rôle sont requis." });
 
             var user = await _userManager.FindByIdAsync(model.UserId);
             if (user == null)
                 return NotFound(new { Message = $"Utilisateur avec ID {model.UserId} non trouvé." });
 
             var result = await _userManager.RemoveFromRoleAsync(user, model.RoleName);
-
             if (result.Succeeded)
-                return Ok(new { Message = $"Le rôle '{model.RoleName}' a été retiré à l'utilisateur." });
+                return Ok(new { Message = $"Rôle '{model.RoleName}' retiré avec succès." });
 
             return BadRequest(new { Errors = result.Errors.Select(e => e.Description) });
         }
 
+        // ================================================================
+        // 🧩 SECTION 6 : TEST TECHNIQUE
+        // ================================================================
+
         [HttpGet("test")]
         [AllowAnonymous]
-        [ProducesResponseType(StatusCodes.Status200OK)]
         public IActionResult Test()
         {
             return Ok(new
             {
-                Message = "UserController fonctionne correctement !",
+                Message = "✅ UserController fonctionne correctement !",
                 DateTime = DateTime.UtcNow
             });
         }
 
+        // -------------------------
+        // 🔹 DTO interne
+        // -------------------------
         public class AssignRoleDto
         {
             public string UserId { get; set; } = string.Empty;

@@ -58,7 +58,7 @@ namespace ASPPorcelette.API.Data
                 .HasOne(c => c.User) // Propriété de navigation de type User
                 .WithMany(user => user.CoursEnseignes) // Collection dans la classe User
                 .HasForeignKey(c => c.UserId) // La clé étrangère (string)
-                .OnDelete(DeleteBehavior.Restrict);
+               .OnDelete(DeleteBehavior.Restrict);
                 }
     }
 }
