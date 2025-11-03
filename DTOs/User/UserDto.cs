@@ -33,6 +33,8 @@ namespace ASPPorcelette.API.DTOs
         public DateTime? DateAdhesion { get; set; }
         public DateTime? DateRenouvellement { get; set; }
 
+        
+
         // Rôles de l'utilisateur
         public List<string> Roles { get; set; } = new List<string>();
 

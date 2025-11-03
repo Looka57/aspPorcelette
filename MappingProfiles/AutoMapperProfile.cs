@@ -27,7 +27,6 @@ namespace ASPPorcelette.API.MappingProfiles
             // Mapping pour Discipline (Modèle vers DTO)     
             CreateMap<Discipline, DisciplineDto>()
             .ForMember(dest => dest.Cours, opt => opt.MapFrom(src => src.CoursAssocies));
-
             CreateMap<Cours, CoursDto>();
             CreateMap<Horaire, HoraireDto>();
             CreateMap<User, UserDto>();
@@ -35,13 +34,9 @@ namespace ASPPorcelette.API.MappingProfiles
             // ----------------------------------------------------
 
             // ----------------------------------------------------
-            // Mapping pour Sensei (Modèle vers DTO)
+            // Mapping pour User (Modèle vers DTO)
             // ----------------------------------------------------
-            // CreateMap<Sensei, SenseiDto>();
-            // CreateMap<SenseiCreateDto, Sensei>();//(POST : du DTO de création au Modèle)
-            // CreateMap<SenseiUpdateDto, Sensei>();//(PUT/PATCH : du DTO de mise à jour au Modèle existant)
-            // CreateMap<Sensei, SenseiUpdateDto>();//(PATCH : du Modèle existant au DTO, pour initialiser le patch)
-
+            // CreateMap<User, UserDto>(); 
             // ----------------------------------------------------
             // Mappings pour la ressource Adherent (CRUD complet)
             // ----------------------------------------------------
