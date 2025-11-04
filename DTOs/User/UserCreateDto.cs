@@ -41,7 +41,7 @@ namespace ASPPorcelette.API.DTOs.User
         // --- ADRESSE (Requise pour l'adhérent) ---
         [Required(ErrorMessage = "L'adresse est requise.")]
         [MaxLength(200)]
-        public string? Adresse { get; set; } // Mappé à User.RueEtNumero
+        public string? RueEtNumero { get; set; } // Mappé à User.RueEtNumero
         
         [Required(ErrorMessage = "La ville est requise.")]
         [MaxLength(100)]

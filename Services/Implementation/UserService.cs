@@ -7,6 +7,9 @@ using ASPPorcelette.API.DTOs.User;
 using ASPPorcelette.API.Models.Identity;
 using ASPPorcelette.API.Data;
 using System;
+using Microsoft.AspNetCore.Hosting;
+using System.IO;
+using Microsoft.AspNetCore.Http;
 using ASPPorcelette.API.DTOs;
 
 namespace ASPPorcelette.API.Services
@@ -30,6 +33,9 @@ namespace ASPPorcelette.API.Services
             _hostEnvironment = hostEnvironment;
         }
 
+        // ======================================================================
+        // 🔹 Lister les utilisateurs
+        // ======================================================================
         public async Task<IEnumerable<UserDto>> GetAdminUserListAsync()
         {
             var users = await _userManager.Users.ToListAsync();
@@ -66,37 +72,90 @@ namespace ASPPorcelette.API.Services
             return userListDtos;
         }
 
-        private async Task<string> SaveProfilePicture(IFormFile? imageFile)
+       // ======================================================================
+// 🔹 Sauvegarder une image sur disque
+// ======================================================================
+private async Task<string> SaveProfilePicture(IFormFile? imageFile)
+{
+    if (imageFile == null || imageFile.Length == 0)
+        return string.Empty;
+
+    var uploadsFolder = Path.Combine(_hostEnvironment.WebRootPath, "images", "profiles");
+    if (!Directory.Exists(uploadsFolder))
+        Directory.CreateDirectory(uploadsFolder);
+
+    var extension = Path.GetExtension(imageFile.FileName) ?? ".jpg";
+    var uniqueFileName = Guid.NewGuid().ToString() + extension;
+    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+    try
+    {
+        using (var fileStream = new FileStream(filePath, FileMode.Create))
         {
-            if (imageFile == null || imageFile.Length == 0)
-                return string.Empty;
-
-            var uploadsFolder = Path.Combine(_hostEnvironment.WebRootPath, "images", "profiles");
-            if (!Directory.Exists(uploadsFolder))
-                Directory.CreateDirectory(uploadsFolder);
-
-            var uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(imageFile.FileName);
-            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
-            {
-                await imageFile.CopyToAsync(fileStream);
-            }
-
-            return $"/images/profiles/{uniqueFileName}";
+            await imageFile.CopyToAsync(fileStream);
         }
+        return $"/images/profiles/{uniqueFileName}";
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ Erreur lors de la sauvegarde du fichier : {ex.Message}");
+        return string.Empty;
+    }
+}
 
+// ======================================================================
+// 🔹 Supprimer une image du disque
+// ======================================================================
+// ======================================================================
+// 🔹 Supprimer une image du disque (VERSION CORRIGÉE)
+// ======================================================================
+// ======================================================================
+// 🔹 Supprimer une image du disque (VERSION CORRIGÉE)
+// ======================================================================
+// ======================================================================
+// 🔹 Supprimer une image du disque (VERSION CORRIGÉE)
+// ======================================================================
+private void DeleteProfilePicture(string? photoUrl)
+{
+    if (string.IsNullOrEmpty(photoUrl))
+        return;
+
+    try
+    {
+        // ✅ Enlève un éventuel "/" au début
+        string relativePath = photoUrl.StartsWith("/") ? photoUrl.TrimStart('/') : photoUrl;
+
+        // ✅ Remplace les "/" par le séparateur de répertoire approprié (Windows ou Linux)
+        relativePath = relativePath.Replace("/", Path.DirectorySeparatorChar.ToString());
+
+        // ✅ Combine correctement le chemin complet
+        string fullPath = Path.Combine(_hostEnvironment.WebRootPath, relativePath);
+
+        Console.WriteLine($"🔍 Tentative de suppression : {fullPath}");
+
+        if (File.Exists(fullPath))
+        {
+            File.Delete(fullPath);
+            Console.WriteLine($"✅ Fichier supprimé avec succès : {fullPath}");
+        }
+        else
+        {
+            Console.WriteLine($"⚠️ Fichier introuvable : {fullPath}");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ Erreur lors de la suppression de l'image {photoUrl} : {ex.Message}");
+        Console.WriteLine($"❌ Stack trace : {ex.StackTrace}");
+    }
+}
+
+        // ======================================================================
+        // 🔹 Création d’un utilisateur avec photo
+        // ======================================================================
         public async Task<IdentityResult> CreateUserWithProfileAsync(UserCreationDto dto, string role)
         {
-            Console.WriteLine("=== Début de CreateUserWithProfileAsync ===");
-            Console.WriteLine($"Email reçu : {dto.Email}");
-            Console.WriteLine($"Date de naissance reçue : {dto.DateNaissance}");
-            Console.WriteLine($"Fichier photo présent ? {(dto.PhotoFile != null ? "OUI" : "NON")}");
-
             string? photoUrl = await SaveProfilePicture(dto.PhotoFile);
-
-            Console.WriteLine($"PhotoUrl enregistrée : {photoUrl}");
-            Console.WriteLine($"DateNaissance reçue du DTO : {dto.DateNaissance}");
 
             var user = new User
             {
@@ -109,7 +168,7 @@ namespace ASPPorcelette.API.Services
                 Grade = dto.Grade ?? string.Empty,
                 Bio = dto.Bio ?? string.Empty,
                 Statut = dto.Statut ?? 0,
-                RueEtNumero = dto.Adresse ?? string.Empty,
+                RueEtNumero = dto.RueEtNumero ?? string.Empty,
                 Ville = dto.Ville ?? string.Empty,
                 CodePostal = dto.CodePostal ?? string.Empty,
                 DateNaissance = dto.DateNaissance,
@@ -119,15 +178,8 @@ namespace ASPPorcelette.API.Services
                 DateCreation = DateTime.UtcNow
             };
 
-            Console.WriteLine($"➡️ DateNaissance envoyée dans User : {user.DateNaissance}");
-            Console.WriteLine($"➡️ PhotoUrl envoyée dans User : {user.PhotoUrl}");
-
             var result = await _userManager.CreateAsync(user, dto.Password);
-
-            if (!result.Succeeded)
-            {
-                return result;
-            }
+            if (!result.Succeeded) return result;
 
             if (!await _roleManager.RoleExistsAsync(role))
             {
@@ -149,140 +201,134 @@ namespace ASPPorcelette.API.Services
             return IdentityResult.Success;
         }
 
-
-
-
-
-        // Fichier : UserService.cs (Ajoutez ceci avant ou après UpdateUserByAdminAsync)
-
-  public async Task<IdentityResult> UpdateUserProfileAsync(string userId, UserUpdateDto dto)
-{
-    var user = await _userManager.FindByIdAsync(userId);
-    if (user == null)
-    {
-        return IdentityResult.Failed(new IdentityError { Description = "Utilisateur Identity non trouvé." });
-    }
-
-    try
-    {
-        // ===============================
-        // 🔹 Mise à jour des infos de base
-        // ===============================
-        user.Prenom = dto.Prenom ?? user.Prenom;
-        user.Nom = dto.Nom ?? user.Nom;
-        user.Telephone = dto.Telephone ?? user.Telephone;
-        user.PhotoUrl = dto.PhotoUrl ?? user.PhotoUrl;
-        user.Grade = dto.Grade ?? user.Grade;
-        user.Bio = dto.Bio ?? user.Bio;
-
-        // ===============================
-        // 🔹 Mise à jour du statut et discipline
-        // ===============================
-        if (dto.Statut.HasValue)
-            user.Statut = dto.Statut.Value;
-
-        if (dto.DisciplineId.HasValue)
-            user.DisciplineId = dto.DisciplineId.Value;
-
-        // ===============================
-        // 🔹 Mise à jour de l'adresse
-        // ===============================
-        user.RueEtNumero = dto.Adresse ?? user.RueEtNumero;
-        user.Ville = dto.Ville ?? user.Ville;
-        user.CodePostal = dto.CodePostal ?? user.CodePostal;
-
-        // ===============================
-        // 🔹 Mise à jour de la date de naissance
-        // ===============================
-        if (dto.DateDeNaissance.HasValue)
-            user.DateNaissance = dto.DateDeNaissance.Value;
-
-        // ===============================
-        // 🔹 Mise à jour du nom d’utilisateur et email
-        // ===============================
-        if (!string.IsNullOrEmpty(dto.Username) && user.UserName != dto.Username)
-        {
-            var usernameResult = await _userManager.SetUserNameAsync(user, dto.Username);
-            if (!usernameResult.Succeeded)
-                return usernameResult;
-        }
-
-        if (!string.IsNullOrEmpty(dto.Email) && user.Email != dto.Email)
-        {
-            user.Email = dto.Email;
-        }
-
-        // ===============================
-        // 🔹 Gestion du changement de mot de passe
-        // ===============================
-        if (!string.IsNullOrEmpty(dto.NewPassword))
-        {
-            if (string.IsNullOrEmpty(dto.CurrentPassword))
-                return IdentityResult.Failed(new IdentityError { Description = "Le mot de passe actuel est requis." });
-
-            var passwordCheck = await _userManager.CheckPasswordAsync(user, dto.CurrentPassword);
-            if (!passwordCheck)
-                return IdentityResult.Failed(new IdentityError { Description = "Mot de passe actuel incorrect." });
-
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var passwordResult = await _userManager.ResetPasswordAsync(user, token, dto.NewPassword);
-
-            if (!passwordResult.Succeeded)
-                return passwordResult;
-        }
-
-        // ===============================
-        // 🔹 Sauvegarde finale
-        // ===============================
-        var updateResult = await _userManager.UpdateAsync(user);
-        return updateResult;
-    }
-    catch (Exception ex)
-    {
-        return IdentityResult.Failed(new IdentityError
-        {
-            Description = $"Une erreur inattendue est survenue lors de la mise à jour du profil : {ex.Message}"
-        });
-    }
-}
-
-
-        // ... et juste après, votre méthode UpdateUserByAdminAsync doit toujours être présente ...
-
-
-
-
-
-
-
-
-
-
-        public async Task<IdentityResult> UpdateUserByAdminAsync(string userId, UserAdminUpdateDto dto)
+        // ======================================================================
+        // 🔹 Mise à jour du profil utilisateur (par lui-même)
+        // ======================================================================
+        public async Task<IdentityResult> UpdateUserProfileAsync(string userId, UserUpdateDto dto)
         {
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
-            {
-                return IdentityResult.Failed(new IdentityError { Description = "Utilisateur Identity non trouvé." });
-            }
+                return IdentityResult.Failed(new IdentityError { Description = "Utilisateur non trouvé." });
 
-            // Mappage:
+            try
+            {
+                user.Prenom = dto.Prenom ?? user.Prenom;
+                user.Nom = dto.Nom ?? user.Nom;
+                user.Telephone = dto.Telephone ?? user.Telephone;
+                user.Grade = dto.Grade ?? user.Grade;
+                user.Bio = dto.Bio ?? user.Bio;
+
+                // === Gestion de la photo ===
+                if (dto.PhotoFile != null)
+                {
+                    string newPhotoUrl = await SaveProfilePicture(dto.PhotoFile);
+                    if (!string.IsNullOrEmpty(newPhotoUrl))
+                    {
+                        string? oldPhotoUrl = user.PhotoUrl;
+                        user.PhotoUrl = newPhotoUrl;
+                        DeleteProfilePicture(oldPhotoUrl); // 🟢 supprime l’ancienne image
+                    }
+                }
+                else if (dto.PhotoUrl == string.Empty && !string.IsNullOrEmpty(user.PhotoUrl))
+                {
+                    DeleteProfilePicture(user.PhotoUrl);
+                    user.PhotoUrl = null;
+                }
+                else if (dto.PhotoFile == null && !string.IsNullOrEmpty(dto.PhotoUrl))
+                {
+                    user.PhotoUrl = dto.PhotoUrl;
+                }
+
+                if (dto.Statut.HasValue) user.Statut = dto.Statut.Value;
+                if (dto.DisciplineId.HasValue) user.DisciplineId = dto.DisciplineId.Value;
+                user.RueEtNumero = dto.RueEtNumero ?? user.RueEtNumero;
+                user.Ville = dto.Ville ?? user.Ville;
+                user.CodePostal = dto.CodePostal ?? user.CodePostal;
+
+                if (dto.DateDeNaissance.HasValue) user.DateNaissance = dto.DateDeNaissance.Value;
+                if (dto.DateAdhesion.HasValue) user.DateAdhesion = dto.DateAdhesion.Value;
+                if (dto.DateRenouvellement.HasValue) user.DateRenouvellement = dto.DateRenouvellement.Value;
+
+                if (!string.IsNullOrEmpty(dto.Username) && user.UserName != dto.Username)
+                {
+                    var usernameResult = await _userManager.SetUserNameAsync(user, dto.Username);
+                    if (!usernameResult.Succeeded) return usernameResult;
+                }
+
+                if (!string.IsNullOrEmpty(dto.Email) && user.Email != dto.Email)
+                    user.Email = dto.Email;
+
+                // === Changement de mot de passe ===
+                if (!string.IsNullOrEmpty(dto.NewPassword))
+                {
+                    if (string.IsNullOrEmpty(dto.CurrentPassword))
+                        return IdentityResult.Failed(new IdentityError { Description = "Le mot de passe actuel est requis." });
+
+                    var passwordCheck = await _userManager.CheckPasswordAsync(user, dto.CurrentPassword);
+                    if (!passwordCheck)
+                        return IdentityResult.Failed(new IdentityError { Description = "Mot de passe actuel incorrect." });
+
+                    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                    var passwordResult = await _userManager.ResetPasswordAsync(user, token, dto.NewPassword);
+                    if (!passwordResult.Succeeded) return passwordResult;
+                }
+
+                return await _userManager.UpdateAsync(user);
+            }
+            catch (Exception ex)
+            {
+                return IdentityResult.Failed(new IdentityError
+                {
+                    Description = $"Erreur lors de la mise à jour du profil : {ex.Message}"
+                });
+            }
+        }
+
+        // ======================================================================
+        // 🔹 Mise à jour d’un utilisateur par un admin
+        // ======================================================================
+        public async Task<IdentityResult> UpdateUserByAdminAsync(string userId, UserUpdateDto dto)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return IdentityResult.Failed(new IdentityError { Description = "Utilisateur non trouvé." });
+
             user.Prenom = dto.Prenom ?? user.Prenom;
             user.Nom = dto.Nom ?? user.Nom;
             user.Telephone = dto.Telephone ?? user.Telephone;
-            user.PhotoUrl = dto.PhotoUrl ?? user.PhotoUrl;
             user.Grade = dto.Grade ?? user.Grade;
             user.Bio = dto.Bio ?? user.Bio;
 
-            if (dto.Statut.HasValue) user.Statut = dto.Statut.Value;
-            if (dto.DisciplineId.HasValue) user.DisciplineId = dto.DisciplineId.Value;
-
-            user.RueEtNumero = dto.Adresse ?? user.RueEtNumero;
+            user.RueEtNumero = dto.RueEtNumero ?? user.RueEtNumero;
             user.Ville = dto.Ville ?? user.Ville;
             user.CodePostal = dto.CodePostal ?? user.CodePostal;
 
+            if (dto.Statut.HasValue) user.Statut = dto.Statut.Value;
+            if (dto.DisciplineId.HasValue) user.DisciplineId = dto.DisciplineId.Value;
             if (dto.DateDeNaissance.HasValue) user.DateNaissance = dto.DateDeNaissance.Value;
-            // Gérer DateAdhesion/Renouvellement si elles sont dans UserAdminUpdateDto
+            if (dto.DateAdhesion.HasValue) user.DateAdhesion = dto.DateAdhesion.Value;
+            if (dto.DateRenouvellement.HasValue) user.DateRenouvellement = dto.DateRenouvellement.Value;
+
+            // === Gestion de la photo ===
+            if (dto.PhotoFile != null)
+            {
+                string newPhotoUrl = await SaveProfilePicture(dto.PhotoFile);
+                if (!string.IsNullOrEmpty(newPhotoUrl))
+                {
+                    string? oldPhotoUrl = user.PhotoUrl;
+                    user.PhotoUrl = newPhotoUrl;
+                    DeleteProfilePicture(oldPhotoUrl);
+                }
+            }
+            else if (dto.PhotoUrl == string.Empty && !string.IsNullOrEmpty(user.PhotoUrl))
+            {
+                DeleteProfilePicture(user.PhotoUrl);
+                user.PhotoUrl = null;
+            }
+            else if (dto.PhotoFile == null && !string.IsNullOrEmpty(dto.PhotoUrl))
+            {
+                user.PhotoUrl = dto.PhotoUrl;
+            }
 
             if (!string.IsNullOrEmpty(dto.Username) && user.UserName != dto.Username)
             {
@@ -291,32 +337,34 @@ namespace ASPPorcelette.API.Services
             }
 
             if (!string.IsNullOrEmpty(dto.Email) && user.Email != dto.Email)
-            {
-                // Si l'email change, on peut aussi changer l'UserName (s'ils sont liés)
                 user.Email = dto.Email;
+
+            if (!string.IsNullOrEmpty(dto.NewPassword))
+            {
+                var removeResult = await _userManager.RemovePasswordAsync(user);
+                if (!removeResult.Succeeded) return removeResult;
+
+                var addResult = await _userManager.AddPasswordAsync(user, dto.NewPassword);
+                if (!addResult.Succeeded) return addResult;
             }
-
-
 
             return await _userManager.UpdateAsync(user);
         }
 
+        // ======================================================================
+        // 🔹 Suppression complète d’un utilisateur
+        // ======================================================================
         public async Task<IdentityResult> DeleteUserAsync(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
-
             if (user == null)
-            {
                 return IdentityResult.Failed(new IdentityError { Description = "Utilisateur non trouvé." });
-            }
 
-            // La méthode DeleteAsync de UserManager supprime l'utilisateur de la base de données
-            // et gère les liens Identity.
+            string? photoUrlToDelete = user.PhotoUrl;
             var result = await _userManager.DeleteAsync(user);
 
-            // ⚠️ NOTE : Si l'utilisateur a des relations étrangères (ex: des entités liées),
-            // vous pourriez devoir gérer leur suppression ou désactivation ici avant d'appeler DeleteAsync,
-            // ou configurer ces relations en CASCADE DELETE dans votre modèle EF Core.
+            if (result.Succeeded)
+                DeleteProfilePicture(photoUrlToDelete);
 
             return result;
         }

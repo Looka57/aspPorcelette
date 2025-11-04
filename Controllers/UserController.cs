@@ -120,26 +120,35 @@ namespace ASPPorcelette.API.Controllers
         /// 🔹 Mise à jour d’un utilisateur par un administrateur ou un sensei.
         /// Utilisé dans le back-office.
         /// </summary>
-        [HttpPut("admin/{id}")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin, Sensei")]
-        public async Task<IActionResult> UpdateUserByAdmin([FromRoute] Guid id, [FromForm] UserAdminUpdateDto updateDto)
-        {
-            // Vérifie cohérence entre l’ID du DTO et celui de la route
-            if (string.IsNullOrEmpty(updateDto.UserId) || !Guid.TryParse(updateDto.UserId, out var dtoGuid) || id != dtoGuid)
-                return BadRequest(new { Message = "L'ID ne correspond pas ou est invalide." });
+       /// <summary>
+/// 🔹 Mise à jour d’un utilisateur par un administrateur ou un sensei.
+/// Utilisé dans le back-office.
+/// </summary>
+[HttpPut("admin/{userId}")] // 💡 Utilisation de {userId} pour plus de clarté
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin, Sensei")]
+// 🟢 CORRECTION: L'ID est passé comme string, et on utilise le DTO que nous avons harmonisé
+public async Task<IActionResult> UpdateUserByAdmin([FromRoute] string userId, [FromForm] UserUpdateDto updateDto) 
+{
+    // 💡 Simplification de la validation de l'ID (on utilise l'ID de la route)
+    if (string.IsNullOrEmpty(userId))
+        return BadRequest(new { Message = "L'ID utilisateur est manquant." });
 
-            var result = await _userService.UpdateUserByAdminAsync(id.ToString(), updateDto);
+    // 💡 (Optionnel mais recommandé si le DTO contient UserId) 
+    // updateDto.UserId = userId; 
+    
+    // Le service doit utiliser l'ID de la route pour trouver l'utilisateur.
+    // Nous appelons le service avec l'ID en string.
+    var result = await _userService.UpdateUserByAdminAsync(userId, updateDto); 
 
-            if (result.Succeeded)
-                return Ok(new { Message = "Utilisateur mis à jour avec succès par l'administrateur." });
+    if (result.Succeeded)
+        return Ok(new { Message = "Utilisateur mis à jour avec succès par l'administrateur." });
 
-            return BadRequest(new
-            {
-                Errors = result.Errors.Select(e => e.Description),
-                Message = "Échec de la mise à jour de l'utilisateur."
-            });
-        }
-
+    return BadRequest(new
+    {
+        Errors = result.Errors.Select(e => e.Description),
+        Message = "Échec de la mise à jour de l'utilisateur."
+    });
+}
         // ================================================================
         // 🧩 SECTION 3 : GESTION DES INSCRIPTIONS
         // ================================================================
@@ -218,46 +227,25 @@ namespace ASPPorcelette.API.Controllers
             return Ok(new { Message = "Adhérent créé avec succès", userId = newUser.Id });
         }
 
-        // ================================================================
-        // 🧩 SECTION 4 : ADMINISTRATION GÉNÉRALE
-        // ================================================================
+        // Dans UserController.cs
 
-        /// <summary>
-        /// 🔹 Liste tous les utilisateurs pour l’administration.
-        /// </summary>
-        [HttpGet("admin/list")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei")]
-        public async Task<IActionResult> GetAllUsers()
-        {
-            var users = _userManager.Users.ToList();
-            var userList = new List<object>();
+// ================================================================
+// 🧩 SECTION 4 : ADMINISTRATION GÉNÉRALE
+// ================================================================
 
-            foreach (var user in users)
-            {
-                var roles = await _userManager.GetRolesAsync(user);
-                userList.Add(new
-                {
-                    user.Id,
-                    user.Email,
-                    user.Nom,
-                    user.Prenom,
-                    user.RueEtNumero,
-                    user.Ville,
-                    user.CodePostal,
-                    user.Telephone,
-                    user.Grade,
-                    user.Bio,
-                    user.Statut,
-                    user.DateNaissance,
-                    user.DateAdhesion,
-                    user.DateRenouvellement,
-                    user.DisciplineId,
-                    Roles = roles.ToList()
-                });
-            }
-
-            return Ok(userList);
-        }
+/// <summary>
+/// 🔹 Liste tous les utilisateurs pour l’administration.
+/// </summary>
+[HttpGet("admin/list")]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei")]
+public async Task<IActionResult> GetAllUsers()
+{
+    // 💡 CORRECTION : Utilisation du service pour obtenir la liste, 
+    // qui mappe correctement en UserDto (incluant PhotoUrl).
+    var userListDtos = await _userService.GetAdminUserListAsync(); 
+    
+    return Ok(userListDtos);
+}
 
         /// <summary>
         /// 🔹 Récupère un utilisateur spécifique via son ID.
@@ -328,7 +316,7 @@ namespace ASPPorcelette.API.Controllers
             if (user.Id == currentUserId)
                 return BadRequest(new { Message = "Vous ne pouvez pas supprimer votre propre compte." });
 
-            var result = await _userManager.DeleteAsync(user);
+            var result = await _userService.DeleteUserAsync(userId);
             if (result.Succeeded)
                 return NoContent();
 

@@ -1,15 +1,17 @@
 using System.ComponentModel.DataAnnotations;
 using System;
+using Microsoft.AspNetCore.Http; // ⚠️ AJOUTÉ pour IFormFile
 
 namespace ASPPorcelette.API.DTOs.User
 {
     /// <summary>
-    /// DTO utilisé pour la mise à jour du profil par l'utilisateur connecté.
-        /// Tous les champs sont optionnels car l'utilisateur ne les envoie pas tous à chaque fois.
+    /// DTO utilisé pour la mise à jour du profil par l'utilisateur connecté ou par l'Admin/Sensei.
+    /// Tous les champs sont optionnels car l'utilisateur ne les envoie pas tous à chaque fois.
     /// </summary>
     public class UserUpdateDto
     {
         public string? UserId { get; set; }
+        
         // === IDENTITY ===
         [EmailAddress(ErrorMessage = "Format d'email invalide.")]
         public string? Email { get; set; }
@@ -38,18 +40,17 @@ namespace ASPPorcelette.API.DTOs.User
         [StringLength(100, MinimumLength = 6)]
         public string? NewPassword { get; set; }
 
-        // --- ADRESSE (POUR LE MODÈLE UNIFIÉ) ---
+        // --- ADRESSE ---
         [MaxLength(200)]
-        public string? Adresse { get; set; } // Mappé à User.RueEtNumero
-
+        public string? RueEtNumero { get; set; }
 
         [MaxLength(100)]
-        public string? Ville { get; set; } // <-- AJOUTÉ
+        public string? Ville { get; set; }
 
         [MaxLength(10)]
-        public string? CodePostal { get; set; } // <-- AJOUTÉ
+        public string? CodePostal { get; set; }
 
-        // === CHAMPS SPÉCIFIQUES SENSEI ===
+        // === CHAMPS SPÉCIFIQUES SENSEI / ADMIN (Profil étendu) ===
         [MaxLength(50)]
         public string? Grade { get; set; }
 
@@ -60,7 +61,14 @@ namespace ASPPorcelette.API.DTOs.User
 
         public int? DisciplineId { get; set; }
 
-        // === CHAMPS SPÉCIFIQUES ADHERENT ===
+        // === CHAMPS SPÉCIFIQUES ADHERENT / ADMIN (Dates) ===
         public DateTime? DateDeNaissance { get; set; }
+        
+        // 🟢 CORRECTION CS1061: AJOUT DES PROPRIÉTÉS MANQUANTES
+        public DateTime? DateAdhesion { get; set; } 
+        public DateTime? DateRenouvellement { get; set; }
+
+        // === FICHIER (Pour upload via FromForm) ===
+        public IFormFile? PhotoFile { get; set; } 
     }
 }

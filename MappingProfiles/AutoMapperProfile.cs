@@ -36,7 +36,10 @@ namespace ASPPorcelette.API.MappingProfiles
             // ----------------------------------------------------
             // Mapping pour User (Modèle vers DTO)
             // ----------------------------------------------------
-            // CreateMap<User, UserDto>(); 
+            CreateMap<User, UserDto>()
+                // Assure le mappage des propriétés avec les mêmes noms (Nom, Prenom, Email, etc.)
+                // ET s'assure que la propriété PhotoUrl est incluse, même si elle n'est pas chargée par défaut.
+                .ForMember(dest => dest.PhotoUrl, opt => opt.MapFrom(src => src.PhotoUrl));
             // ----------------------------------------------------
             // Mappings pour la ressource Adherent (CRUD complet)
             // ----------------------------------------------------
@@ -90,7 +93,6 @@ namespace ASPPorcelette.API.MappingProfiles
                 .ForMember(dest => dest.ActualiteId, opt => opt.Ignore())
                 .ForMember(dest => dest.ImageUrl, opt => opt.Ignore())
                 .ForMember(dest => dest.ImageUrl, opt => opt.Ignore());
-            CreateMap<User, UserDto>();
 
 
             // / ----------------------------------------------------
