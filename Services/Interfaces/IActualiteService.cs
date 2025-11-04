@@ -18,5 +18,7 @@ namespace ASPPorcelette.API.Services.Interfaces
             JsonPatchDocument<ActualiteUpdateDto> patchDocument
         );
         Task<bool> DeleteAsync(int id, string webRootPath);
+
+        
     }
 }
