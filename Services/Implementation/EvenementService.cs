@@ -1,3 +1,4 @@
+using ASPPorcelette.API.Data;
 using ASPPorcelette.API.DTOs.Evenement;
 using ASPPorcelette.API.Models;
 using ASPPorcelette.API.Repository.Interfaces;
@@ -11,7 +12,8 @@ namespace ASPPorcelette.API.Services.Implementation
 {
     public class EvenementService : IEvenementService
     {
-        private readonly IEvenementRepository _repository;
+        private readonly ApplicationDbContext _context; // <-- _context DOIT être ici
+                private readonly IEvenementRepository _repository;
         private readonly IMapper _mapper;
 
         public EvenementService(IEvenementRepository repository, IMapper mapper)
@@ -30,11 +32,11 @@ namespace ASPPorcelette.API.Services.Implementation
             return await _repository.GetAllEvenementsWithDetailsAsync();
         }
 
-        public async Task<Evenement?> GetEvenementByIdAsync(int id)
-        {
-            // Utilise la méthode du repository qui charge les détails
-            return await _repository.GetEvenementWithDetailsAsync(id);
-        }
+public async Task<Evenement?> GetEvenementByIdAsync(int id) 
+{
+    // Utilise la bonne méthode du repository pour charger les détails
+    return await _repository.GetEvenementWithDetailsAsync(id); 
+}
 
         // -----------------------------------------------------------------
         // CREATE
