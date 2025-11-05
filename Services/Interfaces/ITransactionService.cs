@@ -19,14 +19,16 @@ namespace ASPPorcelette.API.Services.Interfaces
 
         // Mise à jour (PUT) avec logique de mise à jour du solde du compte
         Task<Transaction?> UpdateTransactionAsync(int id, TransactionUpdateDto transactionDto);
-        
+
         // Mise à jour partielle (PATCH)
         Task<(Transaction? Transaction, bool Success)> PartialUpdateTransactionAsync(
-            int id, 
+            int id,
             JsonPatchDocument<TransactionUpdateDto> patchDocument
         );
         
+        
         // Suppression avec logique de correction du solde du compte
         Task<bool> DeleteTransactionAsync(int id);
+        Task TransferAsync(int sourceId, int destId, decimal montant, string description, int? categorieId, int disciplineId);
     }
 }

@@ -67,13 +67,28 @@ namespace ASPPorcelette.API.Controllers
         }
 
 
-// GET: api/Transaction/compte/5
-/// <summary>
-/// Récupère toutes les transactions associées à un compte donné.
-/// </summary>
-/// <param name="compteId">L'ID du compte.</param>
-/// <returns>Une liste de TransactionDto.</returns>
-// GET: api/Transaction/compte/5
+[HttpPost("transfer")]
+public async Task<ActionResult> Transfer(TransactionTransferDto transferDto)
+{
+    try
+    {
+        await _transactionService.TransferAsync(
+            transferDto.SourceCompteId,
+            transferDto.DestinationCompteId,
+            transferDto.Montant,
+            transferDto.Description,
+            transferDto.CategorieId,
+            transferDto.DisciplineId // 👈 discipline obligatoire
+        );
+        return StatusCode(201);
+    }
+    catch (Exception ex)
+    {
+        return BadRequest(ex.Message);
+    }
+}
+
+
 
 
 // GET: api/Transaction/compte/5

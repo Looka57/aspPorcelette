@@ -42,7 +42,7 @@ namespace ASPPorcelette.API.Services.Implementation
             return await _transactionRepository.GetByIdWithDetailsAsync(id);
         }
 
-  public async Task<IEnumerable<Transaction>> GetTransactionsByCompteIdAsync(int compteId)
+        public async Task<IEnumerable<Transaction>> GetTransactionsByCompteIdAsync(int compteId)
         {
             return await _transactionRepository.GetByCompteIdWithDetailsAsync(compteId);
         }
@@ -112,29 +112,6 @@ namespace ASPPorcelette.API.Services.Implementation
             // 8️⃣ Retourner la transaction complète avec ses détails
             return await _transactionRepository.GetByIdWithDetailsAsync(createdTransaction.TransactionId);
         }
-
-       
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
         // ============================================================
@@ -246,5 +223,57 @@ namespace ASPPorcelette.API.Services.Implementation
 
             return await _transactionRepository.DeleteAsync(id);
         }
+
+
+
+      public async Task TransferAsync(int sourceId, int destId, decimal montant, string description, int? categorieId, int disciplineId)
+{
+    if (montant <= 0)
+        throw new ArgumentException("Le montant doit être positif.");
+
+    // Récupération des comptes source et destination
+    var source = await _compteRepository.GetByIdAsync(sourceId);
+    var dest = await _compteRepository.GetByIdAsync(destId);
+
+    if (source == null || dest == null)
+        throw new KeyNotFoundException("Compte introuvable.");
+
+    if (source.Solde < montant)
+        throw new InvalidOperationException("Solde insuffisant.");
+
+    // Vérifier que la discipline existe
+    var discipline = await _transactionRepository.GetByIdAsync(disciplineId);
+    if (discipline == null)
+        throw new KeyNotFoundException("Discipline introuvable.");
+
+    // Débit sur le compte source
+    var debit = new Transaction
+    {
+        CompteId = sourceId,
+        Montant = -montant,
+        Description = $"Transfert vers {dest.Nom} : {description}",
+        CategorieTransactionId = categorieId ?? 0,
+        DisciplineId = disciplineId
+    };
+    source.Solde -= montant;
+    await _compteRepository.UpdateCompteAsync(source);
+    await _transactionRepository.AddAsync(debit);
+
+    // Crédit sur le compte destination
+    var credit = new Transaction
+    {
+        CompteId = destId,
+        Montant = montant,
+        Description = $"Transfert depuis {source.Nom} : {description}",
+        CategorieTransactionId = categorieId ?? 0,
+        DisciplineId = disciplineId
+    };
+    dest.Solde += montant;
+    await _compteRepository.UpdateCompteAsync(dest);
+    await _transactionRepository.AddAsync(credit);
+}
+
+
+
     }
 }

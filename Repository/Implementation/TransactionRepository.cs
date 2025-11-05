@@ -23,7 +23,8 @@ namespace ASPPorcelette.API.Repository.Implementation
             return _context.Transactions
                 .Include(t => t.Compte)          // Inclut le Compte
                 .Include(t => t.Categorie)      // Inclut la CategorieTransaction
-                .Include(t => t.Discipline);    // Inclut la Discipline
+                .Include(t => t.Discipline)  // Inclut la Discipline
+                .Include(t => t.User);          // Inclut l'utilisateur associé
         }
 
         public async Task<IEnumerable<Transaction>> GetAllWithDetailsAsync()

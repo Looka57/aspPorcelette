@@ -12,6 +12,8 @@ namespace ASPPorcelette.API.DTOs.Evenement
         [StringLength(500)]
         public string Description { get; set; } = string.Empty;
 
+        public string Lieu { get; set; } = string.Empty;
+
         [Required(ErrorMessage = "La date de début est requise.")]
         public DateTime DateDebut { get; set; }
 

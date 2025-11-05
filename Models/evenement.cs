@@ -15,6 +15,9 @@ namespace ASPPorcelette.API.Models
 
         [MaxLength(500)]
         public string Description { get; set; } = string.Empty;
+        
+        [MaxLength(500)]
+        public string Lieu { get; set; } = string.Empty;
 
         [Required]
         public DateTime DateDebut { get; set; }

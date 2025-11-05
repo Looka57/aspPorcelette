@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using ASPPorcelette.API.Models.Identity;
 
 namespace ASPPorcelette.API.Models
 {
@@ -30,6 +31,9 @@ namespace ASPPorcelette.API.Models
 
         [Required]
         public int DisciplineId { get; set; }
+
+        public string? UserId { get; set; }
+        public User? User { get; set; }
 
         // -----------------------------------------------------------------
         // Propriétés de navigation
