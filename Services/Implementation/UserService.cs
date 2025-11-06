@@ -38,7 +38,10 @@ namespace ASPPorcelette.API.Services
         // ======================================================================
         public async Task<IEnumerable<UserDto>> GetAdminUserListAsync()
         {
-            var users = await _userManager.Users.ToListAsync();
+            var users = await _userManager.Users
+            .Where(u => u.Statut == 1)
+            .ToListAsync();
+
             var userListDtos = new List<UserDto>();
 
             foreach (var user in users)
@@ -72,83 +75,131 @@ namespace ASPPorcelette.API.Services
             return userListDtos;
         }
 
-       // ======================================================================
-// 🔹 Sauvegarder une image sur disque
-// ======================================================================
-private async Task<string> SaveProfilePicture(IFormFile? imageFile)
-{
-    if (imageFile == null || imageFile.Length == 0)
-        return string.Empty;
-
-    var uploadsFolder = Path.Combine(_hostEnvironment.WebRootPath, "images", "profiles");
-    if (!Directory.Exists(uploadsFolder))
-        Directory.CreateDirectory(uploadsFolder);
-
-    var extension = Path.GetExtension(imageFile.FileName) ?? ".jpg";
-    var uniqueFileName = Guid.NewGuid().ToString() + extension;
-    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-    try
-    {
-        using (var fileStream = new FileStream(filePath, FileMode.Create))
+        // ======================================================================
+        // 🔹 Compter les adhérents actifs (Statut = 1 et DateRenouvellement >= aujourd'hui)
+        // ======================================================================
+        public async Task<int> GetActiveAdherentsCountAsync()
         {
-            await imageFile.CopyToAsync(fileStream);
+            DateTime cycleStart = new DateTime(DateTime.Today.Year, 9, 1);
+            return await _userManager.Users
+                .Where(u => u.Statut == 1
+                            && u.DateRenouvellement.HasValue
+                            && u.DateRenouvellement.Value >= cycleStart)
+                .CountAsync();
         }
-        return $"/images/profiles/{uniqueFileName}";
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"❌ Erreur lors de la sauvegarde du fichier : {ex.Message}");
-        return string.Empty;
-    }
+ // ======================================================================
+        // 🔹Date adhesion l'annee suivante
+        // ======================================================================
+
+private DateTime GetStartOfNextAdhesionCycle()
+{
+    var today = DateTime.Today;
+    int year = today.Month < 9 ? today.Year : today.Year + 1;
+    return new DateTime(year, 9, 1);
 }
 
-// ======================================================================
-// 🔹 Supprimer une image du disque
-// ======================================================================
-// ======================================================================
-// 🔹 Supprimer une image du disque (VERSION CORRIGÉE)
-// ======================================================================
-// ======================================================================
-// 🔹 Supprimer une image du disque (VERSION CORRIGÉE)
-// ======================================================================
-// ======================================================================
-// 🔹 Supprimer une image du disque (VERSION CORRIGÉE)
-// ======================================================================
-private void DeleteProfilePicture(string? photoUrl)
-{
-    if (string.IsNullOrEmpty(photoUrl))
-        return;
 
-    try
-    {
-        // ✅ Enlève un éventuel "/" au début
-        string relativePath = photoUrl.StartsWith("/") ? photoUrl.TrimStart('/') : photoUrl;
 
-        // ✅ Remplace les "/" par le séparateur de répertoire approprié (Windows ou Linux)
-        relativePath = relativePath.Replace("/", Path.DirectorySeparatorChar.ToString());
 
-        // ✅ Combine correctement le chemin complet
-        string fullPath = Path.Combine(_hostEnvironment.WebRootPath, relativePath);
 
-        Console.WriteLine($"🔍 Tentative de suppression : {fullPath}");
 
-        if (File.Exists(fullPath))
+
+
+
+
+
+
+
+
+
+
+        // ======================================================================
+        // 🔹 Renouveler l'adhésion d'un utilisateur
+        // ======================================================================
+        public async Task<IdentityResult> RenewAdhesionAsync(string userId)
         {
-            File.Delete(fullPath);
-            Console.WriteLine($"✅ Fichier supprimé avec succès : {fullPath}");
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return IdentityResult.Failed(new IdentityError { Description = "Utilisateur non trouvé." });
+
+            //   / La date de renouvellement est le 31 août de l'année suivante
+            DateTime nextCycleStart = GetStartOfNextAdhesionCycle();
+            user.DateRenouvellement = nextCycleStart.AddDays(-1); // 31 août
+
+            user.Statut = 1; // actif
+
+            return await _userManager.UpdateAsync(user);
         }
-        else
+
+
+        // ======================================================================
+        // 🔹 Sauvegarder une image sur disque
+        // ======================================================================
+        private async Task<string> SaveProfilePicture(IFormFile? imageFile)
         {
-            Console.WriteLine($"⚠️ Fichier introuvable : {fullPath}");
+            if (imageFile == null || imageFile.Length == 0)
+                return string.Empty;
+
+            var uploadsFolder = Path.Combine(_hostEnvironment.WebRootPath, "images", "profiles");
+            if (!Directory.Exists(uploadsFolder))
+                Directory.CreateDirectory(uploadsFolder);
+
+            var extension = Path.GetExtension(imageFile.FileName) ?? ".jpg";
+            var uniqueFileName = Guid.NewGuid().ToString() + extension;
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            try
+            {
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await imageFile.CopyToAsync(fileStream);
+                }
+                return $"/images/profiles/{uniqueFileName}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Erreur lors de la sauvegarde du fichier : {ex.Message}");
+                return string.Empty;
+            }
         }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"❌ Erreur lors de la suppression de l'image {photoUrl} : {ex.Message}");
-        Console.WriteLine($"❌ Stack trace : {ex.StackTrace}");
-    }
-}
+
+        // ======================================================================
+        // 🔹 Supprimer une image du disque (VERSION CORRIGÉE)
+        // ======================================================================
+        private void DeleteProfilePicture(string? photoUrl)
+        {
+            if (string.IsNullOrEmpty(photoUrl))
+                return;
+
+            try
+            {
+                // ✅ Enlève un éventuel "/" au début
+                string relativePath = photoUrl.StartsWith("/") ? photoUrl.TrimStart('/') : photoUrl;
+
+                // ✅ Remplace les "/" par le séparateur de répertoire approprié (Windows ou Linux)
+                relativePath = relativePath.Replace("/", Path.DirectorySeparatorChar.ToString());
+
+                // ✅ Combine correctement le chemin complet
+                string fullPath = Path.Combine(_hostEnvironment.WebRootPath, relativePath);
+
+                Console.WriteLine($"🔍 Tentative de suppression : {fullPath}");
+
+                if (File.Exists(fullPath))
+                {
+                    File.Delete(fullPath);
+                    Console.WriteLine($"✅ Fichier supprimé avec succès : {fullPath}");
+                }
+                else
+                {
+                    Console.WriteLine($"⚠️ Fichier introuvable : {fullPath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Erreur lors de la suppression de l'image {photoUrl} : {ex.Message}");
+                Console.WriteLine($"❌ Stack trace : {ex.StackTrace}");
+            }
+        }
 
         // ======================================================================
         // 🔹 Création d’un utilisateur avec photo
@@ -354,17 +405,26 @@ private void DeleteProfilePicture(string? photoUrl)
         // ======================================================================
         // 🔹 Suppression complète d’un utilisateur
         // ======================================================================
-        public async Task<IdentityResult> DeleteUserAsync(string userId)
+        // ======================================================================
+        // 🔹 Désactivation d'un utilisateur (Soft Delete : Statut = 0)
+        // ======================================================================
+        public async Task<IdentityResult> DeactivateUserAsync(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
+
+            // Si l'utilisateur n'existe pas, l'opération est considérée comme réussie pour l'état final.
             if (user == null)
-                return IdentityResult.Failed(new IdentityError { Description = "Utilisateur non trouvé." });
+                return IdentityResult.Success;
 
-            string? photoUrlToDelete = user.PhotoUrl;
-            var result = await _userManager.DeleteAsync(user);
+            // 🎯 MISE EN PLACE DE LA SUPPRESSION DOUCE
+            // 1. Définir le Statut à 0 (Inactif)
+            user.Statut = 0;
 
-            if (result.Succeeded)
-                DeleteProfilePicture(photoUrlToDelete);
+            // 2. Mettre à jour l'utilisateur dans la base de données
+            var result = await _userManager.UpdateAsync(user);
+
+            // 🛑 La photo est CONSERVÉE sur le disque, comme demandé.
+            // L'appel à DeleteProfilePicture est omis ici.
 
             return result;
         }

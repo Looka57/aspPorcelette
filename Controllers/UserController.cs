@@ -185,10 +185,44 @@ namespace ASPPorcelette.API.Controllers
                 return BadRequest(ModelState);
 
             var existingUser = await _userManager.FindByEmailAsync(dto.Email);
-            if (existingUser != null)
-                return BadRequest(new { Message = "Cette adresse e-mail est déjà utilisée." });
 
-            // Création d’un nouvel utilisateur Adhérent
+            if (existingUser != null)
+            {
+                // Vérifie si l'utilisateur est actif
+                bool isActif = existingUser.Statut == 1 && existingUser.DateRenouvellement.HasValue &&
+                               existingUser.DateRenouvellement.Value >= DateTime.Today;
+
+                if (isActif)
+                    return BadRequest(new { Message = "Un utilisateur actif existe déjà avec cet email." });
+
+                // Réactivation de l'utilisateur inactif
+                existingUser.Statut = 1;
+                existingUser.DateRenouvellement = DateTime.Today.AddYears(1);
+                existingUser.Nom = dto.Nom;
+                existingUser.Prenom = dto.Prenom;
+                existingUser.Telephone = dto.Telephone;
+                existingUser.RueEtNumero = dto.Adresse;
+                existingUser.Ville = dto.Ville ?? "N/A";
+                existingUser.CodePostal = dto.CodePostal ?? "00000";
+                existingUser.DisciplineId = dto.DisciplineId;
+                existingUser.DateAdhesion = dto.DateAdhesion;
+                existingUser.DateNaissance = dto.DateDeNaissance;
+
+                var updateResult = await _userManager.UpdateAsync(existingUser);
+                if (updateResult.Succeeded)
+                {
+                    return Ok(new
+                    {
+                        Message = "Utilisateur réactivé avec succès.",
+                        userId = existingUser.Id,
+                        DateRenouvellement = existingUser.DateRenouvellement.Value.ToShortDateString()
+                    });
+                }
+
+                return BadRequest(new { Errors = updateResult.Errors.Select(e => e.Description) });
+            }
+
+            // Création normale si l'utilisateur n'existe pas
             var newUser = new User
             {
                 UserName = dto.Email,
@@ -202,7 +236,7 @@ namespace ASPPorcelette.API.Controllers
                 Statut = 1,
                 DateNaissance = dto.DateDeNaissance,
                 DateAdhesion = dto.DateAdhesion,
-                DateRenouvellement = dto.DateRenouvellement,
+                DateRenouvellement = DateTime.Today.AddYears(1),
                 DateCreation = DateTime.Now,
                 Bio = "",
                 Grade = "",
@@ -210,22 +244,28 @@ namespace ASPPorcelette.API.Controllers
                 DisciplineId = dto.DisciplineId
             };
 
-            var result = await _userManager.CreateAsync(newUser);
-            if (!result.Succeeded)
+            var createResult = await _userManager.CreateAsync(newUser);
+            if (!createResult.Succeeded)
             {
-                var duplicateError = result.Errors.FirstOrDefault(e =>
+                var duplicateError = createResult.Errors.FirstOrDefault(e =>
                     e.Code == "DuplicateEmail" || e.Code == "DuplicateUserName");
 
                 if (duplicateError != null)
                     return BadRequest(new { Message = "Cette adresse e-mail est déjà utilisée." });
 
-                return BadRequest(new { Errors = result.Errors.Select(e => e.Description) });
+                return BadRequest(new { Errors = createResult.Errors.Select(e => e.Description) });
             }
 
             await _userManager.AddToRoleAsync(newUser, "Adherent");
 
-            return Ok(new { Message = "Adhérent créé avec succès", userId = newUser.Id });
+            return Ok(new
+            {
+                Message = "Adhérent créé avec succès",
+                userId = newUser.Id,
+                DateRenouvellement = newUser.DateRenouvellement.Value.ToShortDateString()
+            });
         }
+
 
         // Dans UserController.cs
 
@@ -316,7 +356,7 @@ namespace ASPPorcelette.API.Controllers
             if (user.Id == currentUserId)
                 return BadRequest(new { Message = "Vous ne pouvez pas supprimer votre propre compte." });
 
-            var result = await _userService.DeleteUserAsync(userId);
+            var result = await _userService.DeactivateUserAsync(userId);
             if (result.Succeeded)
                 return NoContent();
 
@@ -385,6 +425,47 @@ namespace ASPPorcelette.API.Controllers
         }
 
         // ================================================================
+        // 🔹 STATISTIQUES ADHERENTS & RENOUVELLEMENT
+        // ================================================================
+
+        /// <summary>
+        /// 🔹 Renouvelle l'adhésion d'un adhérent en mettant à jour sa DateRenouvellement.
+        /// Accessible par Admin et Sensei.
+        /// </summary>
+        [HttpPost("admin/renouvellement/{userId}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei")]
+        public async Task<IActionResult> RenewAdhesion(string userId)
+        {
+            if (string.IsNullOrEmpty(userId))
+                return BadRequest(new { Message = "L'ID utilisateur est requis." });
+
+            var result = await _userService.RenewAdhesionAsync(userId);
+
+            if (result.Succeeded)
+                return Ok(new { Message = "Adhésion renouvelée avec succès." });
+
+            return BadRequest(new { Errors = result.Errors.Select(e => e.Description) });
+        }
+
+
+        /// <summary>
+        /// 🔹 Récupère le nombre d'adhérents actifs (Statut = 1 et DateRenouvellement >= aujourd'hui).
+        /// Accessible par Admin et Sensei.
+        /// </summary>
+        [HttpGet("admin/statistiques/actifs")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei")]
+        public async Task<IActionResult> GetActiveAdherentsCount()
+        {
+            var count = await _userService.GetActiveAdherentsCountAsync();
+            return Ok(new { ActiveAdherents = count });
+        }
+
+        /// <summary>
+        /// 🔹 Renouvelle l'adhésion d'un utilisateur (Adhérent) en mettant à jour la DateRenouvellement.
+        /// Accessible par Admin et Sensei.
+        /// </summary>
+
+        // ================================================================
         // 🧩 SECTION 6 : TEST TECHNIQUE
         // ================================================================
 
@@ -407,5 +488,11 @@ namespace ASPPorcelette.API.Controllers
             public string UserId { get; set; } = string.Empty;
             public string RoleName { get; set; } = string.Empty;
         }
+
+
+
+        
     }
+
+    
 }
