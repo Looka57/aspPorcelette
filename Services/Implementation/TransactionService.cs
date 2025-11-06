@@ -15,17 +15,20 @@ namespace ASPPorcelette.API.Services.Implementation
         private readonly ITransactionRepository _transactionRepository;
         private readonly ICompteRepository _compteRepository;
         private readonly ICategorieTransactionRepository _categorieTransactionRepository;
+        private readonly IDisciplineRepository _disciplineRepository;
         private readonly IMapper _mapper;
 
         public TransactionService(
             ITransactionRepository transactionRepository,
             ICompteRepository compteRepository,
             ICategorieTransactionRepository categorieTransactionRepository,
+            IDisciplineRepository disciplineRepository,
             IMapper mapper)
         {
             _transactionRepository = transactionRepository;
             _compteRepository = compteRepository;
             _categorieTransactionRepository = categorieTransactionRepository;
+            _disciplineRepository = disciplineRepository;
             _mapper = mapper;
         }
 
@@ -70,10 +73,12 @@ namespace ASPPorcelette.API.Services.Implementation
         // ============================================================
         // 🔹 Création d'une transaction
         // ============================================================
-        public async Task<Transaction> CreateTransactionAsync(TransactionCreateDto transactionDto)
+        public async Task<Transaction> CreateTransactionAsync(TransactionCreateDto transactionDto, Guid connectedUserId)
         {
             // 1️⃣ Mapper le DTO vers l'entité Transaction
             var transaction = _mapper.Map<Transaction>(transactionDto);
+
+            transaction.UserId = connectedUserId.ToString(); // Associer l'utilisateur connecté
 
             // 2️⃣ Récupérer le compte concerné
             var compte = await _compteRepository.GetByIdAsync(transaction.CompteId);
@@ -226,52 +231,54 @@ namespace ASPPorcelette.API.Services.Implementation
 
 
 
-      public async Task TransferAsync(int sourceId, int destId, decimal montant, string description, int? categorieId, int disciplineId)
-{
-    if (montant <= 0)
-        throw new ArgumentException("Le montant doit être positif.");
+        public async Task TransferAsync(int sourceId, int destId, decimal montant, string description, int? categorieId, int disciplineId, Guid connectedUserId)
+        {
+            if (montant <= 0)
+                throw new ArgumentException("Le montant doit être positif.");
 
-    // Récupération des comptes source et destination
-    var source = await _compteRepository.GetByIdAsync(sourceId);
-    var dest = await _compteRepository.GetByIdAsync(destId);
+            // Récupération des comptes source et destination
+            var source = await _compteRepository.GetByIdAsync(sourceId);
+            var dest = await _compteRepository.GetByIdAsync(destId);
 
-    if (source == null || dest == null)
-        throw new KeyNotFoundException("Compte introuvable.");
+            if (source == null || dest == null)
+                throw new KeyNotFoundException("Compte introuvable.");
 
-    if (source.Solde < montant)
-        throw new InvalidOperationException("Solde insuffisant.");
+            if (source.Solde < montant)
+                throw new InvalidOperationException("Solde insuffisant.");
 
-    // Vérifier que la discipline existe
-    var discipline = await _transactionRepository.GetByIdAsync(disciplineId);
-    if (discipline == null)
-        throw new KeyNotFoundException("Discipline introuvable.");
+            // Vérifier que la discipline existe
+            var discipline = await _disciplineRepository.GetByIdAsync(disciplineId);
+            if (discipline == null)
+                throw new KeyNotFoundException("Discipline introuvable.");
 
-    // Débit sur le compte source
-    var debit = new Transaction
-    {
-        CompteId = sourceId,
-        Montant = -montant,
-        Description = $"Transfert vers {dest.Nom} : {description}",
-        CategorieTransactionId = categorieId ?? 0,
-        DisciplineId = disciplineId
-    };
-    source.Solde -= montant;
-    await _compteRepository.UpdateCompteAsync(source);
-    await _transactionRepository.AddAsync(debit);
+            // Débit sur le compte source
+            var debit = new Transaction
+            {
+                CompteId = sourceId,
+                Montant = -montant,
+                Description = $"Transfert vers {dest.Nom} : {description}",
+                CategorieTransactionId = categorieId ?? 0,
+                DisciplineId = disciplineId,
+                UserId = connectedUserId.ToString()
+            };
+            source.Solde -= montant;
+            await _compteRepository.UpdateCompteAsync(source);
+            await _transactionRepository.AddAsync(debit);
 
-    // Crédit sur le compte destination
-    var credit = new Transaction
-    {
-        CompteId = destId,
-        Montant = montant,
-        Description = $"Transfert depuis {source.Nom} : {description}",
-        CategorieTransactionId = categorieId ?? 0,
-        DisciplineId = disciplineId
-    };
-    dest.Solde += montant;
-    await _compteRepository.UpdateCompteAsync(dest);
-    await _transactionRepository.AddAsync(credit);
-}
+            // Crédit sur le compte destination
+            var credit = new Transaction
+            {
+                CompteId = destId,
+                Montant = montant,
+                Description = $"Transfert depuis {source.Nom} : {description}",
+                CategorieTransactionId = categorieId ?? 0,
+                DisciplineId = disciplineId,
+                UserId = connectedUserId.ToString()
+            };
+            dest.Solde += montant;
+            await _compteRepository.UpdateCompteAsync(dest);
+            await _transactionRepository.AddAsync(credit);
+        }
 
 
 

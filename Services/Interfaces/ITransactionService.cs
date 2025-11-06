@@ -14,8 +14,7 @@ namespace ASPPorcelette.API.Services.Interfaces
         Task<IEnumerable<Transaction>> GetTransactionsByCompteIdAsync(int compteId);
 
         // Création avec logique de mise à jour du solde du compte
-        Task<Transaction> CreateTransactionAsync(TransactionCreateDto transactionDto);
-        
+        Task<Transaction> CreateTransactionAsync(TransactionCreateDto transactionDto, Guid connectedUserId);
 
         // Mise à jour (PUT) avec logique de mise à jour du solde du compte
         Task<Transaction?> UpdateTransactionAsync(int id, TransactionUpdateDto transactionDto);
@@ -25,10 +24,10 @@ namespace ASPPorcelette.API.Services.Interfaces
             int id,
             JsonPatchDocument<TransactionUpdateDto> patchDocument
         );
-        
-        
+
+
         // Suppression avec logique de correction du solde du compte
         Task<bool> DeleteTransactionAsync(int id);
-        Task TransferAsync(int sourceId, int destId, decimal montant, string description, int? categorieId, int disciplineId);
+        Task TransferAsync(int sourceId, int destId, decimal montant, string description, int? categorieId, int disciplineId, Guid UserId);
     }
 }

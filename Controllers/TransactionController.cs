@@ -2,16 +2,19 @@ using ASPPorcelette.API.DTOs.Transaction;
 using ASPPorcelette.API.Models;
 using ASPPorcelette.API.Services.Interfaces;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace ASPPorcelette.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class TransactionController : ControllerBase
     {
         private readonly ITransactionService _transactionService;
@@ -43,7 +46,7 @@ namespace ASPPorcelette.API.Controllers
             return Ok(transactionDtos);
         }
 
-        
+
 
         // GET: api/Transaction/5
         /// <summary>
@@ -67,9 +70,15 @@ namespace ASPPorcelette.API.Controllers
         }
 
 
-[HttpPost("transfer")]
+        [HttpPost("transfer")]
 public async Task<ActionResult> Transfer(TransactionTransferDto transferDto)
 {
+    var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out Guid connectedUserId))
+    {
+        return Unauthorized("Impossible d'identifier l'utilisateur connecté.");
+    }
+
     try
     {
         await _transactionService.TransferAsync(
@@ -78,8 +87,10 @@ public async Task<ActionResult> Transfer(TransactionTransferDto transferDto)
             transferDto.Montant,
             transferDto.Description,
             transferDto.CategorieId,
-            transferDto.DisciplineId // 👈 discipline obligatoire
+            transferDto.DisciplineId,
+            connectedUserId // maintenant c’est bien un Guid
         );
+
         return StatusCode(201);
     }
     catch (Exception ex)
@@ -91,25 +102,25 @@ public async Task<ActionResult> Transfer(TransactionTransferDto transferDto)
 
 
 
-// GET: api/Transaction/compte/5
-/// <summary>
-/// Récupère toutes les transactions liées à un compte donné.
-/// </summary>
-/// <param name="compteId">L'ID du compte.</param>
-/// <returns>Liste de transactions avec leurs détails.</returns>
-[HttpGet("compte/{compteId}")]
-[ProducesResponseType(StatusCodes.Status200OK)]
-[ProducesResponseType(StatusCodes.Status404NotFound)]
-public async Task<ActionResult<IEnumerable<TransactionDto>>> GetTransactionsByCompte(int compteId)
-{
-    var transactions = await _transactionService.GetTransactionsByCompteIdAsync(compteId);
+        // GET: api/Transaction/compte/5
+        /// <summary>
+        /// Récupère toutes les transactions liées à un compte donné.
+        /// </summary>
+        /// <param name="compteId">L'ID du compte.</param>
+        /// <returns>Liste de transactions avec leurs détails.</returns>
+        [HttpGet("compte/{compteId}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<IEnumerable<TransactionDto>>> GetTransactionsByCompte(int compteId)
+        {
+            var transactions = await _transactionService.GetTransactionsByCompteIdAsync(compteId);
 
-    if (transactions == null || !transactions.Any())
-        return NotFound($"Aucune transaction trouvée pour le compte ID {compteId}.");
+            if (transactions == null || !transactions.Any())
+                return NotFound($"Aucune transaction trouvée pour le compte ID {compteId}.");
 
-    var transactionDtos = _mapper.Map<IEnumerable<TransactionDto>>(transactions);
-    return Ok(transactionDtos);
-}
+            var transactionDtos = _mapper.Map<IEnumerable<TransactionDto>>(transactions);
+            return Ok(transactionDtos);
+        }
 
 
 
@@ -136,10 +147,15 @@ public async Task<ActionResult<IEnumerable<TransactionDto>>> GetTransactionsByCo
         [ProducesResponseType(StatusCodes.Status404NotFound)] // Si CompteId, CategorieId ou DisciplineId est invalide
         public async Task<ActionResult<TransactionDto>> PostTransaction(TransactionCreateDto transactionDto)
         {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out Guid connectedUserId))
+            {
+                return Unauthorized("Impossible d'identifier l'utilisateur connecté.");
+            }
             try
             {
-                var createdTransaction = await _transactionService.CreateTransactionAsync(transactionDto);
-                
+                var createdTransaction = await _transactionService.CreateTransactionAsync(transactionDto, connectedUserId);
+
                 // Le service retourne l'entité, mais nous avons besoin des détails (relations)
                 // Le moyen le plus simple est de le re-récupérer avec les détails inclus
                 var transactionWithDetails = await _transactionService.GetTransactionByIdAsync(createdTransaction.TransactionId);
@@ -151,7 +167,7 @@ public async Task<ActionResult<IEnumerable<TransactionDto>>> GetTransactionsByCo
             catch (KeyNotFoundException ex)
             {
                 // Attrape l'exception lancée si un ID de relation (Compte, Categorie, Discipline) est introuvable
-                return NotFound(ex.Message); 
+                return NotFound(ex.Message);
             }
         }
 
@@ -171,7 +187,7 @@ public async Task<ActionResult<IEnumerable<TransactionDto>>> GetTransactionsByCo
             // Correction : Suppression de la vérification id != transactionDto.TransactionId
             // car TransactionUpdateDto ne contient pas de TransactionId.
             // L'ID est passé directement au service.
-            
+
             try
             {
                 var updatedTransaction = await _transactionService.UpdateTransactionAsync(id, transactionDto);
@@ -180,7 +196,7 @@ public async Task<ActionResult<IEnumerable<TransactionDto>>> GetTransactionsByCo
                 {
                     return NotFound($"Transaction avec ID {id} non trouvée.");
                 }
-                
+
                 // Le service renvoie l'entité mise à jour avec les détails
                 return Ok(_mapper.Map<TransactionDto>(updatedTransaction));
             }
@@ -189,7 +205,7 @@ public async Task<ActionResult<IEnumerable<TransactionDto>>> GetTransactionsByCo
                 return NotFound(ex.Message);
             }
         }
-        
+
         // PATCH: api/Transaction/5
         /// <summary>
         /// Met à jour partiellement une transaction et corrige le solde du compte si le montant ou le compte change.
@@ -202,21 +218,21 @@ public async Task<ActionResult<IEnumerable<TransactionDto>>> GetTransactionsByCo
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<TransactionDto>> PatchTransaction(
-            int id, 
+            int id,
             [FromBody] JsonPatchDocument<TransactionUpdateDto> patchDocument)
         {
             if (patchDocument == null)
             {
                 return BadRequest("Document de patch JSON invalide.");
             }
-            
+
             var (transaction, success) = await _transactionService.PartialUpdateTransactionAsync(id, patchDocument);
 
             if (!success)
             {
                 return NotFound($"Transaction avec ID {id} non trouvée ou dépendance invalide.");
             }
-            
+
             return Ok(_mapper.Map<TransactionDto>(transaction));
         }
 

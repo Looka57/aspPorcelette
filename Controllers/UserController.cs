@@ -120,35 +120,35 @@ namespace ASPPorcelette.API.Controllers
         /// 🔹 Mise à jour d’un utilisateur par un administrateur ou un sensei.
         /// Utilisé dans le back-office.
         /// </summary>
-       /// <summary>
-/// 🔹 Mise à jour d’un utilisateur par un administrateur ou un sensei.
-/// Utilisé dans le back-office.
-/// </summary>
-[HttpPut("admin/{userId}")] // 💡 Utilisation de {userId} pour plus de clarté
-[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin, Sensei")]
-// 🟢 CORRECTION: L'ID est passé comme string, et on utilise le DTO que nous avons harmonisé
-public async Task<IActionResult> UpdateUserByAdmin([FromRoute] string userId, [FromForm] UserUpdateDto updateDto) 
-{
-    // 💡 Simplification de la validation de l'ID (on utilise l'ID de la route)
-    if (string.IsNullOrEmpty(userId))
-        return BadRequest(new { Message = "L'ID utilisateur est manquant." });
+        /// <summary>
+        /// 🔹 Mise à jour d’un utilisateur par un administrateur ou un sensei.
+        /// Utilisé dans le back-office.
+        /// </summary>
+        [HttpPut("admin/{userId}")] // 💡 Utilisation de {userId} pour plus de clarté
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin, Sensei")]
+        // 🟢 CORRECTION: L'ID est passé comme string, et on utilise le DTO que nous avons harmonisé
+        public async Task<IActionResult> UpdateUserByAdmin([FromRoute] string userId, [FromForm] UserUpdateDto updateDto)
+        {
+            // 💡 Simplification de la validation de l'ID (on utilise l'ID de la route)
+            if (string.IsNullOrEmpty(userId))
+                return BadRequest(new { Message = "L'ID utilisateur est manquant." });
 
-    // 💡 (Optionnel mais recommandé si le DTO contient UserId) 
-    // updateDto.UserId = userId; 
-    
-    // Le service doit utiliser l'ID de la route pour trouver l'utilisateur.
-    // Nous appelons le service avec l'ID en string.
-    var result = await _userService.UpdateUserByAdminAsync(userId, updateDto); 
+            // 💡 (Optionnel mais recommandé si le DTO contient UserId) 
+            // updateDto.UserId = userId; 
 
-    if (result.Succeeded)
-        return Ok(new { Message = "Utilisateur mis à jour avec succès par l'administrateur." });
+            // Le service doit utiliser l'ID de la route pour trouver l'utilisateur.
+            // Nous appelons le service avec l'ID en string.
+            var result = await _userService.UpdateUserByAdminAsync(userId, updateDto);
 
-    return BadRequest(new
-    {
-        Errors = result.Errors.Select(e => e.Description),
-        Message = "Échec de la mise à jour de l'utilisateur."
-    });
-}
+            if (result.Succeeded)
+                return Ok(new { Message = "Utilisateur mis à jour avec succès par l'administrateur." });
+
+            return BadRequest(new
+            {
+                Errors = result.Errors.Select(e => e.Description),
+                Message = "Échec de la mise à jour de l'utilisateur."
+            });
+        }
         // ================================================================
         // 🧩 SECTION 3 : GESTION DES INSCRIPTIONS
         // ================================================================
@@ -229,23 +229,23 @@ public async Task<IActionResult> UpdateUserByAdmin([FromRoute] string userId, [F
 
         // Dans UserController.cs
 
-// ================================================================
-// 🧩 SECTION 4 : ADMINISTRATION GÉNÉRALE
-// ================================================================
+        // ================================================================
+        // 🧩 SECTION 4 : ADMINISTRATION GÉNÉRALE
+        // ================================================================
 
-/// <summary>
-/// 🔹 Liste tous les utilisateurs pour l’administration.
-/// </summary>
-[HttpGet("admin/list")]
-[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei")]
-public async Task<IActionResult> GetAllUsers()
-{
-    // 💡 CORRECTION : Utilisation du service pour obtenir la liste, 
-    // qui mappe correctement en UserDto (incluant PhotoUrl).
-    var userListDtos = await _userService.GetAdminUserListAsync(); 
-    
-    return Ok(userListDtos);
-}
+        /// <summary>
+        /// 🔹 Liste tous les utilisateurs pour l’administration.
+        /// </summary>
+        [HttpGet("admin/list")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            // 💡 CORRECTION : Utilisation du service pour obtenir la liste, 
+            // qui mappe correctement en UserDto (incluant PhotoUrl).
+            var userListDtos = await _userService.GetAdminUserListAsync();
+
+            return Ok(userListDtos);
+        }
 
         /// <summary>
         /// 🔹 Récupère un utilisateur spécifique via son ID.
@@ -305,7 +305,7 @@ public async Task<IActionResult> GetAllUsers()
         /// 🔹 Supprime un utilisateur (seulement par un Admin).
         /// </summary>
         [HttpDelete("admin/{userId}")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei")]
         public async Task<IActionResult> DeleteUser(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);

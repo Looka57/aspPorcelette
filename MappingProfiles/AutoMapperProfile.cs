@@ -18,9 +18,6 @@ namespace ASPPorcelette.API.MappingProfiles
 {
     public class AutoMapperProfile : Profile
     {
-        // AutoMapper gère automatiquement les propriétés ayant le même nom.
-        // Il sait aussi mapper la propriété 'DisciplinePrincipale' (qui est un objet) 
-        // vers le 'DisciplinePrincipale' (qui est un DTO), car nous avons défini un mapping pour Discipline -> DisciplineDto.
         public AutoMapperProfile()
         {
             // ----------------------------------------------------
@@ -39,7 +36,9 @@ namespace ASPPorcelette.API.MappingProfiles
             CreateMap<User, UserDto>()
                 // Assure le mappage des propriétés avec les mêmes noms (Nom, Prenom, Email, etc.)
                 // ET s'assure que la propriété PhotoUrl est incluse, même si elle n'est pas chargée par défaut.
-                .ForMember(dest => dest.PhotoUrl, opt => opt.MapFrom(src => src.PhotoUrl));
+                .ForMember(dest => dest.PhotoUrl, opt => opt.MapFrom(src => src.PhotoUrl))
+                .ForMember(dest => dest.Nom, opt => opt.MapFrom(src => src.Nom))
+                .ForMember(dest => dest.Prenom, opt => opt.MapFrom(src => src.Prenom));
             // ----------------------------------------------------
             // Mappings pour la ressource Adherent (CRUD complet)
             // ----------------------------------------------------
