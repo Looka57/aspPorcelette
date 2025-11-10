@@ -12,8 +12,8 @@ namespace ASPPorcelette.API.Services.Implementation
 {
     public class EvenementService : IEvenementService
     {
-        private readonly ApplicationDbContext _context; // <-- _context DOIT être ici
-                private readonly IEvenementRepository _repository;
+        private readonly ApplicationDbContext _context; 
+        private readonly IEvenementRepository _repository;
         private readonly IMapper _mapper;
 
         public EvenementService(IEvenementRepository repository, IMapper mapper)
@@ -32,11 +32,11 @@ namespace ASPPorcelette.API.Services.Implementation
             return await _repository.GetAllEvenementsWithDetailsAsync();
         }
 
-public async Task<Evenement?> GetEvenementByIdAsync(int id) 
-{
-    // Utilise la bonne méthode du repository pour charger les détails
-    return await _repository.GetEvenementWithDetailsAsync(id); 
-}
+        public async Task<Evenement?> GetEvenementByIdAsync(int id)
+        {
+            // Utilise la bonne méthode du repository pour charger les détails
+            return await _repository.GetEvenementWithDetailsAsync(id);
+        }
 
         // -----------------------------------------------------------------
         // CREATE
@@ -46,9 +46,9 @@ public async Task<Evenement?> GetEvenementByIdAsync(int id)
         {
             // Mappage du DTO vers l'entité
             var evenementEntity = _mapper.Map<Evenement>(createDto);
-            
+
             // Logique métier avant l'ajout si nécessaire (ex: validation de la date)
-            
+
             // Ajout au repository
             return await _repository.AddAsync(evenementEntity);
         }
@@ -61,7 +61,7 @@ public async Task<Evenement?> GetEvenementByIdAsync(int id)
         {
             // 1. Charger l'entité existante (nécessaire si on voulait faire des vérifications)
             // Cependant, le repository gère le 'find' dans son Update, donc nous mappons directement.
-            
+
             // 2. Mappage du DTO vers l'entité (l'ID sera ajouté ci-dessous)
             var evenementToUpdate = _mapper.Map<Evenement>(updateDto);
             evenementToUpdate.EvenementId = id;
@@ -69,13 +69,13 @@ public async Task<Evenement?> GetEvenementByIdAsync(int id)
             // 3. Mise à jour
             return await _repository.UpdateAsync(evenementToUpdate);
         }
-        
+
         // -----------------------------------------------------------------
         // UPDATE (PATCH)
         // -----------------------------------------------------------------
 
         public async Task<(Evenement? Evenement, bool Success)> PartialUpdateEvenementAsync(
-            int id, 
+            int id,
             JsonPatchDocument<EvenementUpdateDto> patchDocument
         )
         {
@@ -88,7 +88,7 @@ public async Task<Evenement?> GetEvenementByIdAsync(int id)
 
             // 2. Mappage de l'entité vers le DTO de mise à jour (pour l'application du patch)
             var evenementDtoToPatch = _mapper.Map<EvenementUpdateDto>(evenementEntity);
-            
+
             // 3. Appliquer les opérations de patch
             patchDocument.ApplyTo(evenementDtoToPatch);
 
@@ -97,12 +97,12 @@ public async Task<Evenement?> GetEvenementByIdAsync(int id)
 
             // 5. Mettre à jour dans la base (retourne true/false)
             var success = await _repository.UpdateAsync(evenementEntity);
-            
+
             if (!success)
             {
-                 return (null, false);
+                return (null, false);
             }
-            
+
             // 6. Recharger l'événement avec les relations Sensei et Discipline pour le retour
             var evenementWithDetails = await _repository.GetEvenementWithDetailsAsync(id);
 

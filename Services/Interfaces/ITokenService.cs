@@ -8,6 +8,6 @@ namespace ASPPorcelette.API.Services.Identity
     /// </summary>
     public interface ITokenService
     {
-         Task<string> CreateTokenAsync(User user);
+        Task<string> CreateTokenAsync(User user);
     }
 }

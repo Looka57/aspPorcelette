@@ -35,7 +35,7 @@ namespace ASPPorcelette.API.Services.Implementation
         {
             return await _context.Actualites
                 .Include(a => a.User)
-                .Include(a => a.EvenementAssocie) // 👈 ajout essentiel
+                .Include(a => a.EvenementAssocie) 
                 .OrderByDescending(a => a.DateDePublication)
                 .ToListAsync();
         }
@@ -44,7 +44,7 @@ namespace ASPPorcelette.API.Services.Implementation
         {
             return await _context.Actualites
                 .Include(a => a.User)
-                .Include(a => a.EvenementAssocie) // 👈 ici aussi
+                .Include(a => a.EvenementAssocie) 
                 .FirstOrDefaultAsync(a => a.ActualiteId == id);
         }
 
@@ -75,7 +75,6 @@ namespace ASPPorcelette.API.Services.Implementation
                     // Si l'événement n'existe pas (la clé étrangère échouerait), 
                     // on force l'ID à NULL pour permettre la sauvegarde de l'article.
                     finalEvenementId = null;
-                    // ⚠️ Vous pouvez logguer ceci : Console.WriteLine($"EvenementId {createDto.EvenementId} introuvable. Set à null.");
                 }
             }
 

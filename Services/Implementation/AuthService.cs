@@ -121,6 +121,16 @@ namespace ASPPorcelette.API.Services.Identity
                 };
             }
 
+            if (user.Statut == 0) // ou la valeur qui correspond à inactif
+            {
+                return new AuthResultDto
+                {
+                    IsSuccess = false,
+                    Errors = new[] { "Compte désactivé." }
+                };
+            }
+
+
             // 2. Vérifier le mot de passe
             var isPasswordValid = await _userManager.CheckPasswordAsync(user, request.Password);
 
