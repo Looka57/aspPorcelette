@@ -278,6 +278,7 @@ namespace ASPPorcelette.API.Controllers
         /// </summary>
         [HttpGet("admin/list")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAllUsers()
         {
             // 💡 CORRECTION : Utilisation du service pour obtenir la liste, 

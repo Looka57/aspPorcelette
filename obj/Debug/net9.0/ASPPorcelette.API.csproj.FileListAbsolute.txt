@@ -31,6 +31,7 @@ C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\bin\Debug\net9
 C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\bin\Debug\net9.0\Microsoft.EntityFrameworkCore.dll
 C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\bin\Debug\net9.0\Microsoft.EntityFrameworkCore.Abstractions.dll
 C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\bin\Debug\net9.0\Microsoft.EntityFrameworkCore.Design.dll
+C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\bin\Debug\net9.0\Microsoft.EntityFrameworkCore.InMemory.dll
 C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\bin\Debug\net9.0\Microsoft.EntityFrameworkCore.Relational.dll
 C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\bin\Debug\net9.0\Microsoft.EntityFrameworkCore.SqlServer.dll
 C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\bin\Debug\net9.0\Microsoft.Extensions.Caching.Abstractions.dll
@@ -177,4 +178,3 @@ C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\obj\Debug\net9
 C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\obj\Debug\net9.0\ASPPorcelette.API.pdb
 C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\obj\Debug\net9.0\ASPPorcelette.API.genruntimeconfig.cache
 C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\obj\Debug\net9.0\ref\ASPPorcelette.API.dll
-C:\Users\Looka\OneDrive\Documents\AspPorcelette\ASPPorcelette.API\bin\Debug\net9.0\Microsoft.EntityFrameworkCore.InMemory.dll
