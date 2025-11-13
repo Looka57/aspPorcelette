@@ -52,14 +52,9 @@ namespace ASPPorcelette.API.Seed
                     UserName = adminEmail,
                     Email = adminEmail,
                     EmailConfirmed = true,
-
-                    // --- L'AJOUT CRITIQUE POUR RÉSOUDRE L'ERREUR ---
-                    Bio = string.Empty, // <--- AJOUTER CETTE LIGNE (OU une valeur par défaut)
-
-                    // Autres propriétés obligatoires (vérifiez votre modèle User) :
+                    Bio = string.Empty, 
                     Nom = "Super",
                     Prenom = "Admin",
-                    // Assurez-vous que tous les autres champs VARCHAR/NVARCHAR NON-NULLABLE ont une valeur (même vide)
                     RueEtNumero = string.Empty,
                     Ville = string.Empty,
                     CodePostal = string.Empty,
