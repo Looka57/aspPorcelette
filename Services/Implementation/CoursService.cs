@@ -20,6 +20,16 @@ namespace ASPPorcelette.API.Services.Implementation
             _mapper = mapper;
         }
 
+        public async Task<IEnumerable<Cours>> GetAllCoursWithDetailsAsync()
+    {
+        return await _coursRepository.GetAllCoursWithDetailsAsync();
+    }
+    
+    public async Task<Cours?> GetCoursWithDetailsAsync(int id)
+    {
+        return await _coursRepository.GetCoursWithDetailsAsync(id);
+    }
+
         public async Task<IEnumerable<Cours>> GetAllAsync()
         {
             // Utilise la méthode qui charge les relations pour l'affichage

@@ -39,6 +39,11 @@ namespace ASPPorcelette.API.MappingProfiles
                 .ForMember(dest => dest.PhotoUrl, opt => opt.MapFrom(src => src.PhotoUrl))
                 .ForMember(dest => dest.Nom, opt => opt.MapFrom(src => src.Nom))
                 .ForMember(dest => dest.Prenom, opt => opt.MapFrom(src => src.Prenom));
+
+            // Mappage de l'entité User (source) vers le DTO minimaliste (destination)
+            CreateMap<User, DTOs.Sensei.SenseiMinimalDto>();
+
+
             // ----------------------------------------------------
             // Mappings pour la ressource Adherent (CRUD complet)
             // ----------------------------------------------------
@@ -50,7 +55,11 @@ namespace ASPPorcelette.API.MappingProfiles
             // ----------------------------------------------------
             // Mappings pour la ressource Cours
             // ----------------------------------------------------
-            CreateMap<Models.Cours, DTOs.Cours.CoursDto>();   // 1. Entité vers DTO de sortie (GET)
+            CreateMap<Models.Cours, DTOs.Cours.CoursDto>()
+            .ForMember(
+                        dest => dest.Sensei,                  // La propriété du DTO (Destination)
+                        opt => opt.MapFrom(src => src.User)   // Mappe depuis la propriété de l'Entité (Source)
+                        );  // 1. Entité vers DTO de sortie (GET)
             CreateMap<DTOs.Cours.CoursCreateDto, Models.Cours>();   // 2. DTO de création vers Entité (POST)
             CreateMap<Models.Cours, DTOs.Cours.CoursUpdateDto>();   // 3. Entité vers DTO de mise à jour (pour l'initialisation du PATCH)
             CreateMap<DTOs.Cours.CoursUpdateDto, Models.Cours>();  // 4. DTO de mise à jour vers Entité (PUT/PATCH)

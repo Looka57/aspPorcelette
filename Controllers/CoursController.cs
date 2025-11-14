@@ -25,29 +25,33 @@ namespace ASPPorcelette.API.Controllers
         /// <summary>
         /// Récupère la liste de tous les cours avec les détails Sensei, Discipline et Horaires.
         /// </summary>
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<CoursDto>>> GetAllCours()
-        {
-            var cours = await _coursService.GetAllAsync();
-            // Mappe la liste des modèles vers la liste des DTOs de réponse
-            return Ok(_mapper.Map<IEnumerable<CoursDto>>(cours)); 
-        }
+      // DANS CoursController.cs
 
-        // GET: api/Cours/5
-        /// <summary>
-        /// Récupère un cours spécifique par ID avec tous les détails.
-        /// </summary>
-        [HttpGet("{id}")]
-        public async Task<ActionResult<CoursDto>> GetCoursById(int id)
-        {
-            var cours = await _coursService.GetByIdAsync(id);
-            if (cours == null)
-            {
-                return NotFound();
-            }
-            // Mappe le modèle vers le DTO de réponse
-            return Ok(_mapper.Map<CoursDto>(cours));
-        }
+// GET: api/Cours
+[HttpGet]
+public async Task<ActionResult<IEnumerable<CoursDto>>> GetAllCours()
+{
+    // 🎯 CORRECTION : Utiliser la méthode qui récupère les détails 🎯
+    var cours = await _coursService.GetAllCoursWithDetailsAsync(); // CHANGEMENT ICI
+    
+    // ... reste du code ...
+    return Ok(_mapper.Map<IEnumerable<CoursDto>>(cours)); 
+}
+
+// GET: api/Cours/5
+[HttpGet("{id}")]
+public async Task<ActionResult<CoursDto>> GetCoursById(int id)
+{
+    // 🎯 CORRECTION : Utiliser la méthode qui récupère les détails 🎯
+    var cours = await _coursService.GetCoursWithDetailsAsync(id); // CHANGEMENT ICI
+    
+    if (cours == null)
+    {
+        return NotFound();
+    }
+    // ... reste du code ...
+    return Ok(_mapper.Map<CoursDto>(cours));
+}
 
         // POST: api/Cours
         /// <summary>
