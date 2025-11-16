@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting; 
 using System.IO; 
 using System;
+using System.Security.Claims; // 🛑 Ajouté pour les claims d'utilisateur
+using Microsoft.AspNetCore.Authorization; // 🛑 Ajouté pour l'attribut [Authorize]
 
 namespace ASPPorcelette.API.Controllers
 {
@@ -61,14 +63,31 @@ namespace ASPPorcelette.API.Controllers
         // POST: Créer une nouvelle actualité
         // -----------------------------------------------------------------
         [HttpPost]
+        [Authorize] // 🛑 Assure qu'un token est présent et valide
         [Consumes("multipart/form-data")] 
         public async Task<ActionResult<ActualiteDto>> CreateActualite([FromForm] ActualiteCreateDto createDto)
         {
-            // Vérification du modèle
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
+            
+            // -----------------------------------------------------------------
+            // 🛑 CORRECTION CLÉ : EXTRACTION ET ASSIGNATION DU USER ID (Sensei)
+            // -----------------------------------------------------------------
+            // 1. Récupère l'ID de l'utilisateur à partir du token JWT
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                // Si l'ID est manquant (token mal formé ou autre), renvoyer une erreur d'autorisation
+                return Unauthorized();
+            }
+
+            // 2. Assigne l'ID de l'utilisateur connecté au DTO. 
+            //    Ceci écrase toute valeur potentielle dans le corps de la requête.
+            createDto.UserId = userId; // 🛑 Vous devez ajouter public string UserId { get; set; } à ActualiteCreateDto
+            // -----------------------------------------------------------------
 
             string imageUrl = null;
 
@@ -93,7 +112,8 @@ namespace ASPPorcelette.API.Controllers
             }
 
             createDto.ImageUrl = imageUrl;
-
+            
+            // Le service doit maintenant prendre en charge le DTO qui contient le UserId correct.
             var createdActualite = await _actualiteService.CreateAsync(createDto);
 
             return CreatedAtAction(
@@ -114,7 +134,9 @@ namespace ASPPorcelette.API.Controllers
             {
                 return BadRequest(ModelState);
             }
-
+            
+            // NOTE: Pour la mise à jour, vous devriez aussi vérifier que l'utilisateur connecté est bien l'auteur.
+            
             var success = await _actualiteService.UpdateAsync(id, updateDto, _env.WebRootPath);
 
             if (!success)
