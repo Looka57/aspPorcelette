@@ -37,9 +37,5 @@ namespace ASPPorcelette.API.DTOs
 
         // Rôles de l'utilisateur
         public List<string> Roles { get; set; } = new List<string>();
-
-        // ❌ SUPPRIMEZ ces deux lignes :
-        // public SenseiDto? ProfilSensei { get; set; }
-        // public AdherentDto? ProfilAdherent { get; set; }
     }
 }

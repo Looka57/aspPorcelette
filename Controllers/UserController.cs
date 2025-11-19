@@ -266,6 +266,57 @@ namespace ASPPorcelette.API.Controllers
             });
         }
 
+// UserController.cs
+
+// ... dans une nouvelle section publique ou à la fin
+
+/// <summary>
+/// 🔹 Récupère un utilisateur spécifique par son ID pour un affichage public (sans authentification).
+/// </summary>
+/// <summary>
+/// 🔹 Récupère un utilisateur spécifique par son ID pour un affichage public (sans authentification).
+/// </summary>
+[HttpGet("{userId}")]
+[AllowAnonymous]
+public async Task<IActionResult> GetUserProfilePublic(string userId)
+{
+    var user = await _userManager.FindByIdAsync(userId);
+    if (user == null)
+        return NotFound(new { Message = $"Utilisateur avec ID {userId} non trouvé." });
+
+    var roles = await _userManager.GetRolesAsync(user);
+    
+    return Ok(new
+    {
+        Id = user.Id,
+        user.Nom,
+        user.Prenom,
+        user.Telephone,
+        user.RueEtNumero,
+        user.Ville,
+        user.CodePostal,
+        user.Grade,
+        user.PhotoUrl,
+        user.Bio,
+        user.DisciplineId,
+        Roles = roles
+    });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         // Dans UserController.cs
 
@@ -277,7 +328,6 @@ namespace ASPPorcelette.API.Controllers
         /// 🔹 Liste tous les utilisateurs pour l’administration.
         /// </summary>
         [HttpGet("admin/list")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei")]
         [AllowAnonymous]
         public async Task<IActionResult> GetAllUsers()
         {
@@ -287,6 +337,9 @@ namespace ASPPorcelette.API.Controllers
 
             return Ok(userListDtos);
         }
+
+
+        
 
         /// <summary>
         /// 🔹 Récupère un utilisateur spécifique via son ID.
