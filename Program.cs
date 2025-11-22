@@ -22,15 +22,13 @@ using Microsoft.AspNetCore.Http; // Nécessaire pour WriteAsJsonAsync
 using System.Threading.Tasks; // Nécessaire pour Task.CompletedTask
 using System;
 using System.Linq;
-
+using System.Threading.RateLimiting; // Namespace essentiel
+using Microsoft.AspNetCore.RateLimiting; // Ajouté pour s'assurer que l'extension ApplyLimiter est disponible
 
 System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 
 var builder = WebApplication.CreateBuilder(args);
-
-// --- CORRECTION: Assurer les 'using' nécessaires ---
-// (Ils sont inclus ci-dessus)
 
 // --- Configuration CORS ---
 builder.Services.AddCors(options =>
@@ -118,7 +116,7 @@ builder.Services.AddAuthentication(options =>
             return Task.CompletedTask;
         },
         OnAuthenticationFailed = context => {
-             // Vous pouvez ajouter ici la gestion des logs
+            // Vous pouvez ajouter ici la gestion des logs
             return Task.CompletedTask;
         },
         OnTokenValidated = context => {
@@ -174,6 +172,28 @@ builder.Services.AddScoped<ITarifService, TarifService>();
 // Enregistrement des services d'authentification
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+
+// --- AJOUT ET CORRECTION DE LA LIMITATION DU TAUX (Rate Limiting) ---
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("LoginRateLimit", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: key => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromSeconds(60),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            }
+        )
+    );
+});
+
+// --------------------------------------------------------
+
 
 // --- 4. CONFIGURATION DE L'API (Contrôleurs et Swagger) ---
 builder.Services.AddControllers()
@@ -253,11 +273,16 @@ if (app.Environment.IsDevelopment())
 
 
 app.UseStaticFiles();
+
+// 💥 ORDRE DU PIPELINE CORRECT
 app.UseRouting();
+
+// Le Rate Limiter doit être placé ici, avant CORS et l'Authentification.
+app.UseRateLimiter(); 
+
 app.UseCors("VueAppPolicy");
 
 // Les services d'authentification et d'autorisation sont cruciaux pour une API sécurisée
-// 💥 L'ORDRE EST ESSENTIEL
 app.UseAuthentication();
 app.UseAuthorization();
 

@@ -11,12 +11,14 @@ using ASPPorcelette.API.Models.Identity;
 using ASPPorcelette.API.Models.Identity.Dto;
 using ASPPorcelette.API.Services.Identity;
 using ASPPorcelette.API.DTOs;
-using ASPPorcelette.API.DTOs.User; // Pour UpdateRoleRequestDto
+using ASPPorcelette.API.DTOs.User;
+using Microsoft.AspNetCore.RateLimiting; // Pour UpdateRoleRequestDto
 
 namespace ASPPorcelette.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [EnableRateLimiting("LoginRateLimit")] // Applique la limite à tout le contrôleur
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
