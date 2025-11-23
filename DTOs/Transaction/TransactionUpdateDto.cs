@@ -8,9 +8,8 @@ public class TransactionUpdateDto
         [MaxLength(500, ErrorMessage = "La description ne doit pas dépasser 500 caractères.")]
         public string? Description { get; set; }
         
-    public DateTime? DateTransaction { get; set; }  // <-- ici
+    public DateTime? DateTransaction { get; set; }  
         
-        // On permet de changer les clés étrangères, ce qui revient à reclasser la transaction.
         public int? CompteId { get; set; }
         public int? CategorieTransactionId { get; set; }
         public int? DisciplineId { get; set; }
