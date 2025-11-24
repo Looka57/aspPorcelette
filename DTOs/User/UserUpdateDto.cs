@@ -57,14 +57,14 @@ namespace ASPPorcelette.API.DTOs.User
         [MaxLength(4000)]
         public string? Bio { get; set; }
 
-        public int? Statut { get; set; } = 0;
+        public int? Statut { get; set; }
 
         public int? DisciplineId { get; set; }
 
         // === CHAMPS SPÉCIFIQUES ADHERENT / ADMIN (Dates) ===
-        public DateTime? DateDeNaissance { get; set; }
+    [DataType(DataType.Date)] // 👈 AJOUTER CECI
+    public DateTime? DateDeNaissance { get; set; }
         
-        // 🟢 CORRECTION CS1061: AJOUT DES PROPRIÉTÉS MANQUANTES
         public DateTime? DateAdhesion { get; set; } 
         public DateTime? DateRenouvellement { get; set; }
 

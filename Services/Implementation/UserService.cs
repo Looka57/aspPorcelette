@@ -296,7 +296,7 @@ private DateTime GetStartOfNextAdhesionCycle()
                 user.Ville = dto.Ville ?? user.Ville;
                 user.CodePostal = dto.CodePostal ?? user.CodePostal;
 
-                if (dto.DateDeNaissance.HasValue) user.DateNaissance = dto.DateDeNaissance.Value;
+                if (dto.DateDeNaissance.HasValue) user.DateNaissance = dto.DateDeNaissance.Value.Date;
                 if (dto.DateAdhesion.HasValue) user.DateAdhesion = dto.DateAdhesion.Value;
                 if (dto.DateRenouvellement.HasValue) user.DateRenouvellement = dto.DateRenouvellement.Value;
 
@@ -356,7 +356,15 @@ private DateTime GetStartOfNextAdhesionCycle()
 
             if (dto.Statut.HasValue) user.Statut = dto.Statut.Value;
             if (dto.DisciplineId.HasValue) user.DisciplineId = dto.DisciplineId.Value;
-            if (dto.DateDeNaissance.HasValue) user.DateNaissance = dto.DateDeNaissance.Value;
+           if (dto.DateDeNaissance.HasValue) 
+{
+    Console.WriteLine($"DEBUG: DTO DateDeNaissance : {dto.DateDeNaissance.Value}");
+    user.DateNaissance = dto.DateDeNaissance.Value.Date;
+    Console.WriteLine($"DEBUG: User DateNaissance après modif : {user.DateNaissance}");
+} else {
+    // Si vous arrivez ici, c'est que la conversion en C# a échoué.
+    Console.WriteLine($"DEBUG: DTO DateDeNaissance est NULL ou échec de conversion.");
+}
             if (dto.DateAdhesion.HasValue) user.DateAdhesion = dto.DateAdhesion.Value;
             if (dto.DateRenouvellement.HasValue) user.DateRenouvellement = dto.DateRenouvellement.Value;
 
@@ -402,9 +410,7 @@ private DateTime GetStartOfNextAdhesionCycle()
             return await _userManager.UpdateAsync(user);
         }
 
-        // ======================================================================
-        // 🔹 Suppression complète d’un utilisateur
-        // ======================================================================
+      
         // ======================================================================
         // 🔹 Désactivation d'un utilisateur (Soft Delete : Statut = 0)
         // ======================================================================

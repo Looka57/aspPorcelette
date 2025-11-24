@@ -13,7 +13,7 @@ namespace ASPPorcelette.API.Services
         Task<IdentityResult> UpdateUserProfileAsync(string userId, UserUpdateDto updateDto);
 
         // 👈 NOUVELLE méthode pour la mise à jour SANS mot de passe par l'admin
-        Task<IdentityResult> UpdateUserByAdminAsync(string userId, UserUpdateDto dto); // 🟢 Utilisez UserUpdateDto
+        Task<IdentityResult> UpdateUserByAdminAsync(string userId, UserUpdateDto dto); 
         // Liste des utilisateurs pour l'admin
         Task<IEnumerable<UserDto>> GetAdminUserListAsync();
 
