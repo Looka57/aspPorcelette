@@ -31,17 +31,21 @@ System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeM
 var builder = WebApplication.CreateBuilder(args);
 
 // --- Configuration CORS ---
+// Avant builder.Build()
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("VueAppPolicy",
         policy =>
         {
-            // 🎯 L'URL du FRONT-END : vérifiez le port de votre projet Vue (Vite = 5173 par défaut)
-            policy.WithOrigins("http://localhost:5173")
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
+            policy
+                .WithOrigins("http://localhost:8080")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
         });
 });
+
+
 
 // --- 1. CONFIGURATION DE LA BASE DE DONNÉES (DBContext) ---
 builder.Services.Configure<JwtSettings>(
@@ -248,9 +252,27 @@ using (var scope = app.Services.CreateScope())
     var serviceProvider = scope.ServiceProvider;
 
     // Récupérer les managers nécessaires
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var maxRetries = 10;
+for (int i = 0; i < maxRetries; i++)
+{
+    try
+    {
+        dbContext.Database.Migrate();
+        break;
+    }
+    catch
+    {
+        Console.WriteLine("DB pas encore prête, retry dans 5s...");
+        await Task.Delay(5000);
+    }
+}
+
     var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = serviceProvider.GetRequiredService<UserManager<User>>();
     var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+
+       dbContext.Database.Migrate();
 
     // 1. Seeding des Rôles
     await AuthDbContextSeed.SeedRolesAsync(roleManager);
