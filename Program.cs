@@ -30,21 +30,28 @@ System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeM
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(8080); // Écoute sur toutes les interfaces dans le container
+});
+
+
 // --- Configuration CORS ---
 // Avant builder.Build()
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("VueAppPolicy",
-        policy =>
-        {
-            policy
-                .WithOrigins("http://localhost:8080")
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials();
-        });
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins(
+            "http://localhost:8080",      // Frontend Docker
+            "http://localhost:5173",      // Frontend dev local (Vite)
+            "http://localhost:3000"       // Frontend dev local (React)
+        )
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials();
+    });
 });
-
 
 
 // --- 1. CONFIGURATION DE LA BASE DE DONNÉES (DBContext) ---
@@ -302,7 +309,7 @@ app.UseRouting();
 // Le Rate Limiter doit être placé ici, avant CORS et l'Authentification.
 app.UseRateLimiter(); 
 
-app.UseCors("VueAppPolicy");
+app.UseCors("AllowFrontend");
 
 // Les services d'authentification et d'autorisation sont cruciaux pour une API sécurisée
 app.UseAuthentication();
