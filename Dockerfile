@@ -2,12 +2,12 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0-preview AS build
 WORKDIR /src
 
-# Copier le fichier .csproj et restaurer les dépendances
-COPY ["ASPPorcelette.API.csproj", "./"]
+# Copier uniquement le fichier .csproj et restaurer les dépendances
+COPY ASPPorcelette.API.csproj ./
 RUN dotnet restore "ASPPorcelette.API.csproj"
 
-# Copier tout le reste et builder
-COPY . .
+# Copier tout le projet API (ignore les tests)
+COPY . ./
 RUN dotnet build "ASPPorcelette.API.csproj" -c Release -o /app/build
 
 # Stage 2: Publish
@@ -18,5 +18,5 @@ RUN dotnet publish "ASPPorcelette.API.csproj" -c Release -o /app/publish /p:UseA
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-preview AS final
 WORKDIR /app
 EXPOSE 8080
-COPY --from=publish /app/publish .
+COPY --from=publish /app/publish ./
 ENTRYPOINT ["dotnet", "ASPPorcelette.API.dll"]
