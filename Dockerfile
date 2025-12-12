@@ -14,6 +14,8 @@ RUN dotnet build "ASPPorcelette.API.csproj" -c Release -o /app/build
 FROM build AS publish
 RUN dotnet publish "ASPPorcelette.API.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
+RUN cp -a /src/wwwroot /app/publish/
+
 # Stage 3: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-preview AS final
 WORKDIR /app

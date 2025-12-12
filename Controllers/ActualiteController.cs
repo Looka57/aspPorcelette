@@ -88,33 +88,8 @@ namespace ASPPorcelette.API.Controllers
             //    Ceci écrase toute valeur potentielle dans le corps de la requête.
             createDto.UserId = userId; // 🛑 Vous devez ajouter public string UserId { get; set; } à ActualiteCreateDto
             // -----------------------------------------------------------------
-
-            string imageUrl = null;
-
-            // Gestion du fichier image
-            if (createDto.ImageFile != null)
-            {
-                var uploadFolder = Path.Combine(_env.WebRootPath, "images", "actualites");
-                if (!Directory.Exists(uploadFolder))
-                {
-                    Directory.CreateDirectory(uploadFolder);
-                }
-
-                var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(createDto.ImageFile.FileName);
-                var filePath = Path.Combine(uploadFolder, uniqueFileName);
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    await createDto.ImageFile.CopyToAsync(fileStream);
-                }
-
-                imageUrl = $"/images/actualites/{uniqueFileName}";
-            }
-
-            createDto.ImageUrl = imageUrl;
-            
             // Le service doit maintenant prendre en charge le DTO qui contient le UserId correct.
-            var createdActualite = await _actualiteService.CreateAsync(createDto);
+            var createdActualite = await _actualiteService.CreateAsync(createDto , _env.WebRootPath);
 
             return CreatedAtAction(
                 nameof(GetActualiteById),

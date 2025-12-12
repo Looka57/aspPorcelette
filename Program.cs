@@ -23,7 +23,9 @@ using System.Threading.Tasks; // Nécessaire pour Task.CompletedTask
 using System;
 using System.Linq;
 using System.Threading.RateLimiting; // Namespace essentiel
-using Microsoft.AspNetCore.RateLimiting; // Ajouté pour s'assurer que l'extension ApplyLimiter est disponible
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.FileProviders; // Ajouté pour s'assurer que l'extension ApplyLimiter est disponible
 
 System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
@@ -301,7 +303,34 @@ if (app.Environment.IsDevelopment())
 }
 
 
-app.UseStaticFiles();
+// --- Support complet des fichiers statiques (JPG, PNG, WEBP, etc.) ---
+var provider = new FileExtensionContentTypeProvider();
+
+// 2. Assurez-vous d'ajouter les types qui posent problème (JPG et PNG)
+if (!provider.Mappings.ContainsKey(".jpg"))
+{
+    provider.Mappings[".jpg"] = "image/jpeg";
+}
+if (!provider.Mappings.ContainsKey(".png"))
+{
+    provider.Mappings[".png"] = "image/png";
+}
+
+// 3. Utilisez le ContentRootPath pour pointer vers le wwwroot du conteneur (la méthode la plus fiable)
+var physicalProvider = new PhysicalFileProvider(
+    Path.Combine(app.Environment.ContentRootPath, "wwwroot"));
+
+// 4. Utilisation du middleware pour les fichiers manquants (.jpg/.png)
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = physicalProvider,
+    RequestPath = "", // Servir depuis la racine de l'URL
+    ContentTypeProvider = provider // Utiliser notre liste de types MIME enrichie
+});
+
+// 5. Utilisation du middleware par défaut (pour les .webp et les fichiers non spécifiés)
+// Ceci est souvent nécessaire dans certains environnements conteneurisés
+// app.UseStaticFiles();
 
 // 💥 ORDRE DU PIPELINE CORRECT
 app.UseRouting();

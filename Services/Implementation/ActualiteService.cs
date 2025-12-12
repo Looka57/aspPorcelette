@@ -10,6 +10,10 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Webp;
+using SixLabors.ImageSharp.Processing;
+// Assurez-vous d'avoir aussi System.IO et System.Threading.Tasks
 
 namespace ASPPorcelette.API.Services.Implementation
 {
@@ -52,7 +56,7 @@ namespace ASPPorcelette.API.Services.Implementation
         // Création (CREATE)
         // -----------------------------------------------------------------
 
-        public async Task<Actualite> CreateAsync(ActualiteCreateDto createDto)
+        public async Task<Actualite>CreateAsync(ActualiteCreateDto createDto, string webRootPath)
         {
             // On récupère l'utilisateur (Sensei) via le UserId
             var user = await _userManager.FindByIdAsync(createDto.UserId);
@@ -60,6 +64,18 @@ namespace ASPPorcelette.API.Services.Implementation
             {
                 throw new Exception("Utilisateur introuvable");
             }
+            // -----------------------------------------------------
+            // Gestion de l'image
+            string? imageUrl = null;
+            if (createDto.ImageFile != null)
+            {
+                imageUrl = await SavePhysicalFileAsync(createDto.ImageFile, webRootPath);
+            }
+                // -----------------------------------------------------
+
+
+
+
             // ************************************************************
             // 🎯 VÉRIFICATION CRITIQUE DE LA CLÉ ÉTRANGÈRE (EvenementId)
             // ************************************************************
@@ -82,7 +98,7 @@ namespace ASPPorcelette.API.Services.Implementation
             {
                 Titre = createDto.Titre,
                 Contenu = createDto.Contenu,
-                ImageUrl = createDto.ImageUrl,
+                ImageUrl = imageUrl,
                 UserId = user.Id,
                 DateDePublication = DateTime.UtcNow,
                 EvenementId = finalEvenementId,
@@ -170,22 +186,46 @@ namespace ASPPorcelette.API.Services.Implementation
         // Méthode pour sauvegarder le fichier sur le disque (réutilisée de la création)
         private async Task<string> SavePhysicalFileAsync(IFormFile imageFile, string webRootPath)
         {
+            Console.WriteLine($"[SERVICE/IMAGE] WebRootPath: {webRootPath}"); // ⬅️ AJOUTER CE LOG
             var uploadFolder = Path.Combine(webRootPath, "images", "actualites");
+            Console.WriteLine($"[SERVICE/IMAGE] UploadFolder: {uploadFolder}"); // ⬅️ AJOUTER CE LOG
             if (!Directory.Exists(uploadFolder))
             {
                 Directory.CreateDirectory(uploadFolder);
             }
 
-            var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
-            var filePath = Path.Combine(uploadFolder, uniqueFileName);
+       var newFileExtension = ".webp";
+    var uniqueFileName = Guid.NewGuid().ToString() + newFileExtension;
+    var filePath = Path.Combine(uploadFolder, uniqueFileName);
 
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
+    // 🚨 Début du bloc de conversion
+    try
+    {
+        // Utiliser le stream de l'IFormFile directement
+        using (var stream = imageFile.OpenReadStream())
+        {
+            // 1. Charger l'image avec ImageSharp (décode automatiquement JPG/PNG)
+            using (var image = await Image.LoadAsync(stream))
             {
-                await imageFile.CopyToAsync(fileStream);
-            }
+                // 2. Définir l'encodeur WebP
+                var encoder = new WebpEncoder { Quality = 80 }; // Qualité 80/100
 
-            return $"/images/actualites/{uniqueFileName}";
+                // 3. Enregistrer l'image, maintenant encodée en WebP, dans le fichier physique
+                await image.SaveAsync(filePath, encoder);
+            }
         }
+    }
+    catch (Exception ex)
+    {
+        // Gérer les erreurs (ex: le fichier n'est pas une image valide)
+        Console.WriteLine($"⚠️ Erreur lors de la conversion en WebP : {ex.Message}");
+        // Si la conversion échoue, il est préférable d'échouer l'opération d'enregistrement.
+        throw new InvalidOperationException("Erreur de conversion de l'image. Veuillez vérifier le fichier.", ex);
+    }
+    // 🚨 Fin du bloc de conversion
+
+    return $"/images/actualites/{uniqueFileName}";
+}
 
         // Méthode pour supprimer le fichier physique
         private void DeletePhysicalFile(string? imageUrl, string webRootPath)
