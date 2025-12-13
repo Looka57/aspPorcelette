@@ -11,6 +11,9 @@ using Microsoft.AspNetCore.Hosting;
 using System.IO;
 using Microsoft.AspNetCore.Http;
 using ASPPorcelette.API.DTOs;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Webp;
+using SixLabors.ImageSharp.Processing;
 
 namespace ASPPorcelette.API.Services
 {
@@ -135,34 +138,48 @@ private DateTime GetStartOfNextAdhesionCycle()
         // ======================================================================
         // 🔹 Sauvegarder une image sur disque
         // ======================================================================
-        private async Task<string> SaveProfilePicture(IFormFile? imageFile)
+private async Task<string> SaveProfilePicture(IFormFile? imageFile)
+{
+    if (imageFile == null || imageFile.Length == 0)
+        return string.Empty;
+    
+    var uploadsFolder = Path.Combine(_hostEnvironment.WebRootPath, "images", "profiles");
+
+    
+    if (!Directory.Exists(uploadsFolder))
+    {
+        Directory.CreateDirectory(uploadsFolder);
+    }
+
+
+
+    var uniqueFileName = Guid.NewGuid().ToString() + ".webp";
+    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+    try
+    {
+        // 3. Conversion réelle en WebP via ImageSharp
+        using (var stream = imageFile.OpenReadStream())
         {
-            if (imageFile == null || imageFile.Length == 0)
-                return string.Empty;
-
-            var uploadsFolder = Path.Combine(_hostEnvironment.WebRootPath, "images", "profiles");
-            if (!Directory.Exists(uploadsFolder))
-                Directory.CreateDirectory(uploadsFolder);
-
-            var extension = Path.GetExtension(imageFile.FileName) ?? ".jpg";
-            var uniqueFileName = Guid.NewGuid().ToString() + extension;
-            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            try
+            using (var image = await Image.LoadAsync(stream))
             {
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    await imageFile.CopyToAsync(fileStream);
-                }
-                return $"/images/profiles/{uniqueFileName}";
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ Erreur lors de la sauvegarde du fichier : {ex.Message}");
-                return string.Empty;
+                // Optionnel : Redimensionner les photos de profil si elles sont trop grandes (ex: 500x500)
+                // image.Mutate(x => x.Resize(new ResizeOptions { Size = new Size(500, 500), Mode = ResizeMode.Max }));
+
+                var encoder = new WebpEncoder { Quality = 80 };
+                await image.SaveAsync(filePath, encoder);
             }
         }
 
+        Console.WriteLine($"✅ Photo de profil convertie et sauvegardée: {filePath}");
+        return $"/images/profiles/{uniqueFileName}";
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ Erreur lors de la conversion de la photo de profil : {ex.Message}");
+        return string.Empty;
+    }
+}
         // ======================================================================
         // 🔹 Supprimer une image du disque (VERSION CORRIGÉE)
         // ======================================================================
