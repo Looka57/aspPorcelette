@@ -15,6 +15,7 @@
     {
         [ApiController]
         [Route("api/[controller]")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public class UserController : ControllerBase
         {
             // -------------------------
