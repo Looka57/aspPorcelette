@@ -19,9 +19,8 @@ namespace ASPPorcelette.API.DTOs.Evenement
 
         public DateTime? DateFin { get; set; }
 
-        [Required(ErrorMessage = "L'URL de l'image est requise.")]
         [StringLength(500)]
-        public string ImageUrl { get; set; } = string.Empty;
+        public string? ImageUrl { get; set; }
 
         [Required(ErrorMessage = "Le type d'événement est requis.")]
         public int TypeEvenementId { get; set; }
