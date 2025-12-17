@@ -10,24 +10,6 @@ const router = createRouter({
   },
   routes: [
     // --- ROUTES PUBLIQUES (Avec menu FrontLayout) ---
-    {
-      path: "/",
-      component: FrontLayout,
-      children: [
-        { path: "", name: "home", component: () => import("@/views/HomeView.vue") },
-        { path: "judo", name: "judo", component: () => import("@/views/JudoView.vue") },
-        { path: "aikido", name: "aikido", component: () => import("@/views/AikidoView.vue") },
-        { path: "jujitsu", name: "jujitsu", component: () => import("@/views/JujitsuView.vue") },
-        { path: "judo-detente", name: "judo-detente", component: () => import("@/views/JudoDetenteView.vue") },
-        { path: "equipe", name: "sensei", component: () => import("@/views/SenseiSiteView.vue") },
-        { path: "equipeDetailView/:id", name: "senseiDetailView", component: () => import("@/views/SenseiDetailView.vue"), props: true },
-        { path: "actualites", name: "actualites", component: () => import("@/views/ActualiteSiteView.vue") },
-        { path: "actualite/:id", name: "ActualiteDetail", component: () => import("@/views/ActualiteDetail.vue"), props: true },
-        { path: "evenements", name: "evenements", component: () => import("@/views/EvenementsView.vue") },
-        { path: "evenement/:id", name: "EvenementDetail", component: () => import("@/views/EvenementDetail.vue"), props: true },
-        { path: "tarifs", name: "tarifs", component: () => import("@/views/TarifSiteView.vue") },
-      ],
-    },
 
     // --- ROUTES SANS LAYOUT (Celles-ci iront dans le bloc "else" de App.vue) ---
     {
