@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ASPPorcelette.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0eab0ee42d83bafbbf822ab11b1a47431c16b81f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+eed1e465040bde1b27f438df89117ae025fd4267")]
 [assembly: System.Reflection.AssemblyProductAttribute("ASPPorcelette.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ASPPorcelette.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
