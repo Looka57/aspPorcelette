@@ -73,10 +73,11 @@ SQL Server
 
 ## 🌐 Démonstration
 
+
+
 Le projet est accessible en ligne :
 
-➡️ [https://ton-url.fr](https://asporcelette-art-martiaux.fr/)
-[![Website](https://img.shields.io/badge/Site%20en%20ligne-Visiter-success?style=for-the-badge)]([https://ton-url.fr](https://asporcelette-art-martiaux.fr/))
+[![Website](https://img.shields.io/badge/Site%20en%20ligne-Visiter-success?style=for-the-badge)](https://asporcelette-art-martiaux.fr/)
 
 ---
 
