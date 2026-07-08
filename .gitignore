@@ -13,6 +13,9 @@ Logs/
 # Configuration locale
 appsettings.Development.json
 
+# Configuration production avec secrets
+appsettings.Production.json
+
 # Secrets
 .env
 secrets.json
