@@ -10,10 +10,9 @@ obj/
 *.log
 Logs/
 
-# Configuration locale
+# Configuration ASP.NET (contient des secrets)
+appsettings.json
 appsettings.Development.json
-
-# Configuration production avec secrets
 appsettings.Production.json
 
 # Secrets
