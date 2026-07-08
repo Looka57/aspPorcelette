@@ -46,6 +46,43 @@ SQL Server
 
 ---
 
+## ⚙️ Installation & Lancement
+
+### Prérequis
+* [.NET 8.0 SDK](https://dotnet.microsoft.com/download) (ou version utilisée)
+* [SQL Server](https://www.microsoft.com/en-us/sql-server/sql-server-downloads)
+
+### Installation
+1. Cloner le dépôt :
+   ```bash
+   git clone [https://github.com/ton-utilisateur/ton-repo-backend.git](https://github.com/ton-utilisateur/ton-repo-backend.git)
+
+   Configurer la chaîne de connexion à la base de données dans le fichier appsettings.json.
+
+Appliquer les migrations pour créer la base de données :
+
+dotnet ef database update
+dotnet run
+
+Documentation API
+Une fois l'API lancée, tu peux accéder à l'interface Swagger pour tester les endpoints à l'adresse suivante : https://localhost:5001/swagger
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## 🎯 Objectifs du projet
 
 * Développer une API REST moderne.
