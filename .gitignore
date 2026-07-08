@@ -1,0 +1,30 @@
+# Visual Studio / VS Code
+.vs/
+.vscode/
+
+# Build .NET
+bin/
+obj/
+
+# Logs
+*.log
+Logs/
+
+# Configuration locale
+appsettings.Development.json
+
+# Secrets
+.env
+secrets.json
+
+# Base de données locale
+*.mdf
+*.ldf
+*.ndf
+
+# Certificats
+*.pfx
+
+# OS
+.DS_Store
+Thumbs.db
