@@ -56,32 +56,22 @@ SQL Server
 1. Cloner le dépôt :
    ```bash
    git clone [https://github.com/ton-utilisateur/ton-repo-backend.git](https://github.com/ton-utilisateur/ton-repo-backend.git)
+Configurer la chaîne de connexion à la base de données dans le fichier appsettings.json.
 
-   Configurer la chaîne de connexion à la base de données dans le fichier appsettings.json.
-
-Appliquer les migrations pour créer la base de données :
-
+Appliquer les migrations :
+ ```bash
 dotnet ef database update
+```
+
+Lancer l'API :
+```bash
 dotnet run
+```
 
 Documentation API
-Une fois l'API lancée, tu peux accéder à l'interface Swagger pour tester les endpoints à l'adresse suivante : https://localhost:5001/swagger
+Une fois l'API lancée, tu peux accéder à l'interface Swagger pour tester les endpoints ici : https://localhost:5001/swagger
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+---
 
 ## 🎯 Objectifs du projet
 
@@ -108,8 +98,6 @@ Une fois l'API lancée, tu peux accéder à l'interface Swagger pour tester les 
 ---
 
 ## 🌐 Démonstration
-
-
 
 Le projet est accessible en ligne :
 
