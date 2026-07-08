@@ -103,11 +103,14 @@ Une fois l'API lancée, tu peux accéder à l'interface Swagger pour tester les 
 
 ---
 
+### 📂 Outils recommandés
+- **Éditeur :** Visual Studio Code
+- **Extensions :** Vue (Official)
+- **Débogage :** Vue.js DevTools
 
 ---
 
 ## 🚀 État du projet
 
 🟢 Projet déployé et en production.
-
 Le projet est utilisé pour alimenter le site de l'APS Judo de Porcelette et continue d'évoluer avec l'ajout de nouvelles fonctionnalités et améliorations.
