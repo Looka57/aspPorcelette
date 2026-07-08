@@ -6,6 +6,12 @@ Ce projet constitue le cœur de l'application. Il centralise les données, sécu
 
 ---
 
+## 🌐 Démonstration
+
+Le projet est accessible en ligne :
+
+[![Website](https://img.shields.io/badge/Site%20en%20ligne-Visiter-success?style=for-the-badge)](https://asporcelette-art-martiaux.fr/)
+
 ## 🚀 Fonctionnalités
 
 * 🔐 Authentification sécurisée
@@ -97,11 +103,6 @@ Une fois l'API lancée, tu peux accéder à l'interface Swagger pour tester les 
 
 ---
 
-## 🌐 Démonstration
-
-Le projet est accessible en ligne :
-
-[![Website](https://img.shields.io/badge/Site%20en%20ligne-Visiter-success?style=for-the-badge)](https://asporcelette-art-martiaux.fr/)
 
 ---
 
