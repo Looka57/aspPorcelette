@@ -34,5 +34,9 @@ namespace ASPPorcelette.API.DTOs.Adherent
         public string Statut { get; set; } = "Actif";
         public int? DisciplineId { get; set; } // nullable si pas obligatoire
 
+        // Certificat médical
+        public bool CertificatMedicalFourni { get; set; }
+        public DateTime? DateCertificatMedical { get; set; }
+
     }
 }

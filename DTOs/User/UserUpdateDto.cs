@@ -11,7 +11,7 @@ namespace ASPPorcelette.API.DTOs.User
     public class UserUpdateDto
     {
         public string? UserId { get; set; }
-        
+
         // === IDENTITY ===
         [EmailAddress(ErrorMessage = "Format d'email invalide.")]
         public string? Email { get; set; }
@@ -62,13 +62,17 @@ namespace ASPPorcelette.API.DTOs.User
         public int? DisciplineId { get; set; }
 
         // === CHAMPS SPÉCIFIQUES ADHERENT / ADMIN (Dates) ===
-    [DataType(DataType.Date)] // 👈 AJOUTER CECI
-    public DateTime? DateDeNaissance { get; set; }
-        
-        public DateTime? DateAdhesion { get; set; } 
+        [DataType(DataType.Date)]
+        public DateTime? DateDeNaissance { get; set; }
+        public DateTime? DateAdhesion { get; set; }
         public DateTime? DateRenouvellement { get; set; }
 
+        // === CERTIFICAT MÉDICAL ===
+        public bool? CertificatMedicalFourni { get; set; }
+        public DateTime? DateCertificatMedical { get; set; }
+        public DateTime? DateExpirationCertificatMedical { get; set; }
+
         // === FICHIER (Pour upload via FromForm) ===
-        public IFormFile? PhotoFile { get; set; } 
+        public IFormFile? PhotoFile { get; set; }
     }
 }

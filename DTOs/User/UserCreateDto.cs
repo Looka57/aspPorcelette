@@ -42,11 +42,11 @@ namespace ASPPorcelette.API.DTOs.User
         [Required(ErrorMessage = "L'adresse est requise.")]
         [MaxLength(200)]
         public string? RueEtNumero { get; set; } // Mappé à User.RueEtNumero
-        
+
         [Required(ErrorMessage = "La ville est requise.")]
         [MaxLength(100)]
         public string? Ville { get; set; } // <-- AJOUTÉ
-        
+
         [Required(ErrorMessage = "Le code postal est requis.")]
         [MaxLength(10)]
         public string? CodePostal { get; set; } // <-- AJOUTÉ
@@ -67,5 +67,10 @@ namespace ASPPorcelette.API.DTOs.User
         public DateTime? DateNaissance { get; set; }
         public DateTime? DateAdhesion { get; set; }
         public DateTime? DateRenouvellement { get; set; }
+
+        // === CERTIFICAT MÉDICAL ===
+        public bool CertificatMedicalFourni { get; set; }
+        public DateTime? DateCertificatMedical { get; set; }
+        public DateTime? DateExpirationCertificatMedical { get; set; }
     }
 }

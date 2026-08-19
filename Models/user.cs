@@ -34,11 +34,17 @@ namespace ASPPorcelette.API.Models.Identity
         public DateTime? DateAdhesion { get; set; }
         public DateTime? DateRenouvellement { get; set; }
 
+        // Certificat médical
+        public bool CertificatMedicalFourni { get; set; }
+        public DateTime? DateCertificatMedical { get; set; }
+        public DateTime? DateExpirationCertificatMedical { get; set; }
+
         // Le statut pourrait être une énumération (Actif, Inactif, Suspendu)
         public int Statut { get; set; } // 0: Inactif, 1: Actif, etc.
 
         // La bio est utile pour les Sensei
         public string? Bio { get; set; }
+        
 
 
         public int? DisciplineId { get; set; }

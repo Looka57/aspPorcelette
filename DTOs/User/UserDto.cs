@@ -33,7 +33,9 @@ namespace ASPPorcelette.API.DTOs
         public DateTime? DateAdhesion { get; set; }
         public DateTime? DateRenouvellement { get; set; }
 
-        
+        public bool CertificatMedicalFourni { get; set; }
+        public DateTime? DateCertificatMedical { get; set; }
+        public DateTime? DateExpirationCertificatMedical { get; set; }
 
         // Rôles de l'utilisateur
         public List<string> Roles { get; set; } = new List<string>();

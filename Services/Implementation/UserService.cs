@@ -70,7 +70,11 @@ namespace ASPPorcelette.API.Services
                     DateAdhesion = user.DateAdhesion,
                     DateRenouvellement = user.DateRenouvellement,
                     DisciplineId = user.DisciplineId,
-                    Roles = roles.ToList()
+                    // certificat medicale
+                    CertificatMedicalFourni = user.CertificatMedicalFourni,
+                    DateCertificatMedical = user.DateCertificatMedical,
+                    DateExpirationCertificatMedical = user.DateExpirationCertificatMedical,
+                    Roles = roles.ToList(),
                 };
                 userListDtos.Add(userDto);
             }
@@ -90,16 +94,16 @@ namespace ASPPorcelette.API.Services
                             && u.DateRenouvellement.Value >= cycleStart)
                 .CountAsync();
         }
- // ======================================================================
+        // ======================================================================
         // 🔹Date adhesion l'annee suivante
         // ======================================================================
 
-private DateTime GetStartOfNextAdhesionCycle()
-{
-    var today = DateTime.Today;
-    int year = today.Month < 9 ? today.Year : today.Year + 1;
-    return new DateTime(year, 9, 1);
-}
+        private DateTime GetStartOfNextAdhesionCycle()
+        {
+            var today = DateTime.Today;
+            int year = today.Month < 9 ? today.Year : today.Year + 1;
+            return new DateTime(year, 9, 1);
+        }
 
 
 
@@ -138,48 +142,48 @@ private DateTime GetStartOfNextAdhesionCycle()
         // ======================================================================
         // 🔹 Sauvegarder une image sur disque
         // ======================================================================
-private async Task<string> SaveProfilePicture(IFormFile? imageFile)
-{
-    if (imageFile == null || imageFile.Length == 0)
-        return string.Empty;
-    
-    var uploadsFolder = Path.Combine(_hostEnvironment.WebRootPath, "images", "profiles");
-
-    
-    if (!Directory.Exists(uploadsFolder))
-    {
-        Directory.CreateDirectory(uploadsFolder);
-    }
-
-
-
-    var uniqueFileName = Guid.NewGuid().ToString() + ".webp";
-    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-    try
-    {
-        // 3. Conversion réelle en WebP via ImageSharp
-        using (var stream = imageFile.OpenReadStream())
+        private async Task<string> SaveProfilePicture(IFormFile? imageFile)
         {
-            using (var image = await Image.LoadAsync(stream))
-            {
-                // Optionnel : Redimensionner les photos de profil si elles sont trop grandes (ex: 500x500)
-                // image.Mutate(x => x.Resize(new ResizeOptions { Size = new Size(500, 500), Mode = ResizeMode.Max }));
+            if (imageFile == null || imageFile.Length == 0)
+                return string.Empty;
 
-                var encoder = new WebpEncoder { Quality = 80 };
-                await image.SaveAsync(filePath, encoder);
+            var uploadsFolder = Path.Combine(_hostEnvironment.WebRootPath, "images", "profiles");
+
+
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+
+
+            var uniqueFileName = Guid.NewGuid().ToString() + ".webp";
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            try
+            {
+                // 3. Conversion réelle en WebP via ImageSharp
+                using (var stream = imageFile.OpenReadStream())
+                {
+                    using (var image = await Image.LoadAsync(stream))
+                    {
+                        // Optionnel : Redimensionner les photos de profil si elles sont trop grandes (ex: 500x500)
+                        // image.Mutate(x => x.Resize(new ResizeOptions { Size = new Size(500, 500), Mode = ResizeMode.Max }));
+
+                        var encoder = new WebpEncoder { Quality = 80 };
+                        await image.SaveAsync(filePath, encoder);
+                    }
+                }
+
+                Console.WriteLine($"✅ Photo de profil convertie et sauvegardée: {filePath}");
+                return $"/images/profiles/{uniqueFileName}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Erreur lors de la conversion de la photo de profil : {ex.Message}");
+                return string.Empty;
             }
         }
-
-        Console.WriteLine($"✅ Photo de profil convertie et sauvegardée: {filePath}");
-        return $"/images/profiles/{uniqueFileName}";
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"❌ Erreur lors de la conversion de la photo de profil : {ex.Message}");
-        return string.Empty;
-    }
-}
         // ======================================================================
         // 🔹 Supprimer une image du disque (VERSION CORRIGÉE)
         // ======================================================================
@@ -243,6 +247,12 @@ private async Task<string> SaveProfilePicture(IFormFile? imageFile)
                 DisciplineId = dto.DisciplineId,
                 DateAdhesion = dto.DateAdhesion != default ? dto.DateAdhesion : DateTime.UtcNow,
                 DateRenouvellement = dto.DateRenouvellement != default ? dto.DateRenouvellement : DateTime.UtcNow.AddYears(1),
+
+                // === CERTIFICAT MÉDICAL ===
+                CertificatMedicalFourni = dto.CertificatMedicalFourni,
+                DateCertificatMedical = dto.DateCertificatMedical,
+                DateExpirationCertificatMedical = dto.DateExpirationCertificatMedical,
+
                 DateCreation = DateTime.UtcNow
             };
 
@@ -317,6 +327,16 @@ private async Task<string> SaveProfilePicture(IFormFile? imageFile)
                 if (dto.DateAdhesion.HasValue) user.DateAdhesion = dto.DateAdhesion.Value;
                 if (dto.DateRenouvellement.HasValue) user.DateRenouvellement = dto.DateRenouvellement.Value;
 
+                // === CERTIFICAT MÉDICAL ===
+                if (dto.CertificatMedicalFourni.HasValue)
+                    user.CertificatMedicalFourni = dto.CertificatMedicalFourni.Value;
+
+                if (dto.DateCertificatMedical.HasValue)
+                    user.DateCertificatMedical = dto.DateCertificatMedical.Value;
+
+                if (dto.DateExpirationCertificatMedical.HasValue)
+                    user.DateExpirationCertificatMedical = dto.DateExpirationCertificatMedical.Value;
+
                 if (!string.IsNullOrEmpty(dto.Username) && user.UserName != dto.Username)
                 {
                     var usernameResult = await _userManager.SetUserNameAsync(user, dto.Username);
@@ -373,17 +393,27 @@ private async Task<string> SaveProfilePicture(IFormFile? imageFile)
 
             if (dto.Statut.HasValue) user.Statut = dto.Statut.Value;
             if (dto.DisciplineId.HasValue) user.DisciplineId = dto.DisciplineId.Value;
-           if (dto.DateDeNaissance.HasValue) 
-{
-    Console.WriteLine($"DEBUG: DTO DateDeNaissance : {dto.DateDeNaissance.Value}");
-    user.DateNaissance = dto.DateDeNaissance.Value.Date;
-    Console.WriteLine($"DEBUG: User DateNaissance après modif : {user.DateNaissance}");
-} else {
-    // Si vous arrivez ici, c'est que la conversion en C# a échoué.
-    Console.WriteLine($"DEBUG: DTO DateDeNaissance est NULL ou échec de conversion.");
-}
+            if (dto.DateDeNaissance.HasValue)
+            {
+                Console.WriteLine($"DEBUG: DTO DateDeNaissance : {dto.DateDeNaissance.Value}");
+                user.DateNaissance = dto.DateDeNaissance.Value.Date;
+                Console.WriteLine($"DEBUG: User DateNaissance après modif : {user.DateNaissance}");
+            }
+            else
+            {
+                // Si vous arrivez ici, c'est que la conversion en C# a échoué.
+                Console.WriteLine($"DEBUG: DTO DateDeNaissance est NULL ou échec de conversion.");
+            }
             if (dto.DateAdhesion.HasValue) user.DateAdhesion = dto.DateAdhesion.Value;
             if (dto.DateRenouvellement.HasValue) user.DateRenouvellement = dto.DateRenouvellement.Value;
+            if (dto.CertificatMedicalFourni.HasValue)
+                user.CertificatMedicalFourni = dto.CertificatMedicalFourni.Value;
+
+            if (dto.DateCertificatMedical.HasValue)
+                user.DateCertificatMedical = dto.DateCertificatMedical.Value;
+
+            if (dto.DateExpirationCertificatMedical.HasValue)
+                user.DateExpirationCertificatMedical = dto.DateExpirationCertificatMedical.Value;
 
             // === Gestion de la photo ===
             if (dto.PhotoFile != null)
@@ -427,7 +457,7 @@ private async Task<string> SaveProfilePicture(IFormFile? imageFile)
             return await _userManager.UpdateAsync(user);
         }
 
-      
+
         // ======================================================================
         // 🔹 Désactivation d'un utilisateur (Soft Delete : Statut = 0)
         // ======================================================================
