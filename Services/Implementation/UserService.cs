@@ -94,10 +94,10 @@ namespace ASPPorcelette.API.Services
                             && u.DateRenouvellement.Value >= cycleStart)
                 .CountAsync();
         }
-        // ======================================================================
-        // 🔹Date adhesion l'annee suivante
-        // ======================================================================
 
+        // ======================================================================
+        // 🔹 Date adhesion l'annee suivante
+        // ======================================================================
         private DateTime GetStartOfNextAdhesionCycle()
         {
             var today = DateTime.Today;
@@ -105,20 +105,49 @@ namespace ASPPorcelette.API.Services
             return new DateTime(year, 9, 1);
         }
 
+        // ======================================================================
+        // 🔹 Applique la date du certificat médical et calcule automatiquement
+        //     sa date d'expiration (+3 ans). Utilisée par les 3 points d'entrée
+        //     (création, mise à jour profil, mise à jour admin) pour garantir
+        //     un comportement identique partout.
+        // ======================================================================
+        // ======================================================================
+        // CERTIFICAT MEDICAL
+        // ======================================================================
 
+        private void ApplyCertificatMedical(
+            User user,
+            DateTime? dateCertificat,
+            bool? certificatFourniOverride = null)
+        {
+            // Si une date de certificat est fournie,
+            // le certificat est considéré comme fourni
+            // et sa date d'expiration est automatiquement calculée à +3 ans.
+            if (dateCertificat.HasValue)
+            {
+                var dateCertificatDate = dateCertificat.Value.Date;
 
+                user.DateCertificatMedical = dateCertificatDate;
 
+                // CALCUL CENTRALISE : +3 ANS
+                user.DateExpirationCertificatMedical =
+                    dateCertificatDate.AddYears(3);
 
-
-
-
-
-
-
-
-
-
-
+                user.CertificatMedicalFourni = true;
+            }
+            else if (certificatFourniOverride == false)
+            {
+                // Si on indique explicitement qu'aucun certificat
+                // n'est fourni, on remet les informations à zéro.
+                user.CertificatMedicalFourni = false;
+                user.DateCertificatMedical = null;
+                user.DateExpirationCertificatMedical = null;
+            }
+            else if (certificatFourniOverride.HasValue)
+            {
+                user.CertificatMedicalFourni = certificatFourniOverride.Value;
+            }
+        }
 
         // ======================================================================
         // 🔹 Renouveler l'adhésion d'un utilisateur
@@ -149,13 +178,10 @@ namespace ASPPorcelette.API.Services
 
             var uploadsFolder = Path.Combine(_hostEnvironment.WebRootPath, "images", "profiles");
 
-
             if (!Directory.Exists(uploadsFolder))
             {
                 Directory.CreateDirectory(uploadsFolder);
             }
-
-
 
             var uniqueFileName = Guid.NewGuid().ToString() + ".webp";
             var filePath = Path.Combine(uploadsFolder, uniqueFileName);
@@ -184,6 +210,7 @@ namespace ASPPorcelette.API.Services
                 return string.Empty;
             }
         }
+
         // ======================================================================
         // 🔹 Supprimer une image du disque (VERSION CORRIGÉE)
         // ======================================================================
@@ -223,7 +250,7 @@ namespace ASPPorcelette.API.Services
         }
 
         // ======================================================================
-        // 🔹 Création d’un utilisateur avec photo
+        // 🔹 Création d'un utilisateur avec photo
         // ======================================================================
         public async Task<IdentityResult> CreateUserWithProfileAsync(UserCreationDto dto, string role)
         {
@@ -248,13 +275,11 @@ namespace ASPPorcelette.API.Services
                 DateAdhesion = dto.DateAdhesion != default ? dto.DateAdhesion : DateTime.UtcNow,
                 DateRenouvellement = dto.DateRenouvellement != default ? dto.DateRenouvellement : DateTime.UtcNow.AddYears(1),
 
-                // === CERTIFICAT MÉDICAL ===
-                CertificatMedicalFourni = dto.CertificatMedicalFourni,
-                DateCertificatMedical = dto.DateCertificatMedical,
-                DateExpirationCertificatMedical = dto.DateExpirationCertificatMedical,
-
                 DateCreation = DateTime.UtcNow
             };
+
+            // === CERTIFICAT MÉDICAL === (calcul auto de la date d'expiration si une date est fournie)
+            ApplyCertificatMedical(user, dto.DateCertificatMedical, dto.CertificatMedicalFourni);
 
             var result = await _userManager.CreateAsync(user, dto.Password);
             if (!result.Succeeded) return result;
@@ -304,7 +329,7 @@ namespace ASPPorcelette.API.Services
                     {
                         string? oldPhotoUrl = user.PhotoUrl;
                         user.PhotoUrl = newPhotoUrl;
-                        DeleteProfilePicture(oldPhotoUrl); // 🟢 supprime l’ancienne image
+                        DeleteProfilePicture(oldPhotoUrl); // 🟢 supprime l'ancienne image
                     }
                 }
                 else if (dto.PhotoUrl == string.Empty && !string.IsNullOrEmpty(user.PhotoUrl))
@@ -327,15 +352,8 @@ namespace ASPPorcelette.API.Services
                 if (dto.DateAdhesion.HasValue) user.DateAdhesion = dto.DateAdhesion.Value;
                 if (dto.DateRenouvellement.HasValue) user.DateRenouvellement = dto.DateRenouvellement.Value;
 
-                // === CERTIFICAT MÉDICAL ===
-                if (dto.CertificatMedicalFourni.HasValue)
-                    user.CertificatMedicalFourni = dto.CertificatMedicalFourni.Value;
-
-                if (dto.DateCertificatMedical.HasValue)
-                    user.DateCertificatMedical = dto.DateCertificatMedical.Value;
-
-                if (dto.DateExpirationCertificatMedical.HasValue)
-                    user.DateExpirationCertificatMedical = dto.DateExpirationCertificatMedical.Value;
+                // === CERTIFICAT MÉDICAL === (calcul auto de la date d'expiration si une date est fournie)
+                ApplyCertificatMedical(user, dto.DateCertificatMedical, dto.CertificatMedicalFourni);
 
                 if (!string.IsNullOrEmpty(dto.Username) && user.UserName != dto.Username)
                 {
@@ -373,7 +391,7 @@ namespace ASPPorcelette.API.Services
         }
 
         // ======================================================================
-        // 🔹 Mise à jour d’un utilisateur par un admin
+        // 🔹 Mise à jour d'un utilisateur par un admin
         // ======================================================================
         public async Task<IdentityResult> UpdateUserByAdminAsync(string userId, UserUpdateDto dto)
         {
@@ -395,25 +413,24 @@ namespace ASPPorcelette.API.Services
             if (dto.DisciplineId.HasValue) user.DisciplineId = dto.DisciplineId.Value;
             if (dto.DateDeNaissance.HasValue)
             {
-                Console.WriteLine($"DEBUG: DTO DateDeNaissance : {dto.DateDeNaissance.Value}");
                 user.DateNaissance = dto.DateDeNaissance.Value.Date;
-                Console.WriteLine($"DEBUG: User DateNaissance après modif : {user.DateNaissance}");
             }
-            else
-            {
-                // Si vous arrivez ici, c'est que la conversion en C# a échoué.
-                Console.WriteLine($"DEBUG: DTO DateDeNaissance est NULL ou échec de conversion.");
-            }
+
             if (dto.DateAdhesion.HasValue) user.DateAdhesion = dto.DateAdhesion.Value;
             if (dto.DateRenouvellement.HasValue) user.DateRenouvellement = dto.DateRenouvellement.Value;
-            if (dto.CertificatMedicalFourni.HasValue)
-                user.CertificatMedicalFourni = dto.CertificatMedicalFourni.Value;
 
-            if (dto.DateCertificatMedical.HasValue)
-                user.DateCertificatMedical = dto.DateCertificatMedical.Value;
+            // =============================
+// CERTIFICAT MÉDICAL
+// =============================
 
-            if (dto.DateExpirationCertificatMedical.HasValue)
-                user.DateExpirationCertificatMedical = dto.DateExpirationCertificatMedical.Value;
+user.CertificatMedicalFourni =
+    dto.CertificatMedicalFourni;
+
+user.DateCertificatMedical =
+    dto.DateCertificatMedical;
+
+user.DateExpirationCertificatMedical =
+    dto.DateExpirationCertificatMedical;
 
             // === Gestion de la photo ===
             if (dto.PhotoFile != null)
