@@ -38,6 +38,7 @@ namespace ASPPorcelette.API.Models.Identity
         public bool CertificatMedicalFourni { get; set; }
         public DateTime? DateCertificatMedical { get; set; }
         public DateTime? DateExpirationCertificatMedical { get; set; }
+        public DateTime? DateRappelCertificatMedical { get; set; }
 
         // Le statut pourrait être une énumération (Actif, Inactif, Suspendu)
         public int Statut { get; set; } // 0: Inactif, 1: Actif, etc.

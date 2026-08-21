@@ -115,39 +115,43 @@ namespace ASPPorcelette.API.Services
         // CERTIFICAT MEDICAL
         // ======================================================================
 
-        private void ApplyCertificatMedical(
-            User user,
-            DateTime? dateCertificat,
-            bool? certificatFourniOverride = null)
-        {
-            // Si une date de certificat est fournie,
-            // le certificat est considéré comme fourni
-            // et sa date d'expiration est automatiquement calculée à +3 ans.
-            if (dateCertificat.HasValue)
-            {
-                var dateCertificatDate = dateCertificat.Value.Date;
+       private void ApplyCertificatMedical(
+    User user,
+    DateTime? dateCertificat,
+    bool? certificatFourniOverride = null)
+{
+    // Si une date de certificat est fournie
+    if (dateCertificat.HasValue)
+    {
+        var dateCertificatDate = dateCertificat.Value.Date;
 
-                user.DateCertificatMedical = dateCertificatDate;
+        // Date du certificat
+        user.DateCertificatMedical = dateCertificatDate;
 
-                // CALCUL CENTRALISE : +3 ANS
-                user.DateExpirationCertificatMedical =
-                    dateCertificatDate.AddYears(3);
+        // Expiration = certificat + 3 ans
+        user.DateExpirationCertificatMedical =
+            dateCertificatDate.AddYears(3);
 
-                user.CertificatMedicalFourni = true;
-            }
-            else if (certificatFourniOverride == false)
-            {
-                // Si on indique explicitement qu'aucun certificat
-                // n'est fourni, on remet les informations à zéro.
-                user.CertificatMedicalFourni = false;
-                user.DateCertificatMedical = null;
-                user.DateExpirationCertificatMedical = null;
-            }
-            else if (certificatFourniOverride.HasValue)
-            {
-                user.CertificatMedicalFourni = certificatFourniOverride.Value;
-            }
-        }
+        // Premier rappel = 1 mois avant l'expiration
+        user.DateRappelCertificatMedical =
+            user.DateExpirationCertificatMedical.Value.AddMonths(-1);
+
+        // Certificat fourni
+        user.CertificatMedicalFourni = true;
+    }
+    else if (certificatFourniOverride == false)
+    {
+        // Aucun certificat
+        user.CertificatMedicalFourni = false;
+        user.DateCertificatMedical = null;
+        user.DateExpirationCertificatMedical = null;
+        user.DateRappelCertificatMedical = null;
+    }
+    else if (certificatFourniOverride.HasValue)
+    {
+        user.CertificatMedicalFourni = certificatFourniOverride.Value;
+    }
+}
 
         // ======================================================================
         // 🔹 Renouveler l'adhésion d'un utilisateur
@@ -423,15 +427,15 @@ namespace ASPPorcelette.API.Services
             // CERTIFICAT MÉDICAL
             // =============================
 
-            user.CertificatMedicalFourni =
-                dto.CertificatMedicalFourni ?? user.CertificatMedicalFourni;
+           // =============================
+// CERTIFICAT MÉDICAL
+// =============================
 
-            user.DateCertificatMedical =
-                dto.DateCertificatMedical;
-
-            user.DateExpirationCertificatMedical =
-                dto.DateExpirationCertificatMedical;
-
+ApplyCertificatMedical(
+    user,
+    dto.DateCertificatMedical,
+    dto.CertificatMedicalFourni
+);
             // === Gestion de la photo ===
             if (dto.PhotoFile != null)
             {

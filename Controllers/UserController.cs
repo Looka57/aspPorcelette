@@ -80,6 +80,7 @@ namespace ASPPorcelette.API.Controllers
                 user.CertificatMedicalFourni,
                 user.DateCertificatMedical,
                 user.DateExpirationCertificatMedical,
+                user.DateRappelCertificatMedical,
                 Roles = roles
             });
         }
@@ -221,11 +222,15 @@ namespace ASPPorcelette.API.Controllers
                 // ============================================================
                 if (dto.DateCertificatMedical.HasValue)
                 {
-                    existingUser.DateCertificatMedical =
-                        dto.DateCertificatMedical.Value.Date;
+                    var dateCertificat = dto.DateCertificatMedical.Value.Date;
+
+                    existingUser.DateCertificatMedical = dateCertificat;
 
                     existingUser.DateExpirationCertificatMedical =
-                        dto.DateCertificatMedical.Value.Date.AddYears(3);
+                        dateCertificat.AddYears(3);
+
+                    existingUser.DateRappelCertificatMedical =
+                        existingUser.DateExpirationCertificatMedical.Value.AddMonths(-1);
 
                     existingUser.CertificatMedicalFourni = true;
                 }
@@ -238,6 +243,7 @@ namespace ASPPorcelette.API.Controllers
                     {
                         existingUser.DateCertificatMedical = null;
                         existingUser.DateExpirationCertificatMedical = null;
+                        existingUser.DateRappelCertificatMedical = null;
                     }
                 }
 
@@ -260,6 +266,10 @@ namespace ASPPorcelette.API.Controllers
 
                         DateExpirationCertificatMedical =
                             existingUser.DateExpirationCertificatMedical?
+                                .ToShortDateString(),
+
+                        DateRappelCertificatMedical =
+                            existingUser.DateRappelCertificatMedical?
                                 .ToShortDateString()
                     });
                 }
@@ -308,13 +318,18 @@ namespace ASPPorcelette.API.Controllers
             // ================================================================
             // CERTIFICAT MEDICAL
             // ================================================================
-
             if (dto.DateCertificatMedical.HasValue)
             {
                 var dateCertificat = dto.DateCertificatMedical.Value.Date;
 
                 newUser.DateCertificatMedical = dateCertificat;
-                newUser.DateExpirationCertificatMedical = dateCertificat.AddYears(3);
+
+                newUser.DateExpirationCertificatMedical =
+                    dateCertificat.AddYears(3);
+
+                newUser.DateRappelCertificatMedical =
+                    newUser.DateExpirationCertificatMedical.Value.AddMonths(-1);
+
                 newUser.CertificatMedicalFourni = true;
             }
             else
@@ -322,6 +337,7 @@ namespace ASPPorcelette.API.Controllers
                 newUser.CertificatMedicalFourni = false;
                 newUser.DateCertificatMedical = null;
                 newUser.DateExpirationCertificatMedical = null;
+                newUser.DateRappelCertificatMedical = null;
             }
 
             // ================================================================
@@ -379,6 +395,10 @@ namespace ASPPorcelette.API.Controllers
 
                 DateExpirationCertificatMedical =
                     newUser.DateExpirationCertificatMedical?
+                        .ToShortDateString(),
+
+                DateRappelCertificatMedical =
+                    newUser.DateRappelCertificatMedical?
                         .ToShortDateString()
             });
         }
@@ -469,6 +489,7 @@ namespace ASPPorcelette.API.Controllers
                 user.CertificatMedicalFourni,
                 user.DateCertificatMedical,
                 user.DateExpirationCertificatMedical,
+                user.DateRappelCertificatMedical,
                 Roles = roles
             });
         }
