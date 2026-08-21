@@ -420,17 +420,17 @@ namespace ASPPorcelette.API.Services
             if (dto.DateRenouvellement.HasValue) user.DateRenouvellement = dto.DateRenouvellement.Value;
 
             // =============================
-// CERTIFICAT MÉDICAL
-// =============================
+            // CERTIFICAT MÉDICAL
+            // =============================
 
-user.CertificatMedicalFourni =
-    dto.CertificatMedicalFourni;
+            user.CertificatMedicalFourni =
+                dto.CertificatMedicalFourni ?? user.CertificatMedicalFourni;
 
-user.DateCertificatMedical =
-    dto.DateCertificatMedical;
+            user.DateCertificatMedical =
+                dto.DateCertificatMedical;
 
-user.DateExpirationCertificatMedical =
-    dto.DateExpirationCertificatMedical;
+            user.DateExpirationCertificatMedical =
+                dto.DateExpirationCertificatMedical;
 
             // === Gestion de la photo ===
             if (dto.PhotoFile != null)

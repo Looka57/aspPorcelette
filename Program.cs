@@ -146,6 +146,8 @@ builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
 // ... (Vos injections de dépendances) ...
 builder.Services.AddScoped<IUserService, UserService>();
 
+builder.Services.AddScoped<IEmailService, BrevoEmailService>();
+
 builder.Services.AddScoped<IDisciplineRepository, DisciplineRepository>();
 builder.Services.AddScoped<IDisciplineService, DisciplineService>();
 
@@ -268,11 +270,22 @@ for (int i = 0; i < maxRetries; i++)
     try
     {
         dbContext.Database.Migrate();
+
+        Console.WriteLine("✅ Base de données prête !");
         break;
     }
-    catch
+    catch (Exception ex)
     {
-        Console.WriteLine("DB pas encore prête, retry dans 5s...");
+        Console.WriteLine("❌ Erreur de connexion à la base de données :");
+        Console.WriteLine(ex.Message);
+
+        if (ex.InnerException != null)
+        {
+            Console.WriteLine("➡️ Détail :");
+            Console.WriteLine(ex.InnerException.Message);
+        }
+
+        Console.WriteLine("Nouvelle tentative dans 5 secondes...");
         await Task.Delay(5000);
     }
 }
@@ -281,7 +294,7 @@ for (int i = 0; i < maxRetries; i++)
     var userManager = serviceProvider.GetRequiredService<UserManager<User>>();
     var configuration = serviceProvider.GetRequiredService<IConfiguration>();
 
-       dbContext.Database.Migrate();
+    //    dbContext.Database.Migrate();
 
     // 1. Seeding des Rôles
     await AuthDbContextSeed.SeedRolesAsync(roleManager);
