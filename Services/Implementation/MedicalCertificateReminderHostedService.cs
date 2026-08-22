@@ -25,6 +25,7 @@ namespace ASPPorcelette.API.Services
                     // ============================================================
 
                     var now = DateTime.Now;
+
                     var prochaineExecution = now.Date.AddHours(9);
 
                     // Si 9h est déjà passé aujourd'hui,
@@ -52,10 +53,6 @@ namespace ASPPorcelette.API.Services
                         scope.ServiceProvider
                             .GetRequiredService<MedicalCertificateReminderService>();
 
-                    Console.WriteLine(
-                        $"🧪 Vérification automatique : " +
-                        $"{DateTime.Now:dd/MM/yyyy HH:mm}");
-
                     await reminderService.SendRemindersAsync();
 
                     Console.WriteLine(
@@ -70,8 +67,7 @@ namespace ASPPorcelette.API.Services
                 catch (Exception ex)
                 {
                     Console.WriteLine(
-                        $"❌ Erreur lors de l'envoi automatique des rappels : " +
-                        $"{ex.Message}");
+                        $"❌ Erreur lors de l'envoi automatique des rappels : {ex.Message}");
 
                     // En cas d'erreur, on attend 10 minutes
                     // avant de tenter à nouveau.
@@ -90,4 +86,3 @@ namespace ASPPorcelette.API.Services
         }
     }
 }
-
