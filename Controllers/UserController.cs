@@ -653,5 +653,38 @@ namespace ASPPorcelette.API.Controllers
             public string UserId { get; set; } = string.Empty;
             public string RoleName { get; set; } = string.Empty;
         }
+
+
+
+
+
+    
+[HttpPost("test-rappel-certificat")]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+public async Task<IActionResult> TestRappelCertificat()
+{
+    try
+    {
+        var reminderService =
+            HttpContext.RequestServices
+                .GetRequiredService<MedicalCertificateReminderService>();
+
+        await reminderService.SendRemindersAsync();
+
+        return Ok(new
+        {
+            Message = "Test de relance effectué."
+        });
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new
+        {
+            Message = "Erreur lors du test de relance.",
+            Error = ex.Message
+        });
+    }
+}
+
     }
 }

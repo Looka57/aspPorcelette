@@ -147,6 +147,8 @@ builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
 builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddScoped<IEmailService, BrevoEmailService>();
+builder.Services.AddScoped<MedicalCertificateReminderService>();
+builder.Services.AddHostedService<MedicalCertificateReminderHostedService>();
 
 builder.Services.AddScoped<IDisciplineRepository, DisciplineRepository>();
 builder.Services.AddScoped<IDisciplineService, DisciplineService>();
