@@ -24,15 +24,19 @@ namespace ASPPorcelette.API.Controllers
         private readonly UserManager<User> _userManager;      // Gestion des utilisateurs ASP.NET Identity
         private readonly RoleManager<IdentityRole> _roleManager; // Gestion des rôles
         private readonly IUserService _userService;           // Service métier pour la logique utilisateur
+        private readonly SaisonStatisticsService _saisonStatisticsService;
 
         public UserController(
             UserManager<User> userManager,
             RoleManager<IdentityRole> roleManager,
-            IUserService userService)
+            IUserService userService,
+            SaisonStatisticsService saisonStatisticsService
+            )
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _userService = userService;
+            _saisonStatisticsService = saisonStatisticsService;
         }
 
         // ================================================================
@@ -183,6 +187,12 @@ namespace ASPPorcelette.API.Controllers
 
             var existingUser = await _userManager.FindByEmailAsync(dto.Email);
 
+            var today = DateTime.Today;
+
+            var dateFinSaison = today.Month >= 9
+                ? new DateTime(today.Year + 1, 6, 30)
+                : new DateTime(today.Year, 6, 30);
+
             // ================================================================
             // REACTIVATION D'UN UTILISATEUR EXISTANT
             // ================================================================
@@ -204,8 +214,7 @@ namespace ASPPorcelette.API.Controllers
 
                 existingUser.Statut = 1;
 
-                existingUser.DateRenouvellement =
-                    DateTime.Today.AddYears(1);
+                existingUser.DateRenouvellement = dateFinSaison;
 
                 existingUser.Nom = dto.Nom;
                 existingUser.Prenom = dto.Prenom;
@@ -220,6 +229,7 @@ namespace ASPPorcelette.API.Controllers
                 // ============================================================
                 // CERTIFICAT MEDICAL
                 // ============================================================
+
                 if (dto.DateCertificatMedical.HasValue)
                 {
                     var dateCertificat = dto.DateCertificatMedical.Value.Date;
@@ -230,7 +240,8 @@ namespace ASPPorcelette.API.Controllers
                         dateCertificat.AddYears(3);
 
                     existingUser.DateRappelCertificatMedical =
-                        existingUser.DateExpirationCertificatMedical.Value.AddMonths(-1);
+                        existingUser.DateExpirationCertificatMedical.Value
+                            .AddMonths(-1);
 
                     existingUser.CertificatMedicalFourni = true;
                 }
@@ -256,6 +267,7 @@ namespace ASPPorcelette.API.Controllers
                     {
                         Message = "Utilisateur réactivé avec succès.",
                         userId = existingUser.Id,
+
                         DateRenouvellement =
                             existingUser.DateRenouvellement?
                                 .ToShortDateString(),
@@ -289,11 +301,9 @@ namespace ASPPorcelette.API.Controllers
             {
                 UserName = dto.Email,
                 Email = dto.Email,
-
                 Nom = dto.Nom,
                 Prenom = dto.Prenom,
                 Telephone = dto.Telephone,
-
                 RueEtNumero = dto.Adresse,
                 Ville = dto.Ville ?? "N/A",
                 CodePostal = dto.CodePostal ?? "00000",
@@ -303,8 +313,8 @@ namespace ASPPorcelette.API.Controllers
                 DateNaissance = dto.DateDeNaissance,
                 DateAdhesion = dto.DateAdhesion,
 
-                DateRenouvellement =
-                    DateTime.Today.AddYears(1),
+                // Fin de saison calculée plus haut
+                DateRenouvellement = dateFinSaison,
 
                 DateCreation = DateTime.Now,
 
@@ -318,6 +328,7 @@ namespace ASPPorcelette.API.Controllers
             // ================================================================
             // CERTIFICAT MEDICAL
             // ================================================================
+
             if (dto.DateCertificatMedical.HasValue)
             {
                 var dateCertificat = dto.DateCertificatMedical.Value.Date;
@@ -328,7 +339,8 @@ namespace ASPPorcelette.API.Controllers
                     dateCertificat.AddYears(3);
 
                 newUser.DateRappelCertificatMedical =
-                    newUser.DateExpirationCertificatMedical.Value.AddMonths(-1);
+                    newUser.DateExpirationCertificatMedical.Value
+                        .AddMonths(-1);
 
                 newUser.CertificatMedicalFourni = true;
             }
@@ -358,8 +370,7 @@ namespace ASPPorcelette.API.Controllers
                 {
                     return BadRequest(new
                     {
-                        Message =
-                            "Cette adresse e-mail est déjà utilisée."
+                        Message = "Cette adresse e-mail est déjà utilisée."
                     });
                 }
 
@@ -375,14 +386,9 @@ namespace ASPPorcelette.API.Controllers
                 "Adherent"
             );
 
-            // ================================================================
-            // REPONSE
-            // ================================================================
-
             return Ok(new
             {
                 Message = "Adhérent créé avec succès",
-
                 userId = newUser.Id,
 
                 DateRenouvellement =
@@ -655,36 +661,68 @@ namespace ASPPorcelette.API.Controllers
         }
 
 
-
-
-
-    
-[HttpPost("test-rappel-certificat")]
-[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
-public async Task<IActionResult> TestRappelCertificat()
-{
-    try
-    {
-        var reminderService =
-            HttpContext.RequestServices
-                .GetRequiredService<MedicalCertificateReminderService>();
-
-        await reminderService.SendRemindersAsync();
-
-        return Ok(new
+        [HttpPost("test-rappel-certificat")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+        public async Task<IActionResult> TestRappelCertificat()
         {
-            Message = "Test de relance effectué."
-        });
-    }
-    catch (Exception ex)
-    {
-        return StatusCode(500, new
+            try
+            {
+                var reminderService =
+                    HttpContext.RequestServices
+                        .GetRequiredService<MedicalCertificateReminderService>();
+
+                await reminderService.SendRemindersAsync();
+
+                return Ok(new
+                {
+                    Message = "Test de relance effectué."
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    Message = "Erreur lors du test de relance.",
+                    Error = ex.Message
+                });
+            }
+        }
+
+        // ======================================================================
+        // STATISTIQUES D'UNE SAISON PAR DISCIPLINE
+        // ======================================================================
+
+        [HttpGet("statistiques/saison/{saison}")]
+        [Authorize(Roles = "Admin, Sensei")]
+        public async Task<IActionResult> GetStatistiquesSaison(string saison)
         {
-            Message = "Erreur lors du test de relance.",
-            Error = ex.Message
-        });
-    }
-}
+            var statistiques = await _saisonStatisticsService
+                .GetStatisticsBySeasonAsync(saison);
+
+            if (statistiques == null || !statistiques.Any())
+            {
+                return NotFound(new
+                {
+                    message = $"Aucune statistique trouvée pour la saison {saison}."
+                });
+            }
+
+            return Ok(statistiques);
+        }
+
+        [HttpPost("statistiques/saison/gel")]
+        [Authorize(Roles = "Admin, Sensei")]
+        public async Task<IActionResult> GelStatistiquesSaison()
+        {
+            await _saisonStatisticsService.FreezePreviousSeasonAsync();
+
+            return Ok(new
+            {
+                message = "Le gel des statistiques a été exécuté."
+            });
+        }
+
+
 
     }
 }

@@ -15,6 +15,7 @@ namespace ASPPorcelette.API.Data
         public DbSet<Actualite> Actualites { get; set; }
         public DbSet<Apprendre> Apprendre { get; set; }
         public DbSet<Adherent> Adherents { get; set; }
+        public DbSet<StatistiqueSaison> StatistiquesSaisons { get; set; }
         public DbSet<CategorieTransaction> CategorieTransactions { get; set; }
         public DbSet<Compte> Comptes { get; set; }
         public DbSet<Cours> Cours { get; set; }
@@ -58,7 +59,21 @@ namespace ASPPorcelette.API.Data
                 .HasOne(c => c.User) // Propriété de navigation de type User
                 .WithMany(user => user.CoursEnseignes) // Collection dans la classe User
                 .HasForeignKey(c => c.UserId) // La clé étrangère (string)
-               .OnDelete(DeleteBehavior.Restrict);
-                }
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // StatistiqueSaison ↔ Discipline
+            modelBuilder.Entity<StatistiqueSaison>()
+            .HasOne(s => s.Discipline)
+            .WithMany()
+            .HasForeignKey(s => s.DisciplineId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+            // Une seule statistique par discipline et par saison
+            modelBuilder.Entity<StatistiqueSaison>()
+            .HasIndex(s => new { s.Saison, s.DisciplineId })
+            .IsUnique();
+        }
+
     }
 }
+

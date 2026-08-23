@@ -87,11 +87,22 @@ namespace ASPPorcelette.API.Services
         // ======================================================================
         public async Task<int> GetActiveAdherentsCountAsync()
         {
-            DateTime cycleStart = new DateTime(DateTime.Today.Year, 9, 1);
+            var today = DateTime.Today;
+
+            // Saison : du 1er septembre au 30 juin
+            int startYear = today.Month < 9
+                ? today.Year - 1
+                : today.Year;
+
+            DateTime cycleStart = new DateTime(startYear, 9, 1);
+            DateTime cycleEnd = new DateTime(startYear + 1, 6, 30);
+
             return await _userManager.Users
-                .Where(u => u.Statut == 1
-                            && u.DateRenouvellement.HasValue
-                            && u.DateRenouvellement.Value >= cycleStart)
+                .Where(u =>
+                    u.Statut == 1 &&
+                    u.DateRenouvellement.HasValue &&
+                    u.DateRenouvellement.Value >= cycleStart &&
+                    u.DateRenouvellement.Value <= cycleEnd)
                 .CountAsync();
         }
 
@@ -115,43 +126,43 @@ namespace ASPPorcelette.API.Services
         // CERTIFICAT MEDICAL
         // ======================================================================
 
-       private void ApplyCertificatMedical(
-    User user,
-    DateTime? dateCertificat,
-    bool? certificatFourniOverride = null)
-{
-    // Si une date de certificat est fournie
-    if (dateCertificat.HasValue)
-    {
-        var dateCertificatDate = dateCertificat.Value.Date;
+        private void ApplyCertificatMedical(
+     User user,
+     DateTime? dateCertificat,
+     bool? certificatFourniOverride = null)
+        {
+            // Si une date de certificat est fournie
+            if (dateCertificat.HasValue)
+            {
+                var dateCertificatDate = dateCertificat.Value.Date;
 
-        // Date du certificat
-        user.DateCertificatMedical = dateCertificatDate;
+                // Date du certificat
+                user.DateCertificatMedical = dateCertificatDate;
 
-        // Expiration = certificat + 3 ans
-        user.DateExpirationCertificatMedical =
-            dateCertificatDate.AddYears(3);
+                // Expiration = certificat + 3 ans
+                user.DateExpirationCertificatMedical =
+                    dateCertificatDate.AddYears(3);
 
-        // Premier rappel = 1 mois avant l'expiration
-        user.DateRappelCertificatMedical =
-            user.DateExpirationCertificatMedical.Value.AddMonths(-1);
+                // Premier rappel = 1 mois avant l'expiration
+                user.DateRappelCertificatMedical =
+                    user.DateExpirationCertificatMedical.Value.AddMonths(-1);
 
-        // Certificat fourni
-        user.CertificatMedicalFourni = true;
-    }
-    else if (certificatFourniOverride == false)
-    {
-        // Aucun certificat
-        user.CertificatMedicalFourni = false;
-        user.DateCertificatMedical = null;
-        user.DateExpirationCertificatMedical = null;
-        user.DateRappelCertificatMedical = null;
-    }
-    else if (certificatFourniOverride.HasValue)
-    {
-        user.CertificatMedicalFourni = certificatFourniOverride.Value;
-    }
-}
+                // Certificat fourni
+                user.CertificatMedicalFourni = true;
+            }
+            else if (certificatFourniOverride == false)
+            {
+                // Aucun certificat
+                user.CertificatMedicalFourni = false;
+                user.DateCertificatMedical = null;
+                user.DateExpirationCertificatMedical = null;
+                user.DateRappelCertificatMedical = null;
+            }
+            else if (certificatFourniOverride.HasValue)
+            {
+                user.CertificatMedicalFourni = certificatFourniOverride.Value;
+            }
+        }
 
         // ======================================================================
         // 🔹 Renouveler l'adhésion d'un utilisateur
@@ -427,15 +438,15 @@ namespace ASPPorcelette.API.Services
             // CERTIFICAT MÉDICAL
             // =============================
 
-           // =============================
-// CERTIFICAT MÉDICAL
-// =============================
+            // =============================
+            // CERTIFICAT MÉDICAL
+            // =============================
 
-ApplyCertificatMedical(
-    user,
-    dto.DateCertificatMedical,
-    dto.CertificatMedicalFourni
-);
+            ApplyCertificatMedical(
+                user,
+                dto.DateCertificatMedical,
+                dto.CertificatMedicalFourni
+            );
             // === Gestion de la photo ===
             if (dto.PhotoFile != null)
             {

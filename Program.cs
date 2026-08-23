@@ -112,27 +112,29 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
     };
-    
+
     // Garder l'événement OnChallenge pour être doublement sûr de renvoyer un 401 propre
     options.Events = new JwtBearerEvents
     {
         OnChallenge = context =>
         {
             context.HandleResponse();
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized; 
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             context.Response.ContentType = "application/json";
-            context.Response.WriteAsJsonAsync(new 
+            context.Response.WriteAsJsonAsync(new
             {
                 error = "Unauthorized",
                 message = "Jeton d'authentification manquant ou invalide."
             });
             return Task.CompletedTask;
         },
-        OnAuthenticationFailed = context => {
+        OnAuthenticationFailed = context =>
+        {
             // Vous pouvez ajouter ici la gestion des logs
             return Task.CompletedTask;
         },
-        OnTokenValidated = context => {
+        OnTokenValidated = context =>
+        {
             // Vous pouvez ajouter ici la gestion des logs
             return Task.CompletedTask;
         }
@@ -152,6 +154,10 @@ builder.Services.AddHostedService<MedicalCertificateReminderHostedService>();
 
 builder.Services.AddScoped<IDisciplineRepository, DisciplineRepository>();
 builder.Services.AddScoped<IDisciplineService, DisciplineService>();
+
+builder.Services.AddScoped<SaisonService>();
+builder.Services.AddScoped<SaisonStatisticsService>();
+builder.Services.AddHostedService<SaisonStatisticsBackgroundService>();
 
 builder.Services.AddScoped<IAdherentRepository, AdherentRepository>();
 builder.Services.AddScoped<IAdherentService, AdherentService>();
@@ -265,32 +271,32 @@ using (var scope = app.Services.CreateScope())
     var serviceProvider = scope.ServiceProvider;
 
     // Récupérer les managers nécessaires
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var maxRetries = 10;
-for (int i = 0; i < maxRetries; i++)
-{
-    try
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var maxRetries = 10;
+    for (int i = 0; i < maxRetries; i++)
     {
-        dbContext.Database.Migrate();
-
-        Console.WriteLine("✅ Base de données prête !");
-        break;
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine("❌ Erreur de connexion à la base de données :");
-        Console.WriteLine(ex.Message);
-
-        if (ex.InnerException != null)
+        try
         {
-            Console.WriteLine("➡️ Détail :");
-            Console.WriteLine(ex.InnerException.Message);
-        }
+            dbContext.Database.Migrate();
 
-        Console.WriteLine("Nouvelle tentative dans 5 secondes...");
-        await Task.Delay(5000);
+            Console.WriteLine("✅ Base de données prête !");
+            break;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("❌ Erreur de connexion à la base de données :");
+            Console.WriteLine(ex.Message);
+
+            if (ex.InnerException != null)
+            {
+                Console.WriteLine("➡️ Détail :");
+                Console.WriteLine(ex.InnerException.Message);
+            }
+
+            Console.WriteLine("Nouvelle tentative dans 5 secondes...");
+            await Task.Delay(5000);
+        }
     }
-}
 
     var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = serviceProvider.GetRequiredService<UserManager<User>>();
@@ -351,7 +357,7 @@ app.UseStaticFiles(new StaticFileOptions
 app.UseRouting();
 
 // Le Rate Limiter doit être placé ici, avant CORS et l'Authentification.
-app.UseRateLimiter(); 
+app.UseRateLimiter();
 
 app.UseCors("AllowFrontend");
 
