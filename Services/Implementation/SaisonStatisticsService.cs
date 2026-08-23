@@ -1,17 +1,23 @@
 using ASPPorcelette.API.Data;
 using ASPPorcelette.API.DTOs;
 using ASPPorcelette.API.Models;
+using ASPPorcelette.API.Models.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+
 
 namespace ASPPorcelette.API.Services
 {
     public class SaisonStatisticsService
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<User> _userManager;
 
-        public SaisonStatisticsService(ApplicationDbContext context)
+
+        public SaisonStatisticsService(ApplicationDbContext context, UserManager<User> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         /// <summary>
@@ -45,8 +51,9 @@ namespace ASPPorcelette.API.Services
             var dateDebut = new DateTime(startYear, 9, 1);
             var dateFin = new DateTime(endYear, 6, 30, 23, 59, 59);
 
-            // On récupère directement les utilisateurs ayant une
-            // date d'adhésion pendant cette saison et une discipline.
+            // On récupère les utilisateurs ayant :
+            // - une date d'adhésion pendant la saison
+            // - une discipline
             var utilisateurs = await _context.Users
                 .Where(u =>
                     u.DateAdhesion >= dateDebut &&
@@ -54,8 +61,19 @@ namespace ASPPorcelette.API.Services
                     u.DisciplineId.HasValue)
                 .ToListAsync();
 
+            // On garde uniquement les utilisateurs ayant le rôle Adherent.
+            var adherents = new List<User>();
+
+            foreach (var utilisateur in utilisateurs)
+            {
+                if (await _userManager.IsInRoleAsync(utilisateur, "Adherent"))
+                {
+                    adherents.Add(utilisateur);
+                }
+            }
+
             // On groupe les adhérents par discipline.
-            var statistiques = utilisateurs
+            var statistiques = adherents
                 .GroupBy(u => u.DisciplineId!.Value)
                 .Select(g => new StatistiqueSaison
                 {
@@ -87,6 +105,16 @@ namespace ASPPorcelette.API.Services
                     TotalInscrits = s.TotalInscrits
                 })
                 .Cast<object>()
+                .ToListAsync();
+        }
+
+
+        public async Task<List<string>> GetAvailableSeasonsAsync()
+        {
+            return await _context.StatistiquesSaisons
+                .Select(s => s.Saison)
+                .Distinct()
+                .OrderByDescending(s => s)
                 .ToListAsync();
         }
     }
