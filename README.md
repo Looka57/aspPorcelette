@@ -168,20 +168,11 @@ cd aspPorcelette
 
 ### Configuration
 
-Créer et configurer les variables d'environnement nécessaires au fonctionnement de l'application.
+Les informations sensibles nécessaires au fonctionnement de l'application
+(base de données, authentification JWT, service d'envoi d'emails, etc.)
+sont configurées via des variables d'environnement et ne sont pas versionnées
+dans le dépôt.
 
-Les paramètres sensibles comprennent notamment :
-
-```text
-SA_PASSWORD
-JWT_KEY
-
-BREVO_SMTP_HOST
-BREVO_SMTP_PORT
-BREVO_SMTP_USER
-BREVO_SMTP_KEY
-BREVO_FROM_EMAIL
-BREVO_FROM_NAME
 ```
 
 Les valeurs sensibles ne doivent jamais être versionnées dans Git.
