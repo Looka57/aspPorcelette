@@ -1,6 +1,6 @@
 # 🏛️ ASP Porcelette – Back-End
 
-API REST développée avec **ASP.NET Core** pour alimenter le site de l'APS Judo de Porcelette.
+API REST développée avec **ASP.NET Core** pour alimenter le site de l'AS Porcelette.
 
 Ce projet constitue le cœur de l'application. Il centralise les données, sécurise les accès et fournit l'ensemble des services utilisés par l'interface d'administration ainsi que par le site public.
 
@@ -10,72 +10,209 @@ Ce projet constitue le cœur de l'application. Il centralise les données, sécu
 
 Le projet est accessible en ligne :
 
-[![Website](https://img.shields.io/badge/Site%20en%20ligne-Visiter-success?style=for-the-badge)](https://asporcelette-art-martiaux.fr/)
+**[Website](https://asporcelette-art-martiaux.fr/)**
+
+---
 
 ## 🚀 Fonctionnalités
 
-* 🔐 Authentification sécurisée
+* 🔐 Authentification sécurisée avec JWT
 * 👥 Gestion des utilisateurs et des rôles
 * 📝 Gestion des actualités
 * 📅 Gestion des événements
-* 🥋 Gestion des activités du club
+* 🥋 Gestion des activités et disciplines du club
 * 🖼️ Gestion des contenus dynamiques
 * 📂 Upload et gestion des fichiers
+* 🩺 Gestion des certificats médicaux
+* 📧 Envoi automatique des emails via Brevo
+* 🔔 Rappels automatiques des certificats à J-30 et J-7
+* 🚨 Notification automatique lors de l'expiration d'un certificat
+* ⏰ Vérification quotidienne automatisée avec `BackgroundService`
 * 🔄 API REST consommée par le Front-End Vue.js
-* 📊 Architecture évolutive
+* 🐳 Conteneurisation avec Docker
+* 📊 Architecture évolutive et maintenable
 
 ---
 
 ## 🛠️ Technologies
 
-![ASP.NET Core](https://img.shields.io/badge/ASP.NET_Core-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
-![C#](https://img.shields.io/badge/C%23-239120?style=for-the-badge&logo=c-sharp&logoColor=white)
-![Entity Framework Core](https://img.shields.io/badge/Entity_Framework_Core-512BD4?style=for-the-badge&logo=.net&logoColor=white)
-![SQL Server](https://img.shields.io/badge/SQL_Server-CC2927?style=for-the-badge&logo=microsoft-sql-server&logoColor=white)
-![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=json-web-tokens&logoColor=white)
-![Swagger](https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+* **ASP.NET Core**
+* **C#**
+* **Entity Framework Core**
+* **SQL Server**
+* **ASP.NET Core Identity**
+* **JWT**
+* **Swagger / OpenAPI**
+* **Docker / Docker Compose**
+* **Brevo SMTP**
+
 ---
 
 ## 🏗️ Architecture
 
-```
+```text
 Vue.js Front-End
         │
         ▼
 ASP.NET Core Web API
         │
-Entity Framework Core
+        ├── ASP.NET Core Identity
         │
-SQL Server
+        ├── Services métier
+        │
+        ├── Background Services
+        │
+        └── Entity Framework Core
+                    │
+                    ▼
+                SQL Server
 ```
+
+L'API est conçue pour séparer les responsabilités entre les contrôleurs, les services métier et l'accès aux données.
+
+---
+
+## 📧 Système de rappels des certificats médicaux
+
+Le back-end intègre un système automatisé de suivi des certificats médicaux des adhérents.
+
+Lorsqu'un certificat médical est enregistré, sa date d'expiration est calculée automatiquement à **3 ans** à partir de sa date de délivrance.
+
+Le système permet ainsi à l'administration de suivre la validité des certificats directement depuis l'application.
+
+### 🔔 Rappels automatiques
+
+Le back-end vérifie quotidiennement les certificats médicaux et déclenche automatiquement les notifications nécessaires :
+
+* 📅 **J-30** : premier rappel avant expiration
+* 📅 **J-7** : second rappel avant expiration
+* 🚨 **Jour d'expiration** : notification d'expiration
+
+Les emails sont envoyés via **Brevo SMTP**.
+
+### ⚙️ Fonctionnement
+
+Le système utilise un `BackgroundService` ASP.NET Core exécuté avec le back-end.
+
+```text
+BackgroundService
+       │
+       ▼
+Vérification quotidienne
+       │
+       ▼
+SQL Server
+       │
+       ▼
+Analyse des dates d'expiration
+       │
+       ├── J-30 ──► Email Brevo
+       │
+       ├── J-7  ──► Email Brevo
+       │
+       └── Expiré ──► Email Brevo
+```
+
+Le service est exécuté automatiquement dans le conteneur Docker du back-end.
+
+Le fuseau horaire `Europe/Paris` est configuré afin que les vérifications quotidiennes soient effectuées selon l'heure française.
+
+La vérification est actuellement planifiée quotidiennement à **10h10**.
+
+---
+
+## 🐳 Docker
+
+Le projet utilise Docker Compose afin d'exécuter les différents services de l'application :
+
+```text
+┌───────────────────────────────┐
+│           Docker              │
+│                               │
+│  ┌─────────────┐              │
+│  │   Front-End │ :8080        │
+│  └──────┬──────┘              │
+│         │                      │
+│  ┌──────▼──────┐              │
+│  │   Back-End  │ :5070        │
+│  │ ASP.NET Core│              │
+│  └──────┬──────┘              │
+│         │                      │
+│  ┌──────▼──────┐              │
+│  │ SQL Server  │ :1433        │
+│  └─────────────┘              │
+│                               │
+└───────────────────────────────┘
+```
+
+Le back-end et la base de données communiquent via un réseau Docker dédié.
+
+Les informations sensibles telles que les mots de passe, clés JWT et identifiants SMTP sont fournies via des variables d'environnement et ne sont pas stockées directement dans le dépôt.
 
 ---
 
 ## ⚙️ Installation & Lancement
 
 ### Prérequis
-* [.NET 8.0 SDK](https://dotnet.microsoft.com/download) (ou version utilisée)
-* [SQL Server](https://www.microsoft.com/en-us/sql-server/sql-server-downloads)
 
-### Installation
-1. Cloner le dépôt :
-   ```bash
-   git clone [https://github.com/ton-utilisateur/ton-repo-backend.git](https://github.com/ton-utilisateur/ton-repo-backend.git)
-Configurer la chaîne de connexion à la base de données dans le fichier appsettings.json.
+* [.NET 8.0 SDK](https://dotnet.microsoft.com/download)
+* [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+* Git
 
-Appliquer les migrations :
- ```bash
-dotnet ef database update
-```
+### Cloner le dépôt
 
-Lancer l'API :
 ```bash
-dotnet run
+git clone https://github.com/Looka57/aspPorcelette.git
+cd aspPorcelette
 ```
 
-Documentation API
-Une fois l'API lancée, tu peux accéder à l'interface Swagger pour tester les endpoints ici : https://localhost:5001/swagger
+### Configuration
+
+Créer et configurer les variables d'environnement nécessaires au fonctionnement de l'application.
+
+Les paramètres sensibles comprennent notamment :
+
+```text
+SA_PASSWORD
+JWT_KEY
+
+BREVO_SMTP_HOST
+BREVO_SMTP_PORT
+BREVO_SMTP_USER
+BREVO_SMTP_KEY
+BREVO_FROM_EMAIL
+BREVO_FROM_NAME
+```
+
+Les valeurs sensibles ne doivent jamais être versionnées dans Git.
+
+### Lancer l'application avec Docker
+
+```bash
+docker compose up -d --build
+```
+
+Les migrations Entity Framework Core sont appliquées automatiquement au démarrage du back-end.
+
+Pour consulter les logs du back-end :
+
+```bash
+docker compose logs -f backend
+```
+
+Pour arrêter les conteneurs :
+
+```bash
+docker compose down
+```
+
+---
+
+## 📚 Documentation API
+
+L'API utilise **Swagger / OpenAPI** pour documenter et tester les différents endpoints.
+
+Une fois l'API lancée localement, Swagger est accessible depuis l'URL configurée par l'application.
 
 ---
 
@@ -85,32 +222,52 @@ Une fois l'API lancée, tu peux accéder à l'interface Swagger pour tester les 
 * Mettre en place une architecture maintenable.
 * Centraliser les données du site.
 * Sécuriser les échanges entre le client et le serveur.
+* Gérer les utilisateurs et leurs différents rôles.
+* Automatiser certaines tâches administratives.
 * Faciliter l'évolution future de l'application.
+* Fournir une base technique adaptée à un déploiement en production.
 
 ---
 
 ## 💡 Compétences mises en œuvre
 
 * API REST
-* Architecture MVC
+* ASP.NET Core
+* C#
 * Entity Framework Core
-* Authentification
+* SQL Server
+* ASP.NET Core Identity
+* Authentification JWT
+* Gestion des rôles et autorisations
 * CRUD
-* Gestion des rôles
 * Validation des données
-* Docker
+* Gestion des fichiers
+* Services métier
+* `BackgroundService`
+* Automatisation des tâches
+* Envoi d'emails SMTP
+* Docker / Docker Compose
+* Gestion des variables d'environnement
 * Clean Code
+* Déploiement en production
 
 ---
 
-### 📂 Outils recommandés
-- **Éditeur :** Visual Studio Code
-- **Extensions :** Vue (Official)
-- **Débogage :** Vue.js DevTools
+## 📂 Outils
+
+* **IDE :** Visual Studio / Visual Studio Code
+* **Base de données :** SQL Server
+* **Documentation API :** Swagger / OpenAPI
+* **Conteneurisation :** Docker
+* **Gestion de versions :** Git / GitHub
+* **Service d'envoi d'emails :** Brevo
 
 ---
 
 ## 🚀 État du projet
 
-🟢 Projet déployé et en production.
-Le projet est utilisé pour alimenter le site de l'APS Judo de Porcelette et continue d'évoluer avec l'ajout de nouvelles fonctionnalités et améliorations.
+🟢 **Projet déployé et en production**
+
+Le back-end est utilisé pour alimenter le site de l'AS Porcelette.
+
+Le projet continue d'évoluer avec l'ajout de nouvelles fonctionnalités, améliorations techniques et automatisations destinées à faciliter la gestion quotidienne du club.
