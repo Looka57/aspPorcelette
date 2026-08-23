@@ -26,7 +26,7 @@ namespace ASPPorcelette.API.Services
 
                     var now = DateTime.Now;
 
-                    var prochaineExecution = now.Date.AddHours(9);
+                    var prochaineExecution = now.Date.AddHours(10).AddMinutes(10);
 
                     // Si 9h est déjà passé aujourd'hui,
                     // on programme l'exécution pour demain à 9h.
@@ -42,6 +42,9 @@ namespace ASPPorcelette.API.Services
                         $"{prochaineExecution:dd/MM/yyyy HH:mm}");
 
                     await Task.Delay(delai, stoppingToken);
+
+                    Console.WriteLine(
+    $"🚀 Délai terminé : {DateTime.Now:dd/MM/yyyy HH:mm:ss}");
 
                     // ============================================================
                     // ENVOI DES RAPPELS
