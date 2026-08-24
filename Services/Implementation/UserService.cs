@@ -85,26 +85,18 @@ namespace ASPPorcelette.API.Services
         // ======================================================================
         // 🔹 Compter les adhérents actifs (Statut = 1 et DateRenouvellement >= aujourd'hui)
         // ======================================================================
-        public async Task<int> GetActiveAdherentsCountAsync()
-        {
-            var today = DateTime.Today;
+       public async Task<int> GetActiveAdherentsCountAsync()
+{
+    var today = DateTime.Today;
 
-            // Saison : du 1er septembre au 30 juin
-            int startYear = today.Month < 9
-                ? today.Year - 1
-                : today.Year;
-
-            DateTime cycleStart = new DateTime(startYear, 9, 1);
-            DateTime cycleEnd = new DateTime(startYear + 1, 6, 30);
-
-            return await _userManager.Users
-                .Where(u =>
-                    u.Statut == 1 &&
-                    u.DateRenouvellement.HasValue &&
-                    u.DateRenouvellement.Value >= cycleStart &&
-                    u.DateRenouvellement.Value <= cycleEnd)
-                .CountAsync();
-        }
+    return await _userManager.Users
+        .Where(u =>
+            u.Statut == 1 &&
+            u.DateRenouvellement.HasValue &&
+            u.DateRenouvellement.Value >= today
+        )
+        .CountAsync();
+}
 
         // ======================================================================
         // 🔹 Date adhesion l'annee suivante
