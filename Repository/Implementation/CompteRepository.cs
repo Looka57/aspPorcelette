@@ -20,7 +20,7 @@ namespace ASPPorcelette.API.Repository.Implementation
         {
             // Correction : Inclure Transactions au lieu de TransactionsEffectuees
             return await _context.Comptes
-                                 .Include(c => c.Transactions) 
+                                 .Include(c => c.Transactions)
                                  .ToListAsync();
         }
 
@@ -28,7 +28,7 @@ namespace ASPPorcelette.API.Repository.Implementation
         {
             // Correction : Inclure Transactions au lieu de TransactionsEffectuees
             return await _context.Comptes
-                                 .Include(c => c.Transactions) 
+                                 .Include(c => c.Transactions)
                                  .FirstOrDefaultAsync(c => c.CompteId == id);
         }
 
