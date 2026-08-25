@@ -85,30 +85,35 @@ namespace ASPPorcelette.API.Services
         // ======================================================================
         // 🔹 Compter les adhérents actifs (Statut = 1 et DateRenouvellement >= aujourd'hui)
         // ======================================================================
-       public async Task<int> GetActiveAdherentsCountAsync()
-{
-    var today = DateTime.Today;
+        public async Task<int> GetActiveAdherentsCountAsync()
+        {
+            var today = DateTime.Today;
 
-    return await _userManager.Users
-        .Where(u =>
-            u.Statut == 1 &&
-            u.DateRenouvellement.HasValue &&
-            u.DateRenouvellement.Value >= today
-        )
-        .CountAsync();
-}
+            return await _userManager.Users
+                .Where(u =>
+                    u.Statut == 1 &&
+                    u.DateRenouvellement.HasValue &&
+                    u.DateRenouvellement.Value >= today
+                )
+                .CountAsync();
+        }
 
         // ======================================================================
-        // 🔹 Date adhesion l'annee suivante
+        // 🔹 Détermine la date d'adhésion selon la date du renouvellement
         // ======================================================================
-    private DateTime GetStartOfNextAdhesionCycle(DateTime today)
-{
-    int year = today.Month < 9
-        ? today.Year
-        : today.Year + 1;
+        private DateTime GetStartOfNextAdhesionCycle(DateTime today)
+        {
+            // Avant le début de la saison :
+            // l'adhésion commence au 1er septembre suivant
+            if (today.Month < 9)
+            {
+                return new DateTime(today.Year, 9, 1);
+            }
 
-    return new DateTime(year, 9, 1);
-}
+            // À partir du 1er septembre :
+            // l'adhésion commence à la date réelle du renouvellement
+            return today.Date;
+        }
 
         // ======================================================================
         // 🔹 Applique la date du certificat médical et calcule automatiquement
@@ -161,69 +166,76 @@ namespace ASPPorcelette.API.Services
         // ======================================================================
         // 🔹 Renouveler l'adhésion d'un utilisateur
         // ======================================================================
-  public async Task<IdentityResult> RenewAdhesionAsync(string userId)
-{
-    Console.WriteLine("================================================");
-    Console.WriteLine(">>> RenewAdhesionAsync APPELÉE");
-    Console.WriteLine($">>> userId reçu = {userId}");
-    Console.WriteLine("================================================");
-
-    var user = await _userManager.FindByIdAsync(userId);
-
-    if (user == null)
-    {
-        Console.WriteLine(">>> UTILISATEUR INTROUVABLE");
-
-        return IdentityResult.Failed(
-            new IdentityError
-            {
-                Description = "Utilisateur non trouvé."
-            }
-        );
-    }
-
-    Console.WriteLine($">>> Utilisateur trouvé : {user.Nom} {user.Prenom}");
-    Console.WriteLine($">>> Ancienne date adhésion : {user.DateAdhesion:dd/MM/yyyy}");
-    Console.WriteLine($">>> Ancienne date renouvellement : {user.DateRenouvellement:dd/MM/yyyy}");
-
-    // 🧪 TEST : on simule le 1er septembre 2026
-    DateTime today = new DateTime(2026, 10, 1);
-
-    DateTime nextCycleStart = new DateTime(today.Year, 10, 1);
-
-    DateTime nextCycleEnd = new DateTime(
-        today.Year + 1,
-        6,
-        30
-    );
-
-    Console.WriteLine($">>> DATE TEST = {today:dd/MM/yyyy}");
-    Console.WriteLine($">>> NOUVELLE ADHESION = {nextCycleStart:dd/MM/yyyy}");
-    Console.WriteLine($">>> NOUVEAU RENOUVELLEMENT = {nextCycleEnd:dd/MM/yyyy}");
-
-    user.DateAdhesion = nextCycleStart;
-    user.DateRenouvellement = nextCycleEnd;
-    user.Statut = 1;
-
-    Console.WriteLine($">>> AVANT UPDATE");
-    Console.WriteLine($">>> DateAdhesion = {user.DateAdhesion:dd/MM/yyyy}");
-    Console.WriteLine($">>> DateRenouvellement = {user.DateRenouvellement:dd/MM/yyyy}");
-
-    var result = await _userManager.UpdateAsync(user);
-
-    Console.WriteLine($">>> UPDATE SUCCESS = {result.Succeeded}");
-
-    if (!result.Succeeded)
-    {
-        foreach (var error in result.Errors)
+        public async Task<IdentityResult> RenewAdhesionAsync(string userId)
         {
-            Console.WriteLine($">>> ERREUR UPDATE : {error.Description}");
+            Console.WriteLine("================================================");
+            Console.WriteLine(">>> RenewAdhesionAsync APPELÉE");
+            Console.WriteLine($">>> userId reçu = {userId}");
+            Console.WriteLine("================================================");
+
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user == null)
+            {
+                Console.WriteLine(">>> UTILISATEUR INTROUVABLE");
+
+                return IdentityResult.Failed(
+                    new IdentityError
+                    {
+                        Description = "Utilisateur non trouvé."
+                    }
+                );
+            }
+
+            Console.WriteLine($">>> Utilisateur trouvé : {user.Nom} {user.Prenom}");
+            Console.WriteLine($">>> Ancienne date adhésion : {user.DateAdhesion:dd/MM/yyyy}");
+            Console.WriteLine($">>> Ancienne date renouvellement : {user.DateRenouvellement:dd/MM/yyyy}");
+
+            // Date réelle du renouvellement
+            DateTime today = DateTime.Today;
+
+            // Date d'adhésion :
+            // - avant septembre → 1er septembre
+            // - à partir de septembre → date réelle du renouvellement
+            DateTime nextCycleStart = GetStartOfNextAdhesionCycle(today);
+
+            // Saison sportive : septembre → juin
+            int seasonStartYear = today.Month >= 9
+                ? today.Year
+                : today.Year - 1;
+
+            DateTime nextCycleEnd = new DateTime(
+                seasonStartYear + 1,
+                6,
+                30
+            );
+
+            Console.WriteLine($">>> DATE DU RENOUVELLEMENT = {today:dd/MM/yyyy}");
+            Console.WriteLine($">>> NOUVELLE ADHESION = {nextCycleStart:dd/MM/yyyy}");
+            Console.WriteLine($">>> NOUVEAU RENOUVELLEMENT = {nextCycleEnd:dd/MM/yyyy}");
+
+            user.DateAdhesion = nextCycleStart;
+            user.DateRenouvellement = nextCycleEnd;
+            user.Statut = 1;
+
+            Console.WriteLine(">>> AVANT UPDATE");
+            Console.WriteLine($">>> DateAdhesion = {user.DateAdhesion:dd/MM/yyyy}");
+            Console.WriteLine($">>> DateRenouvellement = {user.DateRenouvellement:dd/MM/yyyy}");
+
+            var result = await _userManager.UpdateAsync(user);
+
+            Console.WriteLine($">>> UPDATE SUCCESS = {result.Succeeded}");
+
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                {
+                    Console.WriteLine($">>> ERREUR UPDATE : {error.Description}");
+                }
+            }
+
+            return result;
         }
-    }
-
-    return result;
-}
-
         // ======================================================================
         // 🔹 Sauvegarder une image sur disque
         // ======================================================================
