@@ -1,8 +1,12 @@
-# 🏛️ ASP Porcelette – Back-End
+Oui. Pour le **README du back-end**, je ferais la même mise à jour que pour le front, mais en mettant davantage en avant ce qu'on a réellement ajouté récemment : **gestion des adhérents, renouvellements par saison, certificats médicaux, rôles, statistiques, comptabilité et logique de saison sportive**.
 
-API REST développée avec **ASP.NET Core** pour alimenter le site de l'AS Porcelette.
+Je corrigerais également un point important : dans ton README actuel tu annonces les **rappels automatiques J-30/J-7 et l'expiration**, donc si cette partie est bien présente dans ton back, on la conserve.
 
-Ce projet constitue le cœur de l'application. Il centralise les données, sécurise les accès et fournit l'ensemble des services utilisés par l'interface d'administration ainsi que par le site public.
+# 🏛️ AS Porcelette Arts Martiaux — Back-End
+
+API REST développée avec **ASP.NET Core** pour alimenter l'application web de gestion de l'association **AS Porcelette Arts Martiaux**.
+
+Le back-end constitue le cœur de l'application. Il centralise les données, sécurise les accès et fournit les services utilisés par le site public ainsi que par les interfaces d'administration et des adhérents.
 
 ---
 
@@ -10,27 +14,188 @@ Ce projet constitue le cœur de l'application. Il centralise les données, sécu
 
 Le projet est accessible en ligne :
 
-**[Website](https://asporcelette-art-martiaux.fr/)**
+**[https://asporcelette-art-martiaux.fr/](https://asporcelette-art-martiaux.fr/)**
 
 ---
 
 ## 🚀 Fonctionnalités
 
-* 🔐 Authentification sécurisée avec JWT
-* 👥 Gestion des utilisateurs et des rôles
-* 📝 Gestion des actualités
-* 📅 Gestion des événements
-* 🥋 Gestion des activités et disciplines du club
-* 🖼️ Gestion des contenus dynamiques
-* 📂 Upload et gestion des fichiers
-* 🩺 Gestion des certificats médicaux
-* 📧 Envoi automatique des emails via Brevo
-* 🔔 Rappels automatiques des certificats à J-30 et J-7
-* 🚨 Notification automatique lors de l'expiration d'un certificat
-* ⏰ Vérification quotidienne automatisée avec `BackgroundService`
-* 🔄 API REST consommée par le Front-End Vue.js
-* 🐳 Conteneurisation avec Docker
-* 📊 Architecture évolutive et maintenable
+### 🔐 Authentification et utilisateurs
+
+* Authentification sécurisée avec JWT
+* Gestion des utilisateurs avec ASP.NET Core Identity
+* Gestion des rôles et autorisations
+* Gestion des profils utilisateurs
+* Protection des endpoints
+* Gestion des accès selon le rôle
+
+Profils actuellement pris en charge :
+
+* **Administrateur**
+* **Sensei**
+* **Adhérent**
+* **Comptable**
+
+---
+
+### 👥 Gestion des adhérents
+
+* Création d'adhérents
+* Consultation des adhérents
+* Modification des informations personnelles
+* Gestion des coordonnées
+* Gestion des disciplines
+* Gestion des grades
+* Gestion des photos de profil
+* Gestion du statut de l'adhérent
+* Gestion des dates d'adhésion
+* Gestion des dates de renouvellement
+* Gestion des informations de profil
+
+---
+
+### 🔄 Gestion des renouvellements
+
+L'application permet de gérer les renouvellements des adhérents selon le fonctionnement saisonnier de l'association.
+
+Une saison sportive est définie du :
+
+**1er septembre → 30 juin**
+
+Exemple :
+
+**Saison 2026-2027 : 01/09/2026 → 30/06/2027**
+
+Le système permet notamment de :
+
+* suivre les adhérents à renouveler ;
+* enregistrer les renouvellements ;
+* distinguer les adhérents renouvelés des adhérents non renouvelés ;
+* associer les renouvellements à une saison sportive ;
+* alimenter les statistiques de la saison.
+
+---
+
+### 🥋 Gestion des disciplines
+
+Gestion des disciplines proposées par l'association :
+
+* Judo
+* Aïkido
+* Ju-jitsu
+* Judo Détente
+
+Les adhérents peuvent être associés à leur discipline afin de permettre leur affichage et leur suivi dans l'application.
+
+---
+
+### 🩺 Gestion des certificats médicaux
+
+Le back-end permet de gérer les informations relatives aux certificats médicaux des adhérents.
+
+Les données enregistrées comprennent notamment :
+
+* certificat médical fourni ou non ;
+* date du certificat médical ;
+* date d'expiration ;
+* date de rappel.
+
+La durée de validité actuellement utilisée est de **3 ans** à partir de la date du certificat.
+
+La date d'expiration est calculée automatiquement par l'application.
+
+---
+
+### 📧 Notifications et rappels
+
+Le back-end intègre un système automatisé permettant de surveiller les dates d'expiration des certificats médicaux.
+
+Des notifications peuvent être déclenchées automatiquement :
+
+* **J-30** avant expiration ;
+* **J-7** avant expiration ;
+* **Jour d'expiration**.
+
+Les emails sont envoyés via **Brevo SMTP**.
+
+---
+
+### ⏰ BackgroundService
+
+La surveillance des certificats est automatisée grâce à un `BackgroundService` ASP.NET Core.
+
+```text
+BackgroundService
+       │
+       ▼
+Vérification quotidienne
+       │
+       ▼
+SQL Server
+       │
+       ▼
+Analyse des dates
+       │
+       ├── J-30 ──► Email
+       │
+       ├── J-7  ──► Email
+       │
+       └── Expiré ──► Email
+```
+
+Le service fonctionne directement avec le back-end et permet d'automatiser les tâches ne nécessitant pas d'intervention manuelle.
+
+Le fuseau horaire **Europe/Paris** est pris en compte pour les traitements planifiés.
+
+---
+
+### 📰 Gestion des contenus
+
+L'API permet également de gérer les contenus du site :
+
+* Actualités
+* Événements
+* Activités
+* Disciplines
+* Contenus dynamiques
+* Informations utilisées par le site public
+
+---
+
+### 📂 Gestion des fichiers
+
+Le back-end prend en charge la gestion des fichiers utilisés par l'application, notamment les images et photos de profil.
+
+Les fichiers sont associés aux données correspondantes et accessibles depuis le front-end.
+
+---
+
+### 💰 Gestion comptable
+
+Le back-end intègre également les fonctionnalités nécessaires au suivi comptable de l'association.
+
+Les données comptables sont organisées autour du fonctionnement par **saison sportive**, avec notamment :
+
+* gestion des dépenses ;
+* dates d'exécution ;
+* suivi des opérations ;
+* association des données à une période comptable.
+
+---
+
+### 📊 Statistiques
+
+L'API fournit les données nécessaires au tableau de bord d'administration.
+
+Les statistiques permettent notamment de suivre :
+
+* le nombre d'adhérents ;
+* la répartition par discipline ;
+* les renouvellements ;
+* les certificats médicaux ;
+* l'évolution des inscriptions.
+
+Ces données sont consommées par le front-end afin d'alimenter les compteurs et graphiques du tableau de bord.
 
 ---
 
@@ -43,8 +208,10 @@ Le projet est accessible en ligne :
 * **ASP.NET Core Identity**
 * **JWT**
 * **Swagger / OpenAPI**
-* **Docker / Docker Compose**
+* **Docker**
+* **Docker Compose**
 * **Brevo SMTP**
+* **BackgroundService**
 
 ---
 
@@ -56,9 +223,11 @@ Vue.js Front-End
         ▼
 ASP.NET Core Web API
         │
-        ├── ASP.NET Core Identity
+        ├── Controllers
         │
         ├── Services métier
+        │
+        ├── ASP.NET Core Identity
         │
         ├── Background Services
         │
@@ -68,95 +237,72 @@ ASP.NET Core Web API
                 SQL Server
 ```
 
-L'API est conçue pour séparer les responsabilités entre les contrôleurs, les services métier et l'accès aux données.
+L'API sépare les différentes responsabilités de l'application afin de faciliter sa maintenance et son évolution.
 
 ---
 
-## 📧 Système de rappels des certificats médicaux
+## 🗄️ Gestion des données
 
-Le back-end intègre un système automatisé de suivi des certificats médicaux des adhérents.
+L'accès aux données est assuré par **Entity Framework Core** avec une base de données **SQL Server**.
 
-Lorsqu'un certificat médical est enregistré, sa date d'expiration est calculée automatiquement à **3 ans** à partir de sa date de délivrance.
+Les principales données gérées comprennent notamment :
 
-Le système permet ainsi à l'administration de suivre la validité des certificats directement depuis l'application.
+* utilisateurs ;
+* adhérents ;
+* disciplines ;
+* actualités ;
+* événements ;
+* informations comptables ;
+* certificats médicaux ;
+* renouvellements.
 
-### 🔔 Rappels automatiques
-
-Le back-end vérifie quotidiennement les certificats médicaux et déclenche automatiquement les notifications nécessaires :
-
-* 📅 **J-30** : premier rappel avant expiration
-* 📅 **J-7** : second rappel avant expiration
-* 🚨 **Jour d'expiration** : notification d'expiration
-
-Les emails sont envoyés via **Brevo SMTP**.
-
-### ⚙️ Fonctionnement
-
-Le système utilise un `BackgroundService` ASP.NET Core exécuté avec le back-end.
-
-```text
-BackgroundService
-       │
-       ▼
-Vérification quotidienne
-       │
-       ▼
-SQL Server
-       │
-       ▼
-Analyse des dates d'expiration
-       │
-       ├── J-30 ──► Email Brevo
-       │
-       ├── J-7  ──► Email Brevo
-       │
-       └── Expiré ──► Email Brevo
-```
-
-Le service est exécuté automatiquement dans le conteneur Docker du back-end.
-
-Le fuseau horaire `Europe/Paris` est configuré afin que les vérifications quotidiennes soient effectuées selon l'heure française.
-
-La vérification est actuellement planifiée quotidiennement à **10h10**.
+ASP.NET Core Identity est utilisé pour la gestion des comptes, des mots de passe et des rôles.
 
 ---
 
 ## 🐳 Docker
 
-Le projet utilise Docker Compose afin d'exécuter les différents services de l'application :
+Le projet utilise **Docker Compose** afin d'exécuter les différents services de l'application.
 
 ```text
-┌───────────────────────────────┐
-│           Docker              │
-│                               │
-│  ┌─────────────┐              │
-│  │   Front-End │ :8080        │
-│  └──────┬──────┘              │
-│         │                      │
-│  ┌──────▼──────┐              │
-│  │   Back-End  │ :5070        │
-│  │ ASP.NET Core│              │
-│  └──────┬──────┘              │
-│         │                      │
-│  ┌──────▼──────┐              │
-│  │ SQL Server  │ :1433        │
-│  └─────────────┘              │
-│                               │
-└───────────────────────────────┘
+┌─────────────────────────────────┐
+│             Docker              │
+│                                 │
+│  ┌───────────────┐              │
+│  │   Front-End   │ :8080        │
+│  └───────┬───────┘              │
+│          │                       │
+│  ┌───────▼───────┐              │
+│  │   Back-End    │ :5070        │
+│  │ ASP.NET Core  │              │
+│  └───────┬───────┘              │
+│          │                       │
+│  ┌───────▼───────┐              │
+│  │  SQL Server   │ :1433        │
+│  └───────────────┘              │
+│                                 │
+└─────────────────────────────────┘
 ```
 
-Le back-end et la base de données communiquent via un réseau Docker dédié.
+Le back-end et SQL Server communiquent via le réseau Docker.
 
-Les informations sensibles telles que les mots de passe, clés JWT et identifiants SMTP sont fournies via des variables d'environnement et ne sont pas stockées directement dans le dépôt.
+Les informations sensibles ne sont pas stockées dans le dépôt Git.
+
+Elles sont fournies via des variables d'environnement, notamment :
+
+* chaîne de connexion SQL Server ;
+* clé JWT ;
+* identifiants SMTP ;
+* paramètres de messagerie.
 
 ---
 
-## ⚙️ Installation & Lancement
+## ⚙️ Installation & lancement
 
 ### Prérequis
 
-* [.NET 8.0 SDK](https://dotnet.microsoft.com/download)
-* [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+* .NET 8.0 SDK
+* Docker Desktop
 * Git
 
 ### Cloner le dépôt
@@ -168,16 +314,11 @@ cd aspPorcelette
 
 ### Configuration
 
-Les informations sensibles nécessaires au fonctionnement de l'application
-(base de données, authentification JWT, service d'envoi d'emails, etc.)
-sont configurées via des variables d'environnement et ne sont pas versionnées
-dans le dépôt.
-
-```
+Les paramètres sensibles nécessaires au fonctionnement de l'application doivent être configurés via les variables d'environnement.
 
 Les valeurs sensibles ne doivent jamais être versionnées dans Git.
 
-### Lancer l'application avec Docker
+### Lancer avec Docker
 
 ```bash
 docker compose up -d --build
@@ -185,13 +326,13 @@ docker compose up -d --build
 
 Les migrations Entity Framework Core sont appliquées automatiquement au démarrage du back-end.
 
-Pour consulter les logs du back-end :
+### Consulter les logs
 
 ```bash
 docker compose logs -f backend
 ```
 
-Pour arrêter les conteneurs :
+### Arrêter les conteneurs
 
 ```bash
 docker compose down
@@ -201,7 +342,7 @@ docker compose down
 
 ## 📚 Documentation API
 
-L'API utilise **Swagger / OpenAPI** pour documenter et tester les différents endpoints.
+L'API utilise **Swagger / OpenAPI** afin de documenter et tester les différents endpoints.
 
 Une fois l'API lancée localement, Swagger est accessible depuis l'URL configurée par l'application.
 
@@ -210,48 +351,86 @@ Une fois l'API lancée localement, Swagger est accessible depuis l'URL configur�
 ## 🎯 Objectifs du projet
 
 * Développer une API REST moderne.
-* Mettre en place une architecture maintenable.
-* Centraliser les données du site.
+* Centraliser les données de l'association.
 * Sécuriser les échanges entre le client et le serveur.
-* Gérer les utilisateurs et leurs différents rôles.
-* Automatiser certaines tâches administratives.
-* Faciliter l'évolution future de l'application.
+* Gérer les utilisateurs et leurs rôles.
+* Faciliter la gestion des adhérents.
+* Automatiser le suivi des certificats médicaux.
+* Gérer les renouvellements selon les saisons sportives.
+* Fournir les données nécessaires aux statistiques.
+* Centraliser certaines fonctions administratives et comptables.
+* Construire une architecture maintenable et évolutive.
 * Fournir une base technique adaptée à un déploiement en production.
 
 ---
 
 ## 💡 Compétences mises en œuvre
 
-* API REST
+### Développement back-end
+
 * ASP.NET Core
 * C#
+* API REST
 * Entity Framework Core
 * SQL Server
-* ASP.NET Core Identity
-* Authentification JWT
-* Gestion des rôles et autorisations
 * CRUD
-* Validation des données
-* Gestion des fichiers
 * Services métier
+* Validation des données
+
+### Authentification et sécurité
+
+* ASP.NET Core Identity
+* JWT
+* Gestion des rôles
+* Autorisation
+* Protection des endpoints
+
+### Automatisation
+
 * `BackgroundService`
-* Automatisation des tâches
+* Vérifications planifiées
+* Gestion des dates d'expiration
+* Notifications automatiques
 * Envoi d'emails SMTP
-* Docker / Docker Compose
-* Gestion des variables d'environnement
-* Clean Code
+
+### Gestion métier
+
+* Gestion des adhérents
+* Gestion des disciplines
+* Gestion des renouvellements
+* Gestion des saisons sportives
+* Gestion des certificats médicaux
+* Gestion comptable
+* Statistiques
+
+### Infrastructure
+
+* Docker
+* Docker Compose
+* Variables d'environnement
+* SQL Server
 * Déploiement en production
+
+### Documentation et maintenance
+
+* Swagger / OpenAPI
+* Git / GitHub
+* Clean Code
+* Architecture évolutive
 
 ---
 
 ## 📂 Outils
 
 * **IDE :** Visual Studio / Visual Studio Code
+* **Framework :** ASP.NET Core
+* **Langage :** C#
+* **ORM :** Entity Framework Core
 * **Base de données :** SQL Server
 * **Documentation API :** Swagger / OpenAPI
-* **Conteneurisation :** Docker
+* **Conteneurisation :** Docker / Docker Compose
 * **Gestion de versions :** Git / GitHub
-* **Service d'envoi d'emails :** Brevo
+* **Emails :** Brevo SMTP
 
 ---
 
@@ -259,6 +438,16 @@ Une fois l'API lancée localement, Swagger est accessible depuis l'URL configur�
 
 🟢 **Projet déployé et en production**
 
-Le back-end est utilisé pour alimenter le site de l'AS Porcelette.
+Le back-end est actuellement utilisé pour alimenter le site de l'**AS Porcelette Arts Martiaux**.
 
-Le projet continue d'évoluer avec l'ajout de nouvelles fonctionnalités, améliorations techniques et automatisations destinées à faciliter la gestion quotidienne du club.
+L'application continue d'évoluer avec l'ajout de nouvelles fonctionnalités, améliorations techniques et automatisations destinées à faciliter la gestion quotidienne de l'association.
+
+---
+
+## 👩‍💻 Projet réalisé par
+
+**Amandine Napolitano**
+
+Développeuse Web
+
+Projet réalisé dans le cadre de la conception et du développement d'une application web complète pour la gestion d'une association sportive.
