@@ -1,10 +1,17 @@
-Oui. Pour le **README du back-end**, je ferais la même mise à jour que pour le front, mais en mettant davantage en avant ce qu'on a réellement ajouté récemment : **gestion des adhérents, renouvellements par saison, certificats médicaux, rôles, statistiques, comptabilité et logique de saison sportive**.
-
-Je corrigerais également un point important : dans ton README actuel tu annonces les **rappels automatiques J-30/J-7 et l'expiration**, donc si cette partie est bien présente dans ton back, on la conserve.
-
 # 🏛️ AS Porcelette Arts Martiaux — Back-End
 
-API REST développée avec **ASP.NET Core** pour alimenter l'application web de gestion de l'association **AS Porcelette Arts Martiaux**.
+![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-8.0-512BD4?style=for-the-badge\&logo=dotnet\&logoColor=white)
+![C#](https://img.shields.io/badge/C%23-8.0-239120?style=for-the-badge\&logo=csharp\&logoColor=white)
+![Entity Framework Core](https://img.shields.io/badge/Entity%20Framework%20Core-8.0-512BD4?style=for-the-badge\&logo=dotnet\&logoColor=white)
+![SQL Server](https://img.shields.io/badge/SQL%20Server-CC2927?style=for-the-badge\&logo=microsoftsqlserver\&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-Authentication-000000?style=for-the-badge\&logo=jsonwebtokens\&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge\&logo=docker\&logoColor=white)
+![Swagger](https://img.shields.io/badge/Swagger-OpenAPI-85EA2D?style=for-the-badge\&logo=swagger\&logoColor=black)
+
+![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge\&logo=github\&logoColor=white)
+![Production](https://img.shields.io/badge/Production-Live-success?style=for-the-badge)
+
+**API REST développée avec ASP.NET Core pour alimenter l'application web de gestion de l'association AS Porcelette Arts Martiaux.**
 
 Le back-end constitue le cœur de l'application. Il centralise les données, sécurise les accès et fournit les services utilisés par le site public ainsi que par les interfaces d'administration et des adhérents.
 
@@ -12,9 +19,10 @@ Le back-end constitue le cœur de l'application. Il centralise les données, sé
 
 ## 🌐 Démonstration
 
-Le projet est accessible en ligne :
+[![Site en ligne](https://img.shields.io/badge/🌐%20Site%20en%20ligne-asporcelette--art--martiaux.fr-success?style=for-the-badge)](https://asporcelette-art-martiaux.fr/)
 
-**[https://asporcelette-art-martiaux.fr/](https://asporcelette-art-martiaux.fr/)**
+**Site officiel :**
+https://asporcelette-art-martiaux.fr/
 
 ---
 
@@ -73,19 +81,6 @@ Le système permet notamment de :
 * distinguer les adhérents renouvelés des adhérents non renouvelés ;
 * associer les renouvellements à une saison sportive ;
 * alimenter les statistiques de la saison.
-
----
-
-### 🥋 Gestion des disciplines
-
-Gestion des disciplines proposées par l'association :
-
-* Judo
-* Aïkido
-* Ju-jitsu
-* Judo Détente
-
-Les adhérents peuvent être associés à leur discipline afin de permettre leur affichage et leur suivi dans l'application.
 
 ---
 
@@ -195,8 +190,6 @@ Les statistiques permettent notamment de suivre :
 * les certificats médicaux ;
 * l'évolution des inscriptions.
 
-Ces données sont consommées par le front-end afin d'alimenter les compteurs et graphiques du tableau de bord.
-
 ---
 
 ## 🛠️ Technologies
@@ -224,20 +217,14 @@ Vue.js Front-End
 ASP.NET Core Web API
         │
         ├── Controllers
-        │
         ├── Services métier
-        │
         ├── ASP.NET Core Identity
-        │
         ├── Background Services
-        │
         └── Entity Framework Core
                     │
                     ▼
                 SQL Server
 ```
-
-L'API sépare les différentes responsabilités de l'application afin de faciliter sa maintenance et son évolution.
 
 ---
 
@@ -280,20 +267,12 @@ Le projet utilise **Docker Compose** afin d'exécuter les différents services d
 │  ┌───────▼───────┐              │
 │  │  SQL Server   │ :1433        │
 │  └───────────────┘              │
-│                                 │
 └─────────────────────────────────┘
 ```
 
-Le back-end et SQL Server communiquent via le réseau Docker.
-
 Les informations sensibles ne sont pas stockées dans le dépôt Git.
 
-Elles sont fournies via des variables d'environnement, notamment :
-
-* chaîne de connexion SQL Server ;
-* clé JWT ;
-* identifiants SMTP ;
-* paramètres de messagerie.
+Elles sont fournies via des variables d'environnement.
 
 ---
 
@@ -311,12 +290,6 @@ Elles sont fournies via des variables d'environnement, notamment :
 git clone https://github.com/Looka57/aspPorcelette.git
 cd aspPorcelette
 ```
-
-### Configuration
-
-Les paramètres sensibles nécessaires au fonctionnement de l'application doivent être configurés via les variables d'environnement.
-
-Les valeurs sensibles ne doivent jamais être versionnées dans Git.
 
 ### Lancer avec Docker
 
@@ -436,9 +409,9 @@ Une fois l'API lancée localement, Swagger est accessible depuis l'URL configur�
 
 ## 🚀 État du projet
 
-🟢 **Projet déployé et en production**
+**Projet déployé et en production**
 
-Le back-end est actuellement utilisé pour alimenter le site de l'**AS Porcelette Arts Martiaux**.
+Le back-end alimente actuellement le site de l'**AS Porcelette Arts Martiaux**.
 
 L'application continue d'évoluer avec l'ajout de nouvelles fonctionnalités, améliorations techniques et automatisations destinées à faciliter la gestion quotidienne de l'association.
 
