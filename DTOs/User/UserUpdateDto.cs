@@ -91,8 +91,8 @@ namespace ASPPorcelette.API.DTOs.User
         // LICENCE PAYEES
         // =========================
 
-
-        public bool? LicencePayee { get; set; }
+public bool? LicencePayee { get; set; }
+public bool? LicenceEnregistree { get; set; }
 
         // =========================
         // CERTIFICAT MEDICAL

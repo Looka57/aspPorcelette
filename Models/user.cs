@@ -34,6 +34,7 @@ namespace ASPPorcelette.API.Models.Identity
         public DateTime? DateAdhesion { get; set; }
         public DateTime? DateRenouvellement { get; set; }
         public bool LicencePayee { get; set; } = false;
+        public bool LicenceEnregistree { get; set; } = false;
 
         // Certificat médical
         public bool CertificatMedicalFourni { get; set; }
