@@ -87,6 +87,13 @@ namespace ASPPorcelette.API.DTOs.User
 
         public DateTime? DateRenouvellement { get; set; }
 
+                // =========================
+        // LICENCE PAYEES
+        // =========================
+
+
+        public bool? LicencePayee { get; set; }
+
         // =========================
         // CERTIFICAT MEDICAL
         // =========================

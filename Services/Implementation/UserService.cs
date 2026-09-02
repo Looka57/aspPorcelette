@@ -69,8 +69,10 @@ namespace ASPPorcelette.API.Services
                     DateNaissance = user.DateNaissance,
                     DateAdhesion = user.DateAdhesion,
                     DateRenouvellement = user.DateRenouvellement,
+                    // LICENCE PAYEEES 
+                    LicencePayee = user.LicencePayee,
                     DisciplineId = user.DisciplineId,
-                    // certificat medicale
+                    // certificat medical
                     CertificatMedicalFourni = user.CertificatMedicalFourni,
                     DateCertificatMedical = user.DateCertificatMedical,
                     DateExpirationCertificatMedical = user.DateExpirationCertificatMedical,
@@ -488,9 +490,9 @@ namespace ASPPorcelette.API.Services
             if (dto.DateRenouvellement.HasValue) user.DateRenouvellement = dto.DateRenouvellement.Value;
 
             // =============================
-            // CERTIFICAT MÉDICAL
+            // LICENCE PAYEES
             // =============================
-
+            if (dto.LicencePayee.HasValue) user.LicencePayee = dto.LicencePayee.Value;
             // =============================
             // CERTIFICAT MÉDICAL
             // =============================
