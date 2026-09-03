@@ -565,10 +565,11 @@ namespace ASPPorcelette.API.Controllers
         /// 🔹 Attribue un rôle à un utilisateur.
         /// </summary>
         [HttpPost("admin/roles/assign")]
-[Authorize(
+        [Authorize(
     AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme,
     Roles = "Admin,Sensei,Comité,Secrétaire"
-)]        public async Task<IActionResult> AssignRole([FromBody] AssignRoleDto model)
+)]
+        public async Task<IActionResult> AssignRole([FromBody] AssignRoleDto model)
         {
             if (string.IsNullOrEmpty(model.UserId) || string.IsNullOrEmpty(model.RoleName))
                 return BadRequest(new { Message = "L'identifiant utilisateur et le rôle sont requis." });
