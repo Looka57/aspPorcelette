@@ -17,7 +17,19 @@ namespace ASPPorcelette.API.Seed
         /// </summary>
         public static async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager)
         {
-            var rolesToSeed = new[] { RoleConstants.Admin, RoleConstants.Sensei, RoleConstants.Student };
+            var rolesToSeed = new[]
+                    {
+                        RoleConstants.Admin,
+                        RoleConstants.Sensei,
+                        RoleConstants.Adherent,
+                        RoleConstants.Comite,
+                        RoleConstants.Secretaire,
+                        RoleConstants.Tresoriere,
+
+                        // Anciens rôles conservés temporairement
+                        RoleConstants.Student,
+                        RoleConstants.Comptable
+                    };
 
             foreach (var roleName in rolesToSeed)
             {
@@ -52,7 +64,7 @@ namespace ASPPorcelette.API.Seed
                     UserName = adminEmail,
                     Email = adminEmail,
                     EmailConfirmed = true,
-                    Bio = string.Empty, 
+                    Bio = string.Empty,
                     Nom = "Super",
                     Prenom = "Admin",
                     RueEtNumero = string.Empty,

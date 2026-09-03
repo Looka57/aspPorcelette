@@ -6,11 +6,22 @@ namespace ASPPorcelette.API.Constants
     /// </summary>
     public static class RoleConstants
     {
-        public const string Admin = "Admin"; // Rôle Administrateur
-        public const string Sensei = "Sensei"; // Rôle Administrateur/Professeur
-        public const string Student = "Student"; // Rôle Utilisateur Standard/Étudiant
+        // Gestion complète de l'application
+        public const string Admin = "Admin";
 
-        // Ajoutez d'autres rôles ici si nécessaire
-        public const string Comptable = "Comptable"; 
+        // Utilisateurs pouvant accéder au dashboard
+        public const string Sensei = "Sensei";
+        public const string Comite = "Comité";
+        public const string Secretaire = "Secrétaire";
+        public const string Tresoriere = "Trésorière";
+
+        // Licenciés : accès uniquement à leur espace personnel
+        public const string Adherent = "Adherent";
+
+        // Ancien rôle conservé 
+        public const string Student = "Student";
+
+        // Ancien rôle comptable conservé temporairement
+        public const string Comptable = "Comptable";
     }
 }

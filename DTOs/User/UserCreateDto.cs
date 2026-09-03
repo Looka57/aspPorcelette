@@ -26,6 +26,12 @@ namespace ASPPorcelette.API.DTOs.User
             MinimumLength = 6)]
         public string Password { get; set; } = string.Empty;
 
+
+         // =========================
+        // Roles
+        // =========================
+        public List<string> Roles { get; set; } = new();
+
         // =========================
         // INFORMATIONS
         // =========================

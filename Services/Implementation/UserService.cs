@@ -320,61 +320,115 @@ namespace ASPPorcelette.API.Services
             }
         }
 
-        // ======================================================================
-        // 🔹 Création d'un utilisateur avec photo
-        // ======================================================================
-        public async Task<IdentityResult> CreateUserWithProfileAsync(UserCreationDto dto, string role)
-        {
-            string? photoUrl = await SaveProfilePicture(dto.PhotoFile);
+  // ======================================================================
+// 🔹 Création d'un utilisateur avec photo et rôles
+// ======================================================================
+public async Task<IdentityResult> CreateUserWithProfileAsync(
+    UserCreationDto dto,
+    string? role = null)
+{
+    string? photoUrl = await SaveProfilePicture(dto.PhotoFile);
 
-            var user = new User
+    var user = new User
+    {
+        UserName = dto.Email,
+        Email = dto.Email,
+        Nom = dto.Nom,
+        Prenom = dto.Prenom,
+        Telephone = dto.Telephone,
+        PhotoUrl = photoUrl ?? string.Empty,
+        Grade = dto.Grade ?? string.Empty,
+        Bio = dto.Bio ?? string.Empty,
+        Statut = dto.Statut ?? 0,
+        RueEtNumero = dto.RueEtNumero ?? string.Empty,
+        Ville = dto.Ville ?? string.Empty,
+        CodePostal = dto.CodePostal ?? string.Empty,
+        DateNaissance = dto.DateNaissance,
+        DisciplineId = dto.DisciplineId,
+        DateAdhesion = dto.DateAdhesion != default
+            ? dto.DateAdhesion
+            : DateTime.UtcNow,
+        DateRenouvellement = dto.DateRenouvellement != default
+            ? dto.DateRenouvellement
+            : DateTime.UtcNow.AddYears(1),
+        DateCreation = DateTime.UtcNow
+    };
+
+    // === CERTIFICAT MÉDICAL ===
+    // Calcul automatique de la date d'expiration
+    // si une date est fournie.
+    ApplyCertificatMedical(
+        user,
+        dto.DateCertificatMedical,
+        dto.CertificatMedicalFourni
+    );
+
+    // === CRÉATION DE L'UTILISATEUR ===
+    var result = await _userManager.CreateAsync(user, dto.Password);
+
+    if (!result.Succeeded)
+        return result;
+
+    // ==================================================================
+    // 🔹 Détermination des rôles
+    // ==================================================================
+
+    var roles = dto.Roles?.Where(r => !string.IsNullOrWhiteSpace(r))
+                           .Distinct(StringComparer.OrdinalIgnoreCase)
+                           .ToList()
+                ?? new List<string>();
+
+    // Compatibilité avec l'ancien fonctionnement
+    if (!string.IsNullOrWhiteSpace(role) && !roles.Contains(role, StringComparer.OrdinalIgnoreCase))
+    {
+        roles.Add(role);
+    }
+
+    // Un utilisateur créé depuis cette méthode doit avoir au moins un rôle.
+    if (!roles.Any())
+    {
+        await _userManager.DeleteAsync(user);
+
+        return IdentityResult.Failed(
+            new IdentityError
             {
-                UserName = dto.Email,
-                Email = dto.Email,
-                Nom = dto.Nom,
-                Prenom = dto.Prenom,
-                Telephone = dto.Telephone,
-                PhotoUrl = photoUrl ?? string.Empty,
-                Grade = dto.Grade ?? string.Empty,
-                Bio = dto.Bio ?? string.Empty,
-                Statut = dto.Statut ?? 0,
-                RueEtNumero = dto.RueEtNumero ?? string.Empty,
-                Ville = dto.Ville ?? string.Empty,
-                CodePostal = dto.CodePostal ?? string.Empty,
-                DateNaissance = dto.DateNaissance,
-                DisciplineId = dto.DisciplineId,
-                DateAdhesion = dto.DateAdhesion != default ? dto.DateAdhesion : DateTime.UtcNow,
-                DateRenouvellement = dto.DateRenouvellement != default ? dto.DateRenouvellement : DateTime.UtcNow.AddYears(1),
-
-                DateCreation = DateTime.UtcNow
-            };
-
-            // === CERTIFICAT MÉDICAL === (calcul auto de la date d'expiration si une date est fournie)
-            ApplyCertificatMedical(user, dto.DateCertificatMedical, dto.CertificatMedicalFourni);
-
-            var result = await _userManager.CreateAsync(user, dto.Password);
-            if (!result.Succeeded) return result;
-
-            if (!await _roleManager.RoleExistsAsync(role))
-            {
-                var roleCreationResult = await _roleManager.CreateAsync(new IdentityRole(role));
-                if (!roleCreationResult.Succeeded)
-                {
-                    await _userManager.DeleteAsync(user);
-                    return roleCreationResult;
-                }
+                Description = "Au moins un rôle doit être sélectionné."
             }
+        );
+    }
 
-            var roleResult = await _userManager.AddToRoleAsync(user, role);
-            if (!roleResult.Succeeded)
+    // ==================================================================
+    // 🔹 Ajout des rôles sélectionnés
+    // ==================================================================
+
+    foreach (var roleName in roles)
+    {
+        // Création du rôle s'il n'existe pas encore
+        if (!await _roleManager.RoleExistsAsync(roleName))
+        {
+            var roleCreationResult =
+                await _roleManager.CreateAsync(new IdentityRole(roleName));
+
+            if (!roleCreationResult.Succeeded)
             {
                 await _userManager.DeleteAsync(user);
-                return roleResult;
+                return roleCreationResult;
             }
-
-            return IdentityResult.Success;
         }
 
+        // Attribution du rôle à l'utilisateur
+        var roleResult =
+            await _userManager.AddToRoleAsync(user, roleName);
+
+        if (!roleResult.Succeeded)
+        {
+            await _userManager.DeleteAsync(user);
+            return roleResult;
+        }
+    }
+
+    return IdentityResult.Success;
+}
         // ======================================================================
         // 🔹 Mise à jour du profil utilisateur (par lui-même)
         // ======================================================================

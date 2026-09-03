@@ -131,7 +131,7 @@ namespace ASPPorcelette.API.Controllers
         /// Utilisé dans le back-office.
         /// </summary>
         [HttpPut("admin/{userId}")] // 💡 Utilisation de {userId} pour plus de clarté
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin, Sensei")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin, Sensei, Secrétaire, Comité")]
         public async Task<IActionResult> UpdateUserByAdmin([FromRoute] string userId, [FromForm] UserUpdateDto updateDto)
         {
             // 💡 Simplification de la validation de l'ID (on utilise l'ID de la route)
@@ -153,26 +153,32 @@ namespace ASPPorcelette.API.Controllers
         // ================================================================
         // 🧩 SECTION 3 : GESTION DES INSCRIPTIONS
         // ================================================================
-
         /// <summary>
-        /// 🔹 Enregistre un nouveau Sensei (compte enseignant).
+        /// 🔹 Enregistre un nouveau membre avec les rôles sélectionnés.
         /// </summary>
         [HttpPost("register/sensei")]
-        [AllowAnonymous]
-        public async Task<IActionResult> RegisterSensei([FromForm] UserCreationDto registrationDto)
+        [Authorize(
+            AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme,
+            Roles = "Admin,Sensei,Secrétaire"
+        )]
+        public async Task<IActionResult> RegisterSensei(
+            [FromForm] UserCreationDto registrationDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var result = await _userService.CreateUserWithProfileAsync(registrationDto, "Sensei");
+            var result = await _userService.CreateUserWithProfileAsync(registrationDto);
 
             if (result.Succeeded)
-                return StatusCode(201, new { Message = "Inscription Sensei réussie." });
+                return StatusCode(201, new
+                {
+                    Message = "Membre créé avec succès."
+                });
 
             return BadRequest(new
             {
                 Errors = result.Errors.Select(e => e.Description),
-                Message = "Échec de l'inscription Sensei."
+                Message = "Échec de la création du membre."
             });
         }
 
@@ -548,7 +554,7 @@ namespace ASPPorcelette.API.Controllers
         /// 🔹 Liste tous les rôles disponibles.
         /// </summary>
         [HttpGet("admin/roles")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei,Comité,Secrétaire")]
         public IActionResult GetAllRoles()
         {
             var roles = _roleManager.Roles.Select(r => r.Name).ToList();
@@ -559,8 +565,10 @@ namespace ASPPorcelette.API.Controllers
         /// 🔹 Attribue un rôle à un utilisateur.
         /// </summary>
         [HttpPost("admin/roles/assign")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
-        public async Task<IActionResult> AssignRole([FromBody] AssignRoleDto model)
+[Authorize(
+    AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme,
+    Roles = "Admin,Sensei,Comité,Secrétaire"
+)]        public async Task<IActionResult> AssignRole([FromBody] AssignRoleDto model)
         {
             if (string.IsNullOrEmpty(model.UserId) || string.IsNullOrEmpty(model.RoleName))
                 return BadRequest(new { Message = "L'identifiant utilisateur et le rôle sont requis." });
@@ -584,7 +592,10 @@ namespace ASPPorcelette.API.Controllers
         /// 🔹 Retire un rôle à un utilisateur.
         /// </summary>
         [HttpPost("admin/roles/remove")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+        [Authorize(
+    AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme,
+    Roles = "Admin,Sensei,Comité,Secrétaire"
+)]
         public async Task<IActionResult> RemoveRole([FromBody] AssignRoleDto model)
         {
             if (string.IsNullOrEmpty(model.UserId) || string.IsNullOrEmpty(model.RoleName))
