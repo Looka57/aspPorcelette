@@ -14,7 +14,7 @@ namespace ASPPorcelette.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize(Roles = "Admin,Sensei,Comité,Secrétaire,Trésorière")]
     public class TransactionController : ControllerBase
     {
         private readonly ITransactionService _transactionService;

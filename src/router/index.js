@@ -31,7 +31,7 @@ const router = createRouter({
     // --- ROUTES ADMIN ---
     {
       path: "/admin",
-      meta: { requiresAuth: true, roles: ["Admin", "Sensei"] },
+      meta: { requiresAuth: true, roles: ["Admin", "Sensei", "Comité", "Secrétaire", "Trésorière"] },
       children: [
         { path: "dashboard", name: "admin-dashboard", component: () => import("@/views/AdminDashboard.vue") },
         { path: "sensei", name: "admin-sensei", component: () => import("@/views/SenseiView.vue") },
@@ -72,9 +72,16 @@ router.beforeEach(async (to, from, next) => {
   if (to.meta.requiresAuth) {
     if (!authStore.isLoggedIn) return next("/login");
 
-    const requiredRoles = to.meta.roles || [];
-    const userRoles = authStore.user?.roles || [];
-    const hasRequiredRole = requiredRoles.some((role) => userRoles.includes(role));
+  const requiredRoles = to.meta.roles || [];
+const userRoles = authStore.user?.roles || [];
+
+console.log("🔐 Route :", to.path);
+console.log("🔐 Rôles requis :", requiredRoles);
+console.log("👤 Utilisateur :", authStore.user);
+console.log("👤 Rôles utilisateur :", userRoles);
+
+const hasRequiredRole =
+  requiredRoles.some((role) => userRoles.includes(role));
 
     if (!hasRequiredRole) return next("/403");
   }

@@ -5,11 +5,13 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ASPPorcelette.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin,Sensei,Comité,Secrétaire,Trésorière")]
     public class CompteController : ControllerBase
     {
         private readonly ICompteService _compteService;

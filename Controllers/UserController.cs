@@ -48,7 +48,7 @@ namespace ASPPorcelette.API.Controllers
         /// Accessible par tous les rôles (Admin, Sensei, Adhérent).
         /// </summary>
         [HttpGet("profile")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei,Adherent")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei,Secrétaire,Comité,Trésorière,Adherent")]
         public async Task<IActionResult> GetMyProfile()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -131,7 +131,7 @@ namespace ASPPorcelette.API.Controllers
         /// Utilisé dans le back-office.
         /// </summary>
         [HttpPut("admin/{userId}")] // 💡 Utilisation de {userId} pour plus de clarté
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin, Sensei, Secrétaire, Comité")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin, Sensei, Secrétaire")]
         public async Task<IActionResult> UpdateUserByAdmin([FromRoute] string userId, [FromForm] UserUpdateDto updateDto)
         {
             // 💡 Simplification de la validation de l'ID (on utilise l'ID de la route)
@@ -186,6 +186,10 @@ namespace ASPPorcelette.API.Controllers
         /// 🔹 Crée un adhérent (utilisateur sans mot de passe).
         /// </summary>
         [HttpPost("register/adherent")]
+        [Authorize(
+    AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme,
+    Roles = "Admin,Sensei,Secrétaire"
+)]
         public async Task<IActionResult> CreateAdherent([FromBody] AdherentCreateDto dto)
         {
             if (!ModelState.IsValid)
@@ -445,6 +449,44 @@ namespace ASPPorcelette.API.Controllers
             });
         }
 
+
+
+// ================================================================
+// 🧩 SECTION 3 BIS : AFFICHAGE PUBLIC DES SENSEIS
+// ================================================================
+
+/// <summary>
+/// 🔹 Récupère la liste des Senseis pour l'affichage public.
+/// Aucune authentification n'est requise.
+/// </summary>
+[HttpGet("public/senseis")]
+[AllowAnonymous]
+public async Task<IActionResult> GetPublicSenseis()
+{
+    var users = await _userManager.GetUsersInRoleAsync("Sensei");
+
+    var senseis = users
+        .Where(user => user.Statut == 1)
+        .Select(user => new
+        {
+            UserId = user.Id,
+            user.Nom,
+            user.Prenom,
+            user.Grade,
+            user.PhotoUrl,
+            user.DisciplineId
+        })
+        .ToList();
+
+    return Ok(senseis);
+}
+
+
+
+
+
+
+
         // ================================================================
         // 🧩 SECTION 4 : ADMINISTRATION GÉNÉRALE
         // ================================================================
@@ -453,7 +495,7 @@ namespace ASPPorcelette.API.Controllers
         /// 🔹 Liste tous les utilisateurs pour l’administration.
         /// </summary>
         [HttpGet("admin/list")]
-        [AllowAnonymous]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei,Secrétaire")]
         public async Task<IActionResult> GetAllUsers()
         {
             // 💡 Utilisation du service pour obtenir la liste,
@@ -467,7 +509,10 @@ namespace ASPPorcelette.API.Controllers
         /// 🔹 Récupère un utilisateur spécifique via son ID.
         /// </summary>
         [HttpGet("admin/{userId}")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei")]
+        [Authorize(
+    AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme,
+    Roles = "Admin,Sensei,Secrétaire"
+)]
         public async Task<IActionResult> GetUserById(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
@@ -554,7 +599,7 @@ namespace ASPPorcelette.API.Controllers
         /// 🔹 Liste tous les rôles disponibles.
         /// </summary>
         [HttpGet("admin/roles")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei,Comité,Secrétaire")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin,Sensei,Secrétaire")]
         public IActionResult GetAllRoles()
         {
             var roles = _roleManager.Roles.Select(r => r.Name).ToList();
@@ -567,7 +612,7 @@ namespace ASPPorcelette.API.Controllers
         [HttpPost("admin/roles/assign")]
         [Authorize(
     AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme,
-    Roles = "Admin,Sensei,Comité,Secrétaire"
+    Roles = "Admin,Sensei,Secrétaire"
 )]
         public async Task<IActionResult> AssignRole([FromBody] AssignRoleDto model)
         {
@@ -595,7 +640,7 @@ namespace ASPPorcelette.API.Controllers
         [HttpPost("admin/roles/remove")]
         [Authorize(
     AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme,
-    Roles = "Admin,Sensei,Comité,Secrétaire"
+    Roles = "Admin,Sensei,Secrétaire"
 )]
         public async Task<IActionResult> RemoveRole([FromBody] AssignRoleDto model)
         {
