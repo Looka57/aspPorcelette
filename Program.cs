@@ -143,7 +143,7 @@ builder.Services.AddAuthentication(options =>
 // --- 3. CONFIGURATION DES SERVICES (Vos couches Repository et Service) ---
 
 // *********** INJECTIONS DE DÉPENDANCES ***********
-builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
+builder.Services.AddAutoMapper(cfg => { }, typeof(AutoMapperProfile).Assembly);
 
 // ... (Vos injections de dépendances) ...
 builder.Services.AddScoped<IUserService, UserService>();
